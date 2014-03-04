@@ -254,7 +254,7 @@ class TransmissionRequest(object):
             response += chunk
 
         try:
-            data = json.loads(str(response, ENCODING))
+            data = json.loads(response.decode("utf-8"))
         except ValueError:
             quit("Cannot parse response: %s\n" % response, JSON_ERROR)
         self.open_request = None
