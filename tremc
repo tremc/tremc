@@ -1074,7 +1074,7 @@ class Interface(object):
         self.lines_per_entry = 3 if self.blank_lines else 2
         self.tlist_item_height = self.lines_per_entry if not self.compact_list else 1
         self.mainview_height = self.height - 2
-        self.torrents_per_page = self.mainview_height / self.tlist_item_height
+        self.torrents_per_page = self.mainview_height // self.tlist_item_height
 
     def run(self):
         self.draw_title_bar()
@@ -1565,7 +1565,7 @@ class Interface(object):
                 piece_count = self.torrent_details['pieceCount']
                 margin = len(str(piece_count)) + 2
                 map_width = int(str(self.width-margin-1)[0:-1] + '0')
-                list_len = int(piece_count / map_width) + 1
+                list_len = (piece_count // map_width) + 1
 
             if list_len:
                 if c == curses.KEY_UP or c == ord('k') or c == curses.ascii.ctrl(ord('p')):
