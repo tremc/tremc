@@ -2015,7 +2015,7 @@ class Interface(object):
             else:
                 tracker_errors = [tracker['lastAnnounceResult'] or tracker['lastScrapeResult']
                                   for tracker in torrent['trackerStats']]
-                parts[0] = self.enc([te for te in tracker_errors if te][0])
+                parts[0] = [te for te in tracker_errors if te][0]
         else:
             if torrent['status'] == Transmission.STATUS_CHECK:
                 parts[0] += " (%.2f%%)" % float(torrent['recheckProgress']) * 100
