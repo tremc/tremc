@@ -2066,7 +2066,7 @@ class Interface(object):
         self.draw_torrentlist_item(self.torrent_details, False, False, 0)
 
         # divider + menu
-        menu_items = ['_Overview', "_Files", 'P_eers', '_Trackers', 'Pie_ces' ]
+        menu_items = ['_Overview', "_Files", 'P_eers', '_Trackers', '_Chunks' ]
         xpos = int((self.width - sum([len(x) for x in menu_items])-len(menu_items)) / 2)
         for item in menu_items:
             self.pad.move(3, xpos)
@@ -2122,7 +2122,7 @@ class Interface(object):
             info[-1].append("%d complete;  " % complete)
             info[-1].append("%d commenced" % partial)
 
-        info.append(['Pieces: ', "%s;  " % t['pieceCount'],
+        info.append(['Chunks: ', "%s;  " % t['pieceCount'],
                      "%s each" % scale_bytes(t['pieceSize'], 'long')])
 
         info.append(['Download: '])
@@ -2561,7 +2561,7 @@ class Interface(object):
 
         missing_pieces = piece_count - counter - 1
         if missing_pieces:
-            line = "%d further piece%s" % (missing_pieces, ('','s')[missing_pieces>1])
+            line = "-- %d more --" % (missing_pieces)
             xpos = (self.width - len(line)) / 2
             self.pad.addstr(int(self.height-3), int(xpos), line, curses.A_REVERSE)
 
