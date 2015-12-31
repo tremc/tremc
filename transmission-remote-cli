@@ -2512,42 +2512,31 @@ class Interface(object):
                 for i in range(4):
                     addstr(ypos+i, 0, ' ', curses.A_BOLD + curses.A_REVERSE)
 
-            addstr(ypos+1, 4,  "Last announce: %s" % timestamp(t['lastAnnounceTime']))
-            addstr(ypos+1, 54, "Last scrape: %s" % timestamp(t['lastScrapeTime']))
-
-            if t['lastAnnounceSucceeded']:
-                peers = "%s peer%s" % (num2str(t['lastAnnouncePeerCount']), ('s', '')[t['lastAnnouncePeerCount']==1])
-                addstr(ypos,   2, t['announce'], curses.A_BOLD + curses.A_UNDERLINE)
-                addstr(ypos+2, 11, "Result: ")
-                addstr(ypos+2, 19, "%s received" % peers, curses.A_BOLD)
-            else:
-                addstr(ypos,   2, t['announce'], curses.A_UNDERLINE)
-                addstr(ypos+2, 9, "Response:")
-                announce_msg_size = self.wrap_and_draw_result(top, ypos+2, 19, self.enc(t['lastAnnounceResult']))
+            addstr(ypos+1, 4, "Last announce: %s" % timestamp(t['lastAnnounceTime']))
+            addstr(ypos+2, 4, "Next announce: %s" % timestamp(t['nextAnnounceTime']))
+            addstr(ypos+3, 4, "  Last scrape: %s" % timestamp(t['lastScrapeTime']))
+            addstr(ypos+4, 4, "  Next scrape: %s" % timestamp(t['nextScrapeTime']))
 
             if t['lastScrapeSucceeded']:
                 seeds   = "%s seed%s" % (num2str(t['seederCount']), ('s', '')[t['seederCount']==1])
                 leeches = "%s leech%s" % (num2str(t['leecherCount']), ('es', '')[t['leecherCount']==1])
-                addstr(ypos+2, 52, "Tracker knows:")
-                addstr(ypos+2, 67, "%s and %s" % (seeds, leeches), curses.A_BOLD)
+                addstr(ypos+5, 4, "Tracker knows: %s and %s" % (seeds, leeches), curses.A_BOLD)
             else:
-                addstr(ypos+2, 57, "Response:")
-                scrape_msg_size += self.wrap_and_draw_result(top, ypos+2, 67, t['lastScrapeResult'])
+                if t['lastScrapeResult']:
+                    addstr(ypos+5, 9, "Response: %s" % t['lastScrapeResult'])
+
+            if t['lastAnnounceSucceeded']:
+                peers = "%s peer%s" % (num2str(t['lastAnnouncePeerCount']), ('s', '')[t['lastAnnouncePeerCount']==1])
+                addstr(ypos,   2, t['announce'], curses.A_BOLD + curses.A_UNDERLINE)
+                addstr(ypos+6, 11, "Result: %s received" % peers, curses.A_BOLD)
+            else:
+                addstr(ypos,   2, t['announce'], curses.A_UNDERLINE)
+                if t['lastAnnounceResult']:
+                    addstr(ypos+6, 9, "Response: %s" % t['lastAnnounceResult'])
 
             ypos += max(announce_msg_size, scrape_msg_size)
 
-            addstr(ypos+3, 4,  "Next announce: %s" % timestamp(t['nextAnnounceTime']))
-            addstr(ypos+3, 52, "  Next scrape: %s" % timestamp(t['nextScrapeTime']))
-
-            ypos += 5
-
-    def wrap_and_draw_result(self, top, ypos, xpos, result):
-
-        i = 0
-        for i, line in enumerate(wrap(str(result), 30)):
-            if ypos+i > top and ypos+i < self.height - 2:
-                self.pad.addstr(ypos+i, xpos, line, curses.A_UNDERLINE)
-        return i
+            ypos += 7
 
     def draw_pieces_map(self, ypos):
         pieces = self.torrent_details['pieces']
