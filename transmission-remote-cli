@@ -3024,7 +3024,7 @@ class Interface(object):
                     hide_cursor()
                     return input
             elif c >= 32 and c < 127:
-                input = input[:index] + str(chr(c), ENCODING) + (index < len(input) and input[index:] or '')
+                input = input[:index] + chr(c) + (index < len(input) and input[index:] or '')
                 index += 1
                 if on_change: on_change(input)
             elif c == ord('\t') and tab_complete:
