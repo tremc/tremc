@@ -2337,8 +2337,8 @@ class Interface(object):
             and index + pos >= self.detaillistitems_per_page:
                 if self.focus_detaillist + 1 + pos_before_focus < self.detaillistitems_per_page / 2:
                     return filelist
-                return filelist[self.focus_detaillist + 1 + pos_before_focus - self.detaillistitems_per_page / 2
-                        : self.focus_detaillist + 1 + pos_before_focus + self.detaillistitems_per_page / 2]
+                return filelist[int(self.focus_detaillist + 1 + pos_before_focus - self.detaillistitems_per_page / 2)
+                        : int(self.focus_detaillist + 1 + pos_before_focus + self.detaillistitems_per_page / 2)]
         begin = len(filelist) - self.detaillistitems_per_page
         return filelist[begin > 0 and begin or 0:]
 
