@@ -2137,21 +2137,17 @@ class Interface(object):
                 info[-1].append("receiving %s per second" % scale_bytes(t['rateDownload'], 'long'))
                 if t['downloadLimited']:
                     info[-1][-1] += " (throttled to %s)" % scale_bytes(t['downloadLimit']*1024, 'long')
-            else:
-                info[-1].append("no reception in progress")
 
         try:
             copies_distributed = (float(t['uploadedEver']) / float(t['sizeWhenDone']))
         except ZeroDivisionError:
             copies_distributed = 0
-        info.append(['Upload: ', "%s (%.2f%%) transmitted; " %
+        info.append(['Upload: ', "%s (%.2f%%) transmitted" %
                      (scale_bytes(t['uploadedEver'], 'long'), t['uploadRatio']*100)])
         if t['rateUpload']:
-            info[-1].append("sending %s per second" % scale_bytes(t['rateUpload'], 'long'))
+            info.append(" Sending %s per second" % scale_bytes(t['rateUpload'], 'long'))
             if t['uploadLimited']:
-                info[-1][-1] += " (throttled to %s)" % scale_bytes(t['uploadLimit']*1024, 'long')
-        else:
-            info[-1].append("no transmission in progress")
+                info[-1] += " (throttled to %s)" % scale_bytes(t['uploadLimit']*1024, 'long')
 
         info.append(['Ratio: ', '%.2f copies distributed' % copies_distributed])
         norm_upload_rate = norm.add('%s:rateUpload' % t['id'], t['rateUpload'], 50)
@@ -2159,13 +2155,7 @@ class Interface(object):
             target_ratio = self.get_target_ratio()
             bytes_left   = (max(t['downloadedEver'],t['sizeWhenDone']) * target_ratio) - t['uploadedEver']
             time_left    = bytes_left / norm_upload_rate
-            info[-1][-1] += ';  '
-            if time_left < 86400:   # 1 day
-                info[-1].append('approaching %.2f at %s' % \
-                                    (target_ratio, timestamp(time.time() + time_left, "%R")))
-            else:
-                info[-1].append('approaching %.2f on %s' % \
-                                    (target_ratio, timestamp(time.time() + time_left, "%x")))
+            info.append(' Approaching %.2f ... %s' % (target_ratio, timestamp(time.time() + time_left, "%x %X")))
 
         info.append(['Seed limit: '])
         if t['seedRatioMode'] == 0:
