@@ -2542,9 +2542,9 @@ class Interface(object):
             ypos += 5
 
     def wrap_and_draw_result(self, top, ypos, xpos, result):
-        result = wrap(result, 30)
+
         i = 0
-        for i, line in enumerate(result):
+        for i, line in enumerate(wrap(str(result), 30)):
             if ypos+i > top and ypos+i < self.height - 2:
                 self.pad.addstr(ypos+i, xpos, line, curses.A_UNDERLINE)
         return i
