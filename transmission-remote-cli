@@ -1322,7 +1322,7 @@ class Interface(object):
                        ('private','P_rivate'), ('isolated', '_Isolated'),
                        ('invert','In_vert'), ('','_All')]
             choice = self.dialog_menu(('Show only','Filter all')[self.filter_inverse], options,
-                                      map(lambda x: x[0]==self.filter_list, options).index(True)+1)
+                                      list(map(lambda x: x[0]==self.filter_list, options)).index(True)+1)
             if choice != -128:
                 if choice == 'invert':
                     self.filter_inverse = not self.filter_inverse
