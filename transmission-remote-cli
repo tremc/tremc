@@ -15,7 +15,7 @@
 # GNU General Public License for more details:                         #
 # http://www.gnu.org/licenses/gpl-3.0.txt                              #
 ########################################################################
-from __future__ import print_function
+
 
 VERSION = '1.7.1'
 
@@ -51,22 +51,22 @@ import operator
 from distutils.spawn import find_executable
 
 try:
-    import httplib
+    import http.client
 except ImportError:
     import http.client
 
 try:
-    import urllib2
+    import urllib.request, urllib.error, urllib.parse
 except ImportError:
     import urllib.request as urllib2
 
 try:
-    import ConfigParser
+    import configparser
 except ImportError:
     import configparser as ConfigParser
 
 try:
-    import urlparse
+    import urllib.parse
 except ImportError:
     import urllib.parse as urlparse
 
@@ -113,7 +113,7 @@ if features['geoip']:
 
 
 # define config defaults
-config = ConfigParser.SafeConfigParser()
+config = configparser.SafeConfigParser()
 config.add_section('Connection')
 config.set('Connection', 'password', '')
 config.set('Connection', 'username', '')
@@ -160,7 +160,7 @@ class ColorManager(object):
         curses.start_color()
         if self.term_has_colors:
             curses.use_default_colors()
-        for name in config.keys():
+        for name in list(config.keys()):
             self.config[name] = self._parse_color_pair(config[name])
             if self.term_has_colors:
                 curses.init_pair(self.config[name]['id'],
@@ -173,7 +173,7 @@ class ColorManager(object):
         # has something to do with how highlighting focus works.)
         bg_name = pair.split(',')[1].split(':')[1].upper()
         fg_name = pair.split(',')[0].split(':')[1].upper()
-        color_pair = {'id': len(self.config.keys()) + 1}
+        color_pair = {'id': len(list(self.config.keys())) + 1}
         try:
             color_pair['bg'] = eval('curses.COLOR_' + bg_name)
         except AttributeError:
@@ -193,7 +193,7 @@ class Normalizer(object):
         self.values = {}
 
     def add(self, id, value, max):
-        if id not in self.values.keys():
+        if id not in list(self.values.keys()):
             self.values[id] = [float(value)]
         else:
             if len(self.values[id]) >= max:
@@ -202,7 +202,7 @@ class Normalizer(object):
         return self.get(id)
 
     def get(self, id):
-        if id not in self.values.keys():
+        if id not in list(self.values.keys()):
             return 0.0
         return sum(self.values[id]) / len(self.values[id])
 
@@ -224,7 +224,7 @@ class TransmissionRequest(object):
         request_data = {'method': method, 'tag': tag}
         if arguments:
             request_data['arguments'] = arguments
-        self.http_request = urllib2.Request(url=self.url, data=json.dumps(request_data))
+        self.http_request = urllib.request.Request(url=self.url, data=json.dumps(request_data))
 
     def send_request(self):
         """Ask for information from server OR submit command."""
@@ -233,13 +233,13 @@ class TransmissionRequest(object):
         try:
             if session_id:
                 self.http_request.add_header('X-Transmission-Session-Id', session_id)
-            self.open_request = urllib2.urlopen(self.http_request)
+            self.open_request = urllib.request.urlopen(self.http_request)
         except AttributeError:
             # request data (http_request) isn't specified yet -- data will be available on next call
             pass
 
         # authentication
-        except urllib2.HTTPError as e:
+        except urllib.error.HTTPError as e:
             try:
                 msg = html2text(str(e.read()))
             except:
@@ -253,7 +253,7 @@ class TransmissionRequest(object):
             except AttributeError:
                 quit(str(msg) + "\n", CONNECTION_ERROR)
 
-        except urllib2.URLError as msg:
+        except urllib.error.URLError as msg:
             try:
                 reason = msg.reason[1]
             except IndexError:
@@ -272,7 +272,7 @@ class TransmissionRequest(object):
                 break
             response += chunk
         try:
-            data = json.loads(unicode(response))
+            data = json.loads(str(response))
         except ValueError:
             quit("Cannot parse response: %s\n" % response, JSON_ERROR)
         self.open_request = None
@@ -318,11 +318,11 @@ class Transmission(object):
         self.path = path
 
         if username and password:
-            password_mgr = urllib2.HTTPPasswordMgrWithDefaultRealm()
+            password_mgr = urllib.request.HTTPPasswordMgrWithDefaultRealm()
             password_mgr.add_password(None, create_url(host, port, path), username, password)
-            authhandler = urllib2.HTTPBasicAuthHandler(password_mgr)
-            opener = urllib2.build_opener(authhandler)
-            urllib2.install_opener(opener)
+            authhandler = urllib.request.HTTPBasicAuthHandler(password_mgr)
+            opener = urllib.request.build_opener(authhandler)
+            urllib.request.install_opener(opener)
 
         # check rpc version
         request = TransmissionRequest(host, port, path, 'session-get', self.TAG_SESSION_GET)
@@ -396,7 +396,7 @@ class Transmission(object):
 
         tag_waiting_for_occurred = False
 
-        for request in self.requests.values():
+        for request in list(self.requests.values()):
             if time.time() - request.last_update >= delay:
                 request.last_update = time.time()
                 response = request.get_response()
@@ -419,7 +419,7 @@ class Transmission(object):
             if torrent['trackerStats']:
                 trackers = sorted(torrent['trackerStats'],
                                   key=operator.itemgetter('tier', 'id'))
-                return urlparse.urlparse(trackers[0]['announce']).hostname
+                return urllib.parse.urlparse(trackers[0]['announce']).hostname
             else:
                 # Trackerless torrents
                 return None
@@ -434,8 +434,8 @@ class Transmission(object):
                 if t['downloadDir'][-1] != '/':
                     t['downloadDir'] += '/'
                 try:
-                    t['seeders'] = max(map(lambda x: x['seederCount'],  t['trackerStats']))
-                    t['leechers'] = max(map(lambda x: x['leecherCount'], t['trackerStats']))
+                    t['seeders'] = max([x['seederCount'] for x in t['trackerStats']])
+                    t['leechers'] = max([x['leecherCount'] for x in t['trackerStats']])
                 except ValueError:
                     t['seeders'] = t['leechers'] = -1
                 t['isIsolated'] = not self.can_has_peers(t)
@@ -664,7 +664,7 @@ class Transmission(object):
         args = {}
         try:
             with  open(location, 'rb') as fp:
-                args['metainfo'] = unicode(base64.b64encode(fp.read()))
+                args['metainfo'] = str(base64.b64encode(fp.read()))
         # If the file doesnt exist or we cant open it, then it is either a url or needs to
         # be open by the server
         except IOError:
@@ -1068,22 +1068,22 @@ class Interface(object):
             self.rateUpload_width   = self.get_rateUpload_width(self.visible_torrents)
             self.torrent_title_width = self.width - self.rateUpload_width - 2
             # show downloading column only if any downloading torrents are visible
-            if filter(lambda x: x['status'] == Transmission.STATUS_DOWNLOAD, self.visible_torrents):
+            if [x for x in self.visible_torrents if x['status'] == Transmission.STATUS_DOWNLOAD]:
                 self.torrent_title_width -= self.rateDownload_width + 2
         else:
             self.visible_torrents = []
             self.torrent_title_width = 80
 
     def get_rateDownload_width(self, torrents):
-        new_width = max(map(lambda x: len(scale_bytes(x['rateDownload'])), torrents))
-        new_width = max(max(map(lambda x: len(scale_time(x['eta'])), torrents)), new_width)
+        new_width = max([len(scale_bytes(x['rateDownload'])) for x in torrents])
+        new_width = max(max([len(scale_time(x['eta'])) for x in torrents]), new_width)
         new_width = max(len(scale_bytes(self.stats['downloadSpeed'])), new_width)
         new_width = max(self.rateDownload_width, new_width) # don't shrink
         return new_width
 
     def get_rateUpload_width(self, torrents):
-        new_width = max(map(lambda x: len(scale_bytes(x['rateUpload'])), torrents))
-        new_width = max(max(map(lambda x: len(num2str(x['uploadRatio'], '%.02f')), torrents)), new_width)
+        new_width = max([len(scale_bytes(x['rateUpload'])) for x in torrents])
+        new_width = max(max([len(num2str(x['uploadRatio'], '%.02f')) for x in torrents]), new_width)
         new_width = max(len(scale_bytes(self.stats['uploadSpeed'])), new_width)
         new_width = max(self.rateUpload_width, new_width) # don't shrink
         return new_width
@@ -1113,7 +1113,7 @@ class Interface(object):
             self.screen.move(0, 0)  # in case cursor can't be invisible
             self.handle_user_input()
             if self.exit_now:
-                sort_str = ','.join(map(lambda x: ('', 'reverse:')[x['reverse']] + x['name'], self.sort_orders))
+                sort_str = ','.join([('', 'reverse:')[x['reverse']] + x['name'] for x in self.sort_orders])
                 config.set('Sorting', 'order',   sort_str)
                 config.set('Filtering', 'filter', self.filter_list)
                 config.set('Filtering', 'invert', str(self.filter_inverse))
@@ -1319,7 +1319,7 @@ class Interface(object):
                                                           t_ratio=total_ratio,
                                                           t_duration=scale_time(total_time, 'long'))
 
-        width = max(map(lambda x: len(x), message.split("\n"))) + 4
+        width = max([len(x) for x in message.split("\n")]) + 4
         width = min(self.width, width)
         height = min(self.height, message.count("\n")+3)
         win = self.window(height, width, message=message, title=title)
@@ -1565,9 +1565,9 @@ class Interface(object):
                 global vmode_id
                 if vmode_id > -1:
                     if vmode_id < self.focus_detaillist:
-                        self.selected_files = range(vmode_id, self.focus_detaillist + 1)
+                        self.selected_files = list(range(vmode_id, self.focus_detaillist + 1))
                     else:
-                        self.selected_files = range(self.focus_detaillist, vmode_id + 1)
+                        self.selected_files = list(range(self.focus_detaillist, vmode_id + 1))
             list_len = 0
 
             # peer list movement
@@ -1699,7 +1699,7 @@ class Interface(object):
                 if self.selected_files:
                     self.selected_files = []
                 else:
-                    self.selected_files = range(0, len(self.torrent_details['files']))
+                    self.selected_files = list(range(0, len(self.torrent_details['files'])))
             elif c == ord('V'):
                 global vmode_id
                 if self.selected_files:
@@ -2046,11 +2046,11 @@ class Interface(object):
             peers += "%5s leech%s" % (num2str(torrent['leechers']), ('es', '  ')[torrent['leechers']==1])
 
             # show additional information if enough room
-            if self.torrent_title_width - sum(map(lambda x: len(x), parts)) - len(peers) > 18:
+            if self.torrent_title_width - sum([len(x) for x in parts]) - len(peers) > 18:
                 uploaded = scale_bytes(torrent['uploadedEver'])
                 parts.append("%7s uploaded" % ('nothing', uploaded)[uploaded != '0B'])
 
-            if self.torrent_title_width - sum(map(lambda x: len(x), parts)) - len(peers) > 22:
+            if self.torrent_title_width - sum([len(x) for x in parts]) - len(peers) > 22:
                 parts.append("%4s peer%s connected" % (torrent['peersConnected'],
                                                        ('s', ' ')[torrent['peersConnected'] == 1]))
 
@@ -2059,7 +2059,7 @@ class Interface(object):
         else:
             tags = 0
 
-        remaining_space = self.torrent_title_width - sum(map(lambda x: len(x), parts), len(peers)) - 2
+        remaining_space = self.torrent_title_width - sum([len(x) for x in parts], len(peers)) - 2
         delimiter = ' ' * int(remaining_space / (len(parts)))
 
         line = server.get_bandwidth_priority(torrent) + ' ' + delimiter.join(parts)
@@ -2081,7 +2081,7 @@ class Interface(object):
 
         # divider + menu
         menu_items = ['_Overview', "_Files", 'P_eers', '_Trackers', 'Pie_ces' ]
-        xpos = int((self.width - sum(map(lambda x: len(x), menu_items))-len(menu_items)) / 2)
+        xpos = int((self.width - sum([len(x) for x in menu_items])-len(menu_items)) / 2)
         for item in menu_items:
             self.pad.move(3, xpos)
             tags = curses.A_BOLD
@@ -2128,7 +2128,7 @@ class Interface(object):
 
         info.append(['Files: ', "%d;  " % len(t['files'])])
         complete     = map(lambda x: x['bytesCompleted'] == x['length'], t['files']).count(True)
-        not_complete = filter(lambda x: x['bytesCompleted'] != x['length'], t['files'])
+        not_complete = [x for x in t['files'] if x['bytesCompleted'] != x['length']]
         partial      = map(lambda x: x['bytesCompleted'] > 0, not_complete).count(True)
         if complete == len(t['files']):
             info[-1].append("all complete")
@@ -2578,7 +2578,7 @@ class Interface(object):
         block = ord(pieces[start >> 3]) << (start & 7)
 
         format = "%%%dd" % (margin - 2)
-        for counter in xrange(start, end):
+        for counter in range(start, end):
             if counter % map_width == 0:
                 ypos += 1
                 xpos = margin
@@ -2600,7 +2600,7 @@ class Interface(object):
             self.pad.addstr(self.height-3, xpos, line, curses.A_REVERSE)
 
     def draw_details_list(self, ypos, info):
-        key_width = max(map(lambda x: len(x[0]), info))
+        key_width = max([len(x[0]) for x in info])
         for i in info:
             self.pad.addstr(ypos, 1, self.enc(i[0].rjust(key_width))) # key
             # value part may be wrapped if it gets too long
@@ -2695,8 +2695,8 @@ class Interface(object):
                                    curses.A_REVERSE)
             self.screen.addstr("%d (" % len(self.torrents), curses.A_REVERSE)
 
-            downloading = len(filter(lambda x: x['status']==Transmission.STATUS_DOWNLOAD, self.torrents))
-            seeding = len(filter(lambda x: x['status']==Transmission.STATUS_SEED, self.torrents))
+            downloading = len([x for x in self.torrents if x['status']==Transmission.STATUS_DOWNLOAD])
+            seeding = len([x for x in self.torrents if x['status']==Transmission.STATUS_SEED])
             paused = self.stats['pausedTorrentCount']
 
             self.screen.addstr("Downloading:", curses.A_REVERSE)
@@ -2791,7 +2791,7 @@ class Interface(object):
             elif self.details_category_focus == 3:
                 help = [('a','Add Tracker'),('r','Remove Tracker')] + help
 
-        line = '  '.join(map(lambda x: "%s:%s" % (x[0], x[1]), help))
+        line = '  '.join(["%s:%s" % (x[0], x[1]) for x in help])
         line = line[0:self.width]
         self.screen.insstr(0, self.width-len(line), line, curses.A_REVERSE)
 
@@ -2872,7 +2872,7 @@ class Interface(object):
                 else:
                     message += "q/Backspace/Esc  Back to torrent list"
 
-        width  = max(map(lambda x: len(x), message.split("\n"))) + 4
+        width  = max([len(x) for x in message.split("\n")]) + 4
         width  = min(self.width, width)
         height = min(self.height, message.count("\n")+3)
         win = self.window(height, width, message=message, title=title)
@@ -2923,7 +2923,7 @@ class Interface(object):
 
     def dialog_ok(self, message):
         height = 3 + message.count("\n")
-        width  = max(max(map(lambda x: len_columns(x), message.split("\n"))), 40) + 4
+        width  = max(max([len_columns(x) for x in message.split("\n")]), 40) + 4
         win = self.window(height, width, message=message)
         while True:
             if win.getch() >= 0:
@@ -2989,8 +2989,8 @@ class Interface(object):
         win = self.window(height, width, message=message)
         win.keypad(True)
         show_cursor()
-        if not isinstance(input, unicode):
-            input = unicode(input, ENCODING)
+        if not isinstance(input, str):
+            input = str(input, ENCODING)
         index = len(input)
         while True:
             # Cut the text into pages, each as long as the text field
@@ -3037,7 +3037,7 @@ class Interface(object):
                     hide_cursor()
                     return input
             elif c >= 32 and c < 127:
-                input = input[:index] + unicode(chr(c), ENCODING) + (index < len(input) and input[index:] or '')
+                input = input[:index] + str(chr(c), ENCODING) + (index < len(input) and input[index:] or '')
                 index += 1
                 if on_change: on_change(input)
             elif c == ord('\t') and tab_complete:
@@ -3045,7 +3045,7 @@ class Interface(object):
                 if tab_complete in ('files', 'dirs'):
                     (dirname, filename) = os.path.split(tilde2homedir(input))
                     if not dirname:
-                        dirname = unicode(os.getcwd())
+                        dirname = str(os.getcwd())
                     try:
                         possible_choices = [ os.path.join(dirname, choice) for choice in os.listdir(dirname)
                                              if choice.startswith(filename) ]
@@ -3083,7 +3083,7 @@ class Interface(object):
         if not allow_zero:
             allow_negative_one = False
 
-        width  = max(max(map(lambda x: len(x), message.split("\n"))), 40) + 4
+        width  = max(max([len(x) for x in message.split("\n")]), 40) + 4
         width  = min(self.width, width)
         height = message.count("\n") + (4,6)[cursorkeys]
 
@@ -3161,7 +3161,7 @@ class Interface(object):
 
     def dialog_menu(self, title, options, focus=1):
         height = len(options) + 2
-        width  = max(max(map(lambda x: len(x[1])+3, options)), len(title)+3)
+        width  = max(max([len(x[1])+3 for x in options]), len(title)+3)
         win = self.window(height, width)
 
         win.addstr(0,1, title)
@@ -3537,7 +3537,7 @@ def ljust_columns(text, max_width, padchar=' '):
 def len_columns(text):
     """ Returns the amount of columns that <text> would occupy. """
     if isinstance(text, str):
-        text = unicode(text, ENCODING)
+        text = str(text, ENCODING)
     columns = 0
     for character in text:
         columns += 2 if unicodedata.east_asian_width(character) in ('W', 'F') else 1
@@ -3559,7 +3559,7 @@ def num2str(num, format='%s'):
 def debug(data):
     if cmd_args.DEBUG:
         file = open("debug.log", 'a')
-        if isinstance(data, str) or isinstance(data, unicode):
+        if isinstance(data, str) or isinstance(data, str):
             file.write(data.encode('UTF-8', 'replace'))
         else:
             import pprint
