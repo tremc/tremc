@@ -1264,7 +1264,7 @@ class Interface(object):
     def show_sort_order_menu(self, c):
         if self.selected_torrent == -1:
             choice = self.dialog_menu('Sort order', self.sort_options,
-                    map(lambda x: x[0]==self.sort_orders[-1]['name'], self.sort_options).index(True)+1)
+                    list(map(lambda x: x[0]==self.sort_orders[-1]['name'], self.sort_options)).index(True)+1)
             if choice != -128:
                 if choice == 'reverse':
                     self.sort_orders[-1]['reverse'] = not self.sort_orders[-1]['reverse']
