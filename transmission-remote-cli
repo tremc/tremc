@@ -2562,7 +2562,7 @@ class Interface(object):
         end = min(start + (self.height - ypos - 3) * map_width, piece_count)
         if end <= start:
             return
-        block = ord(pieces[start >> 3]) << (start & 7)
+        block = (pieces[start >> 3]) << (start & 7)
 
         format = "%%%dd" % (margin - 2)
         for counter in range(start, end):
@@ -2574,7 +2574,7 @@ class Interface(object):
                 xpos += 1
 
             if counter & 7 == 0:
-                block = ord(pieces[counter >> 3])
+                block = (pieces[counter >> 3])
             piece = block & 0x80
             if piece: self.pad.addch(ypos, xpos, ' ', curses.A_REVERSE)
             else:     self.pad.addch(ypos, xpos, '_')
@@ -2584,7 +2584,7 @@ class Interface(object):
         if missing_pieces:
             line = "%d further piece%s" % (missing_pieces, ('','s')[missing_pieces>1])
             xpos = (self.width - len(line)) / 2
-            self.pad.addstr(self.height-3, xpos, line, curses.A_REVERSE)
+            self.pad.addstr(int(self.height-3), int(xpos), line, curses.A_REVERSE)
 
     def draw_details_list(self, ypos, info):
         key_width = max([len(x[0]) for x in info])
