@@ -2310,10 +2310,11 @@ class Interface(object):
         if self.filelist_needs_refresh:
             self.filelist_needs_refresh = False
             self.file_index_map = {}
-            self.sorted_files = sorted(self.torrent_details['files'], cmp=lambda x,y: cmp(x['name'], y['name']))
+            self.sorted_files = sorted(self.torrent_details['files'], key=lambda x: x['name'])
             for index, file in enumerate(self.sorted_files):
                 self.file_index_map[index] = self.torrent_details['files'].index(file)
-        files = sorted(self.torrent_details['files'], cmp=lambda x,y: cmp(x['name'], y['name']))
+
+        files = sorted(self.torrent_details['files'], key=lambda x: x['name'])
 
         filelist = []
         current_folder = []
