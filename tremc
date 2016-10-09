@@ -3255,7 +3255,7 @@ class Interface(object):
                     server.set_option('seedRatioLimited', False)
             elif c == ord('c'):
                 choice = self.dialog_menu('Encryption', enc_options,
-                                          map(lambda x: x[0]==self.stats['encryption'], enc_options).index(True)+1)
+                         list(map(lambda x: x[0]==self.stats['encryption'], enc_options)).index(True)+1)
                 if choice != -128:
                     server.set_option('encryption', choice)
             elif c == ord('u'):
