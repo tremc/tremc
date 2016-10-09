@@ -1,0 +1,13 @@
+fix help
+    It's ugly
+
+fix search
+    Enable searching a torrents contents
+
+fix segfault
+    Sometimes occurs when entering the chunks screen
+    Sometimes occurs when exiting the chunks screen
+
+fix crash
+    Global options: hit 'c' key
+
