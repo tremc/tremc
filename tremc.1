@@ -1,20 +1,18 @@
-.\"Created with GNOME Manpages Editor Wizard
-.\"http://sourceforge.net/projects/gmanedit2
-.TH transmission-remote-cli 1 "April 22, 2012" "" "transmission-remote-cli"
+.TH tremc 1 "08 October 2016" "" "tremc"
 
 .SH NAME
-transmission-remote-cli \- a console client for the Transmission BitTorrent
+tremc \- a console client for the Transmission BitTorrent
 client
 
 .SH SYNOPSIS
-.B transmission-remote-cli
+.B tremc
 .RI [ options ]
 .RI [ filename-or-URL ]
 .br
 
 .SH DESCRIPTION
-.B transmission-remote-cli
-is a curses interface for the daemon of the BitTorrent client Transmission.
+.B tremc
+is a curses interface for the Transmission BitTorrent daemon.
 
 .SH OPTIONS
 .B
@@ -40,12 +38,11 @@ Default: don't use SSL
 Create configuration file with default values.
 .br
 \fINOTE:\fR A config file won't be created unless you provide this option at
-least once. After that, it is rewritten whenever transmission-remote-cli
-exits.
+least once. After that, it is rewritten whenever tremc exits.
 .IP "-f \fICONFIGFILE\fB --config=\fICONFIGFILE\fR"
 Set path to configuration file.
 .br
-Default: ~/.config/transmission-remote-cli/settings.cfg
+Default: ~/.config/tremc/settings.cfg
 .B
 .IP "-n --netrc"
 Get authentication info from ~/.netrc.
@@ -56,8 +53,11 @@ Use the known server connection to pass \fIOPTIONS\fR on to
 .B
 
 .SH FILES
-transmission-remote-cli overwrites the configuration file on exit. Keep that
-in mind if you edit it manually.
+.IP ~/.config/tremc/settings.cfg
+.br
+tremc overwrites the configuration file on exit.
+.br
+Keep that in mind if you edit it manually.
 
 .SH SEE ALSO
 .BR transmission-create (1),
