@@ -1,4 +1,6 @@
 #!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+
 ########################################################################
 # This program is free software: you can redistribute it and/or modify #
 # it under the terms of the GNU General Public License as published by #
@@ -254,7 +256,7 @@ class TransmissionRequest(object):
             response += chunk
 
         try:
-            data = json.loads(str(response, ENCODING))
+            data = json.loads(response.decode("utf-8"))
         except ValueError:
             quit("Cannot parse response: %s\n" % response, JSON_ERROR)
         self.open_request = None
@@ -1011,9 +1013,6 @@ class Interface(object):
     def restore_screen(self):
         curses.endwin()
 
-    def enc(self, text):
-        return text.encode(ENCODING, 'replace')
-
     def get_screen_size(self):
         time.sleep(0.1) # prevents curses.error on rapid resizing
         while True:
@@ -1074,7 +1073,7 @@ class Interface(object):
         self.lines_per_entry = 3 if self.blank_lines else 2
         self.tlist_item_height = self.lines_per_entry if not self.compact_list else 1
         self.mainview_height = self.height - 2
-        self.torrents_per_page = self.mainview_height / self.tlist_item_height
+        self.torrents_per_page = self.mainview_height // self.tlist_item_height
 
     def run(self):
         self.draw_title_bar()
@@ -1565,7 +1564,7 @@ class Interface(object):
                 piece_count = self.torrent_details['pieceCount']
                 margin = len(str(piece_count)) + 2
                 map_width = int(str(self.width-margin-1)[0:-1] + '0')
-                list_len = int(piece_count / map_width) + 1
+                list_len = (piece_count // map_width) + 1
 
             if list_len:
                 if c == curses.KEY_UP or c == ord('k') or c == curses.ascii.ctrl(ord('p')):
@@ -2000,10 +1999,10 @@ class Interface(object):
                 else:
                     bar_complete += bar_incomplete[0]
                     bar_incomplete = bar_incomplete[1:]
-            self.pad.addstr(ypos, 0, self.enc(bar_complete), tag_done)
-            self.pad.addstr(ypos, len_columns(bar_complete), self.enc(bar_incomplete), tag)
+            self.pad.addstr(ypos, 0, bar_complete, tag_done)
+            self.pad.addstr(ypos, len_columns(bar_complete), bar_incomplete, tag)
         else:
-            self.pad.addstr(ypos, 0, self.enc(title), tag_done)
+            self.pad.addstr(ypos, 0, title, tag_done)
 
     def draw_torrentlist_status(self, torrent, focused, ypos):
         peers = ''
@@ -2015,7 +2014,7 @@ class Interface(object):
             else:
                 tracker_errors = [tracker['lastAnnounceResult'] or tracker['lastScrapeResult']
                                   for tracker in torrent['trackerStats']]
-                parts[0] = self.enc([te for te in tracker_errors if te][0])
+                parts[0] = [te for te in tracker_errors if te][0]
         else:
             if torrent['status'] == Transmission.STATUS_CHECK:
                 parts[0] += " (%.2f%%)" % float(torrent['recheckProgress']) * 100
@@ -2240,12 +2239,12 @@ class Interface(object):
                 for i, line in enumerate(comment):
                     if(ypos+i > self.height-1):
                         break
-                    self.pad.addstr(ypos+i, 50, self.enc(line))
+                    self.pad.addstr(ypos+i, 50, line)
             else:
                 width = self.width - 2
                 comment = wrap_multiline(t['comment'], width, initial_indent='Comment: ')
                 for i, line in enumerate(comment):
-                    self.pad.addstr(ypos+6+i, 2, self.enc(line))
+                    self.pad.addstr(ypos+6+i, 2, line)
 
     def draw_filelist(self, ypos):
         column_names = '  #  Progress  Size  Priority  Filename'
@@ -2272,21 +2271,21 @@ class Interface(object):
             xpos = 0
             for part in re.split('(high|normal|low|off)', line[0:30], 1):
                 if part == 'high':
-                    self.pad.addstr(ypos, xpos, self.enc(part),
+                    self.pad.addstr(ypos, xpos, part,
                                     curses_tags + curses.color_pair(self.colors.id('file_prio_high')))
                 elif part == 'normal':
-                    self.pad.addstr(ypos, xpos, self.enc(part),
+                    self.pad.addstr(ypos, xpos, part,
                                     curses_tags + curses.color_pair(self.colors.id('file_prio_normal')))
                 elif part == 'low':
-                    self.pad.addstr(ypos, xpos, self.enc(part),
+                    self.pad.addstr(ypos, xpos, part,
                                     curses_tags + curses.color_pair(self.colors.id('file_prio_low')))
                 elif part == 'off':
-                    self.pad.addstr(ypos, xpos, self.enc(part),
+                    self.pad.addstr(ypos, xpos, part,
                                     curses_tags + curses.color_pair(self.colors.id('file_prio_off')))
                 else:
-                    self.pad.addstr(ypos, xpos, self.enc(part), curses_tags)
+                    self.pad.addstr(ypos, xpos, part, curses_tags)
                 xpos += len(part)
-            self.pad.addstr(ypos, xpos, self.enc(line[30:]), curses_tags)
+            self.pad.addstr(ypos, xpos, line[30:], curses_tags)
             ypos += 1
             if ypos > self.height:
                 break
@@ -2451,14 +2450,14 @@ class Interface(object):
                 else:
                     self.pad.addstr("             ")
             # Client
-            self.pad.addstr(self.enc(peer['clientName'].ljust(clientname_width + 1)))
+            self.pad.addstr(peer['clientName'].ljust(clientname_width + 1))
             # Address:Port
             self.pad.addstr(peer['address'].rjust(address_width) + \
                                 ':' + str(peer['port']).ljust(port_width) + ' ')
             # Country
             if features['geoip']: self.pad.addstr("  %2s   " % geo_ips[peer['address']])
             # Host
-            if features['dns']: self.pad.addstr(self.enc(host_name), curses.A_DIM)
+            if features['dns']: self.pad.addstr(host_name, curses.A_DIM)
             ypos += 1
 
     def draw_trackerlist(self, ypos):
@@ -2564,14 +2563,14 @@ class Interface(object):
     def draw_details_list(self, ypos, info):
         key_width = max([len(x[0]) for x in info])
         for i in info:
-            self.pad.addstr(ypos, 1, self.enc(i[0].rjust(key_width))) # key
+            self.pad.addstr(ypos, 1, i[0].rjust(key_width)) # key
             # value part may be wrapped if it gets too long
             for v in i[1:]:
                 y, x = self.pad.getyx()
                 if x + len(v) >= self.width:
                     ypos += 1
                     self.pad.move(ypos, key_width+1)
-                self.pad.addstr(self.enc(v))
+                self.pad.addstr(v)
             ypos += 1
         return ypos
 
@@ -2730,7 +2729,7 @@ class Interface(object):
         status = "Transmission %s @ %s:%s" % (server.version, server.host, server.port)
         if cmd_args.DEBUG:
             status = "%d x %d " % (self.width, self.height) + status
-        self.screen.addstr(0, 0, self.enc(status), curses.A_REVERSE)
+        self.screen.addstr(0, 0, status, curses.A_REVERSE)
 
     def draw_quick_help(self):
         help = [('?','Help')]
@@ -2868,7 +2867,7 @@ class Interface(object):
                 line = ljust_columns(line, width-7) + '...'
 
             if ypos < height - 1:  # ypos == height-1 is frame border
-                win.addstr(ypos, 2, self.enc(line))
+                win.addstr(ypos, 2, line)
                 ypos += 1
             else:
                 # Do not write outside of frame border
@@ -2963,7 +2962,7 @@ class Interface(object):
 
             color = (curses.color_pair(self.colors.id('dialog_important')) if self.highlight_dialog
                      else curses.color_pair(self.colors.id('dialog')))
-            win.addstr(height - 2, 2, self.enc(displaytext.ljust(textwidth)), color)
+            win.addstr(height - 2, 2, displaytext.ljust(textwidth), color)
             win.move(height - 2, displayindex + 2)
             c = win.getch()
             if c == 27 or c == curses.KEY_BREAK:
