@@ -2233,18 +2233,10 @@ class Interface(object):
             self.pad.addstr(ypos+4, 1, ' Finished: ' + timestamp(t['doneDate']))
 
         if t['comment']:
-            if self.width >= 90:
-                width = self.width - 50
-                comment = wrap_multiline(t['comment'], width, initial_indent='Comment: ')
-                for i, line in enumerate(comment):
-                    if(ypos+i > self.height-1):
-                        break
-                    self.pad.addstr(ypos+i, 50, line)
-            else:
-                width = self.width - 2
-                comment = wrap_multiline(t['comment'], width, initial_indent='Comment: ')
-                for i, line in enumerate(comment):
-                    self.pad.addstr(ypos+6+i, 2, line)
+            width = self.width - 2
+            comment = wrap_multiline(t['comment'], width, initial_indent='Comment: ')
+            for i, line in enumerate(comment):
+                self.pad.addstr(ypos+6+i, 2, line)
 
     def draw_filelist(self, ypos):
         column_names = '  #  Progress  Size  Priority  Filename'
