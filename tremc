@@ -1434,7 +1434,7 @@ class Interface(object):
     def verify_torrent(self, c):
         if self.focus > -1:
             if self.torrents[self.focus]['status'] != Transmission.STATUS_CHECK \
-           and self.torrents[self.focus]['status'] != Transmission.STATUS_CHECK_WAIT:
+            and self.torrents[self.focus]['status'] != Transmission.STATUS_CHECK_WAIT:
                 server.verify_torrent(self.torrents[self.focus]['id'])
 
     def reannounce_torrent(self, c):
@@ -1965,7 +1965,7 @@ class Interface(object):
         if torrent['isIsolated']:
             color = curses.color_pair(self.colors.id('title_error'))
         elif torrent['status'] == Transmission.STATUS_SEED or \
-           torrent['status'] == Transmission.STATUS_SEED_WAIT:
+             torrent['status'] == Transmission.STATUS_SEED_WAIT:
             color = curses.color_pair(self.colors.id('title_seed'))
         elif torrent['status'] == Transmission.STATUS_STOPPED:
             color = curses.color_pair(self.colors.id('title_paused'))
@@ -2016,7 +2016,7 @@ class Interface(object):
                 parts[0] = [te for te in tracker_errors if te][0]
         else:
             if torrent['status'] == Transmission.STATUS_CHECK:
-                parts[0] += " (%.2f%%)" % float(torrent['recheckProgress']) * 100
+                parts[0] += " (%.2f%%)" % (torrent['recheckProgress'] * 100)
             elif torrent['status'] == Transmission.STATUS_DOWNLOAD:
                 parts[0] += " (%.2f%%)" % torrent['percentDone']
             parts[0] = parts[0].ljust(20)
