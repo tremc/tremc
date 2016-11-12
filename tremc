@@ -2486,7 +2486,7 @@ class Interface(object):
                 ypos += 1
 
             if selected:
-                for i in range(4):
+                for i in range(self.TRACKER_ITEM_HEIGHT):
                     addstr(ypos+i, 0, ' ', curses.A_BOLD + curses.A_REVERSE)
 
             addstr(ypos+1, 4, "Last announce: %s" % timestamp(t['lastAnnounceTime']))
