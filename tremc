@@ -1101,7 +1101,6 @@ class Interface(object):
                 config.set('Misc', 'compact_list', str(self.compact_list))
                 config.set('Misc', 'blank_lines', str(self.blank_lines))
                 config.set('Misc', 'torrentname_is_progressbar', str(self.torrentname_is_progressbar))
-                save_config(cmd_args.configfile)
                 return
 
     def go_back_or_unfocus(self, c):
