@@ -1094,13 +1094,6 @@ class Interface(object):
             self.screen.move(0, 0)  # in case cursor can't be invisible
             self.handle_user_input()
             if self.exit_now:
-                sort_str = ','.join([('', 'reverse:')[x['reverse']] + x['name'] for x in self.sort_orders])
-                config.set('Sorting', 'order',   sort_str)
-                config.set('Filtering', 'filter', self.filter_list)
-                config.set('Filtering', 'invert', str(self.filter_inverse))
-                config.set('Misc', 'compact_list', str(self.compact_list))
-                config.set('Misc', 'blank_lines', str(self.blank_lines))
-                config.set('Misc', 'torrentname_is_progressbar', str(self.torrentname_is_progressbar))
                 return
 
     def go_back_or_unfocus(self, c):
@@ -3528,11 +3521,9 @@ def quit(msg='', exitcode=0):
     except curses.error:
         pass
 
-    # if this is a graceful exit and config file is present
-    if not msg and not exitcode:
-        save_config(cmd_args.configfile)
-    else:
+    if msg or exitcode:
         print(msg, file=sys.stderr)
+
     os._exit(exitcode)
 
 
