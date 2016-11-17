@@ -2195,9 +2195,22 @@ class Interface(object):
         if t['creator']:
             info.append(['Creator: ',"%s" % t['creator']])
 
+        info.append([''])
+        info.append(['Created: ',  "%s" % timestamp(t['dateCreated'])])
+        info.append(['Added: ',    "%s" % timestamp(t['addedDate'])])
+        info.append(['Started: ',  "%s" % timestamp(t['startDate'])])
+        info.append(['Activity: ', "%s" % timestamp(t['activityDate'])])
+
+        if t['percentDone'] < 100 and t['eta'] > 0:
+            info.append(['Finishing: ', "%s" % timestamp(time.time() + t['eta'])])
+        elif t['doneDate'] <= 0:
+            info.append(['Finishing: ', 'sometime'])
+        else:
+            info.append(['Finished: ', "%s" % timestamp(t['doneDate'])])
+
         ypos = self.draw_details_list(ypos, info)
 
-        self.draw_details_eventdates(ypos+1)
+        self.draw_comment(ypos+1)
         return ypos+1
 
     def get_target_ratio(self):
@@ -2216,26 +2229,14 @@ class Interface(object):
                 step_size = 1.0
             return int(round((t['uploadRatio'] + step_size/2) / step_size) * step_size)
 
-    def draw_details_eventdates(self, ypos):
+    def draw_comment(self, ypos):
         t = self.torrent_details
-
-        self.pad.addstr(ypos,   1, '  Created: ' + timestamp(t['dateCreated']))
-        self.pad.addstr(ypos+1, 1, '    Added: ' + timestamp(t['addedDate']))
-        self.pad.addstr(ypos+2, 1, '  Started: ' + timestamp(t['startDate']))
-        self.pad.addstr(ypos+3, 1, ' Activity: ' + timestamp(t['activityDate']))
-
-        if t['percentDone'] < 100 and t['eta'] > 0:
-            self.pad.addstr(ypos+4, 1, 'Finishing: ' + timestamp(time.time() + t['eta']))
-        elif t['doneDate'] <= 0:
-            self.pad.addstr(ypos+4, 1, 'Finishing: sometime')
-        else:
-            self.pad.addstr(ypos+4, 1, ' Finished: ' + timestamp(t['doneDate']))
 
         if t['comment']:
             width = self.width - 2
-            comment = wrap_multiline(t['comment'], width, initial_indent='Comment: ')
+            comment = wrap_multiline(t['comment'], width, initial_indent='   Comment: ')
             for i, line in enumerate(comment):
-                self.pad.addstr(ypos+6+i, 2, line)
+                self.pad.addstr(ypos+i, 2, line)
 
     def draw_filelist(self, ypos):
         column_names = '  #  Progress  Size  Priority  Filename'
