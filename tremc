@@ -237,11 +237,7 @@ class TransmissionRequest(object):
                 quit(str(msg) + "\n", CONNECTION_ERROR)
 
         except urllib.error.URLError as msg:
-            try:
-                reason = msg.reason[1]
-            except IndexError:
-                reason = str(msg.reason)
-            quit("Cannot connect to %s: %s\n" % (self.http_request.host, reason), CONNECTION_ERROR)
+            quit("Cannot connect to %s: %s" % (self.http_request.host, msg.reason), CONNECTION_ERROR)
 
     def get_response(self):
         """Get response to previously sent request."""
