@@ -4,7 +4,3 @@ fix help
 fix search
     Enable searching a torrents contents
 
-fix segfault
-    Sometimes occurs when entering the chunks screen
-    Sometimes occurs when exiting the chunks screen
-
