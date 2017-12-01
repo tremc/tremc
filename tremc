@@ -549,7 +549,10 @@ class Transmission(object):
         request = TransmissionRequest(self.host, self.port, self.path, 'free-space', 1, {'path': dir})
         request.send_request()
         response = request.get_response()
-        free = response['arguments']['size-bytes']
+        if 'size-bytes' in response['arguments']:
+            free = response['arguments']['size-bytes']
+        else:
+            free = 0
 
         return free # free space in bytes
 
