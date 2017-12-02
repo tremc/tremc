@@ -1946,11 +1946,11 @@ class Interface(object):
         else:
             percentDone = torrent['percentDone']
 
-        size = "%6s" % scale_bytes(torrent['sizeWhenDone'])
+        size = "%7s" % scale_bytes(torrent['sizeWhenDone'])
         if torrent['percentDone'] < 100:
             if torrent['seeders'] <= 0 and torrent['status'] != Transmission.STATUS_CHECK:
-                size = "%6s / " % scale_bytes(torrent['available']) + size
-            size = "%6s / " % scale_bytes(torrent['haveValid'] + torrent['haveUnchecked']) + size
+                size = "%7s / " % scale_bytes(torrent['available']) + size
+            size = "%7s / " % scale_bytes(torrent['haveValid'] + torrent['haveUnchecked']) + size
         size = '| ' + size
         title = ljust_columns(torrent['name'], width - len(size)) + size
 
@@ -2231,7 +2231,7 @@ class Interface(object):
                 self.pad.addstr(ypos+i, 2, line)
 
     def draw_filelist(self, ypos):
-        column_names = '  #  Progress  Size  Priority  Filename'
+        column_names = '   #  Progress    Size  Priority  Filename'
         self.pad.addstr(ypos, 0, column_names.ljust(self.width), curses.A_UNDERLINE)
         ypos += 1
 
@@ -2251,9 +2251,9 @@ class Interface(object):
                     debug('caught %s in draw_filelist(): %s\n' % (type(e), str(e)))
                     pass
 
-            # colored priority (only in the first 30 chars, the rest is filename)
+            # colored priority (only in the first 33 chars, the rest is filename)
             xpos = 0
-            for part in re.split('(high|normal|low|off)', line[0:30], 1):
+            for part in re.split('(high|normal|low|off)', line[0:33], 1):
                 if part == 'high':
                     self.pad.addstr(ypos, xpos, part,
                                     curses_tags + curses.color_pair(self.colors.id('file_prio_high')))
@@ -2269,7 +2269,7 @@ class Interface(object):
                 else:
                     self.pad.addstr(ypos, xpos, part, curses_tags)
                 xpos += len(part)
-            self.pad.addstr(ypos, xpos, line[30:], curses_tags)
+            self.pad.addstr(ypos, xpos, line[33:], curses_tags)
             ypos += 1
             if ypos > self.height:
                 break
@@ -2340,16 +2340,16 @@ class Interface(object):
         # Increase depth for each new directory that appears in f,
         # but not in current_directory
         while current_depth < f_len:
-            filelist.append('%s\\ %s' % ('  '*current_depth + ' '*31, f[current_depth]))
+            filelist.append('%s\\ %s' % ('  '*current_depth + ' '*34, f[current_depth]))
             current_depth += 1
             pos += 1
         return [current_depth, pos]
 
     def create_filelist_line(self, name, index, percent, length, current_depth):
-        line = "%s  %6.2f%%" % (str(index+1).rjust(3), percent) + \
-            '  '+scale_bytes(length).rjust(5) + \
+        line = "%s  %6.2f%%" % (str(index+1).rjust(4), percent) + \
+            '  '+scale_bytes(length).rjust(7) + \
             '  '+server.get_file_priority(self.torrent_details['id'], self.file_index_map[index]).center(8) + \
-            " %s| %s" % ('  '*current_depth, name[0:self.width-31-current_depth])
+            " %s| %s" % ('  '*current_depth, name[0:self.width-34-current_depth])
         if index == self.focus_detaillist:
             line = '_F' + line
         if index in self.selected_files:
@@ -2374,7 +2374,7 @@ class Interface(object):
             if len(str(peer['port'])) > port_width: port_width = len(str(peer['port']))
 
         # Column names
-        column_names = 'Flags %3d Down %3d Up Progress         ETA ' % \
+        column_names = 'Flags   %3d Down   %3d Up Progress           ETA ' % \
             (self.torrent_details['peersSendingToUs'], self.torrent_details['peersGettingFromUs'])
         column_names += 'Client'.ljust(clientname_width + 1) \
             + 'Address'.ljust(address_width+port_width+1)
@@ -2408,9 +2408,9 @@ class Interface(object):
             # Flags
             self.pad.addstr("%-6s   " % peer['flagStr'])
             # Down
-            self.pad.addstr("%5s  " % scale_bytes(peer['rateToClient']), download_tag)
+            self.pad.addstr("%7s  " % scale_bytes(peer['rateToClient']), download_tag)
             # Up
-            self.pad.addstr("%5s " % scale_bytes(peer['rateToPeer']), upload_tag)
+            self.pad.addstr("%7s " % scale_bytes(peer['rateToPeer']), upload_tag)
 
             # Progress
             if peer['progress'] < 1: self.pad.addstr("%7.2f%%" % (float(peer['progress'])*100))
@@ -2418,14 +2418,14 @@ class Interface(object):
 
             # ETA
             if peer['progress'] < 1 and peer['download_speed'] > 1024:
-                self.pad.addstr(" %6s %4s " % \
+                self.pad.addstr(" %8s %4s " % \
                                     ('~' + scale_bytes(peer['download_speed']),
                                      '~' + scale_time(peer['time_left'])))
             else:
                 if peer['progress'] < 1:
-                    self.pad.addstr("  <guessing> ")
+                    self.pad.addstr("   <guessing>  ")
                 else:
-                    self.pad.addstr("             ")
+                    self.pad.addstr("               ")
             # Client
             self.pad.addstr(peer['clientName'].ljust(clientname_width + 1))
             # Address:Port
@@ -3376,14 +3376,16 @@ def timestamp(timestamp, format="%x %X"):
 def scale_bytes(bytes, type='short'):
     if bytes >= 1099511627776:
         scaled_bytes = round((bytes / 1099511627776.0), 2)
+        if scaled_bytes >= 1000:
+            scaled_bytes = int(scaled_bytes)
         unit = 'T'
     elif bytes >= 1073741824:
         scaled_bytes = round((bytes / 1073741824.0), 2)
+        if scaled_bytes >= 1000:
+            scaled_bytes = int(scaled_bytes)
         unit = 'G'
     elif bytes >= 1048576:
         scaled_bytes = round((bytes / 1048576.0), 1)
-        if scaled_bytes >= 100:
-            scaled_bytes = int(scaled_bytes)
         unit = 'M'
     elif bytes >= 1024:
         scaled_bytes = int(bytes / 1024)
