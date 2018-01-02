@@ -1,6 +1,6 @@
-# bash completion for transmission-remote-cli(1)           -*- shell-script -*-
+# bash completion for tremc(1)           -*- shell-script -*-
 
-_transmission-remote-cli () {
+_tremc () {
   local cur prev opts
 
   _get_comp_words_by_ref cur prev
@@ -26,6 +26,6 @@ _transmission-remote-cli () {
   fi
 }
 
-complete -F _transmission-remote-cli transmission-remote-cli
+complete -F _tremc tremc
 
 # ex: ts=4 sw=4 et filetype=sh

@@ -1,4 +1,4 @@
-#compdef transmission-remote-cli
+#compdef tremc
 
 _arguments \
   {-v,--version}'[Show version number and exit]' \
