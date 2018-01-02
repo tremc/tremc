@@ -83,7 +83,7 @@ torrent files with tremc.
 
 ![Main window - compact](screenshots/tremc-maincompact.png)
 
-![Details window](screenshots/tremc-details.png-20171214-180242.png)
+![Details window](screenshots/tremc-details-20171214.png)
 
 
 ## Copyright
