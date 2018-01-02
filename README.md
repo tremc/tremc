@@ -1,9 +1,7 @@
 Die python2 die.
 
 This is the python3 fork of https://github.com/fagga/transmission-remote-cli
-
-Some extra modifications have been included and development will follow the
-original project as much as possible. No new features are planned.
+No new features are planned. If you want something - write the patch.
 
 ## About
 
@@ -20,9 +18,7 @@ Python 3.0 bitch.
 - [python-xerox](https://pypi.python.org/pypi/xerox): Copy magnet links to the system
   clipboard. You will also need either xclip on linux or pbcopy on OS X for this
   to work.
-
-### Lost Optional Modules
-- python-adns: Resolve IPs to host names. This needs to be ported to py3
+- python3-adns: Resolve IPs to host names. (untested)
 
 ## Usage
 
@@ -43,15 +39,13 @@ You can write this (and other) stuff into a configuration file:
 
 `$ tremc -c johndoe:secretbirthday@homeserver:1234 --create-config`
 
-No configuration file is created automatically, you have to do this
-somehow. However, if the file exists, it is re-written when trcli exits to
-remember some settings. This means you shouldn't have trcli running when
-editing your configuration file.
+No configuration file is created automatically. You must create it.
+`$ tremc --create-config
 
 If you don't like the default configuration file path
 ~/.config/tremc/settings.cfg, change it:
 
-`$ tremc -f ~/.trclirc --create-config`
+`$ tremc -f ~/.tremc --create-config`
 
 
 ### Calling transmission-remote
@@ -85,11 +79,11 @@ torrent files with tremc.
 
 ## Screenshots
 
-![Main window - full, v1.3](https://github.com/louipc/tremc/raw/master/screenshots/screenshot-mainfull-v1.3.png)
+![Main window - full](screenshots/tremc-mainfull.png)
 
-![Main window - compact, v1.3](https://github.com/louipc/tremc/raw/master/screenshots/screenshot-maincompact-v1.3.png)
+![Main window - compact](screenshots/tremc-maincompact.png)
 
-![Info window, v1.3](https://github.com/louipc/tremc/raw/master/screenshots/screenshot-details-v1.3.png)
+![Details window](screenshots/tremc-details.png-20171214-180242.png)
 
 
 ## Copyright
