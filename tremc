@@ -3651,6 +3651,12 @@ if __name__ == '__main__':
     # read config from config file
     config.read(cmd_args.configfile)
 
+    un_pw = os.environ.get("TR_AUTH")
+    if un_pw:
+        username = un_pw.split(":")[0]
+        password = ":".join(un_pw.split(":")[1:])
+        config.set('Connection', 'username', username)
+        config.set('Connection', 'password', password)
     # command line connection data can override config file
     if cmd_args.connection:
         host, port, path, username, password = explode_connection_string(cmd_args.connection)
@@ -3675,10 +3681,8 @@ if __name__ == '__main__':
 
         # transmission-remote requires --auth or --authenv before any other
         # parameters which require authentication. Otherwise, auth fails.
-        if os.environ.get("TR_AUTH"):
-            cmd.extend(['--authenv'])
-        elif (config.get('Connection', 'username') and
-              config.get('Connection', 'password')):
+        if (config.get('Connection', 'username') and
+            config.get('Connection', 'password')):
             os.environ["TR_AUTH"] = "{0}:{1}".format(
                 config.get('Connection', 'username'),
                 config.get('Connection', 'password'))
