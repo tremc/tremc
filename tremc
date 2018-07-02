@@ -646,7 +646,7 @@ class Transmission(object):
         args = {}
         try:
             with  open(location, 'rb') as fp:
-                args['metainfo'] = str(base64.b64encode(fp.read()))
+                args['metainfo'] = base64.b64encode(fp.read()).decode()
         # If the file doesnt exist or we cant open it, then it is either a url or needs to
         # be open by the server
         except IOError:
