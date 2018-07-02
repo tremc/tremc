@@ -94,4 +94,4 @@ Released under the GPLv3 license, see [COPYING](COPYING) for details.
 ## Contact
 
 Feel free to request new features or provide bug reports.
-https://github.com/louipc/tremc
+https://github.com/tremc/tremc
