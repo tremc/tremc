@@ -80,9 +80,9 @@ torrent files with tremc.
 
 ## Screenshots
 
-![Main window - full](screenshots/tremc-mainfull.png)
+![Main window - full](screenshots/screenshot-mainfull-v1.3.png)
 
-![Main window - compact](screenshots/tremc-maincompact.png)
+![Main window - compact](screenshots/screenshot-maincompact-v1.3.png)
 
 ![Details window](screenshots/tremc-details-20171214.png)
 
