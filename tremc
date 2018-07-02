@@ -883,7 +883,7 @@ class Interface(object):
         self.focus        = -1  # -1: nothing focused; 0: top of list; <# of torrents>-1: bottom of list
         self.scrollpos    = 0   # start of torrentlist
         self.torrents_per_page  = 0 # will be set by manage_layout()
-        self.rateDownload_width = self.rateUpload_width = 2
+        self.rateDownload_width = self.rateUpload_width = len(scale_bytes())
 
         self.details_category_focus = 0  # overview/files/peers/tracker in details
         self.focus_detaillist       = -1 # same as focus but for details
@@ -2667,6 +2667,8 @@ class Interface(object):
                     pass
 
     def draw_global_rates(self):
+        # ↑1.2K ↓3.4M
+        # ^    ^^     => +3
         rates_width = self.rateDownload_width + self.rateUpload_width + 3
 
         if self.stats['alt-speed-enabled']:
@@ -3373,7 +3375,7 @@ def timestamp(timestamp, format="%x %X"):
     return "%s (%s)" % (absolute, relative)
 
 
-def scale_bytes(bytes, type='short'):
+def scale_bytes(bytes=0, type='short'):
     if bytes >= 1099511627776:
         scaled_bytes = round((bytes / 1099511627776.0), 1)
         unit = 'T'
