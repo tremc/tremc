@@ -34,7 +34,7 @@ import re
 import base64
 import socket
 socket.setdefaulttimeout(None)
-from optparse import OptionParser, SUPPRESS_HELP
+from optparse import OptionParser
 import sys
 import os
 import signal
