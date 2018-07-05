@@ -67,8 +67,11 @@ except ImportError:  features['geoip'] = False
 try:   import IPy;  features['ipy'] = True  # extract ipv4 from ipv6 addresses
 except ImportError: features['ipy'] = False
 
-try:   import xerox;  features['clipboard'] = True
-except ImportError:   features['clipboard'] = False
+try:
+    import pyperclip
+    features['clipboard'] = True
+except ImportError:
+    features['clipboard'] = False
 
 
 if features['ipy']:
@@ -1374,13 +1377,9 @@ class Interface(object):
         if self.focus > -1 and features['clipboard']:
             magnet = self.torrents[self.focus]['magnetLink']
             try:
-                xerox.copy(magnet)
-            except xerox.ToolNotFound:
-                message = 'Could not copy to the clipboard\n'
-                message += 'You probably do not have an appropriate\n'
-                message += 'tool to handle the clipboard on your system.\n'
-                message += 'Refer to the xerox documentation.'
-                self.dialog_ok(message)
+                pyperclip.copy(magnet)
+            except Exception as e:
+                self.dialog_ok(str(e))
 
     def move_queue(self, direction):
         # queue was implemmented in Transmission v2.4
