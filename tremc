@@ -1017,8 +1017,8 @@ class Interface(object):
             curses.endwin()
             self.screen.refresh()
             self.height, self.width = self.screen.getmaxyx()
-            # Tracker list breaks if width smaller than 40
-            if self.width < 40 or self.height < 16:
+            # Tracker list breaks if width smaller than 73
+            if self.width < 73 or self.height < 16:
                 self.screen.erase()
                 self.screen.addstr(0,0, "Terminal too small", curses.A_REVERSE + curses.A_BOLD)
                 time.sleep(1)
