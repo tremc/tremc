@@ -1932,13 +1932,21 @@ class Interface(object):
                         curses.color_pair(self.colors.id('eta+ratio')) + curses.A_BOLD + curses.A_REVERSE)
 
     def draw_torrentlist_title(self, torrent, focused, width, ypos):
-        if (torrent['status'] == Transmission.STATUS_SEED
-                and (self.stats['seedRatioLimited'] or torrent['seedRatioMode'] == 1)):
-            limit = torrent['seedRatioLimit'] if torrent['seedRatioMode'] == 1 else self.stats['seedRatioLimit']
+        if torrent['status'] == Transmission.STATUS_SEED:
+            if torrent['seedRatioMode'] == 0: # Use global limit if set, otherwise unlimited
+                limit = self.stats['seedRatioLimit'] if self.stats['seedRatioLimited'] else -1
+            elif torrent['seedRatioMode'] == 1: # Stop seeding at seedRatioLimit
+                limit = torrent['seedRatioLimit']
+            elif torrent['seedRatioMode'] == 2: # Seed regardless of ratio
+                limit = -1
+
             if limit > 0:
                 percentDone = min((torrent['uploadRatio'] * 100) / limit, 100)
+            elif limit < 0:
+                percentDone = 100
             else:
                 percentDone = 0
+
         elif torrent['status'] == Transmission.STATUS_CHECK:
             percentDone = float(torrent['recheckProgress']) * 100
         else:
