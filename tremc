@@ -3402,7 +3402,7 @@ def scale_bytes(bytes=0, type='short'):
     if type == 'long':
         return num2str(bytes) + ' [' + num2str(scaled_bytes) + unit + ']'
     else:
-        return num2str(scaled_bytes) + unit
+        return str(scaled_bytes) + unit
 
 
 def homedir2tilde(path):
