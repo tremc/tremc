@@ -16,7 +16,7 @@ Python 3.0 bitch.
 ### Optional Modules
 
 - python-GeoIP: Guess which country peers come from.
-- [python-xerox](https://pypi.python.org/pypi/xerox): Copy magnet links to the system
+- [python-pyperclip](https://pypi.org/project/pyperclip/): Copy magnet links to the system
   clipboard. You will also need either xclip on linux or pbcopy on OS X for this
   to work.
 - python3-adns: Resolve IPs to host names. (untested)
