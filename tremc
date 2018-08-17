@@ -98,7 +98,7 @@ if features['geoip']:
 
 
 # define config defaults
-config = configparser.SafeConfigParser()
+config = configparser.ConfigParser()
 config.add_section('Connection')
 config.set('Connection', 'password', '')
 config.set('Connection', 'username', '')
