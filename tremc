@@ -32,6 +32,8 @@ from textwrap import wrap
 from subprocess import call, Popen
 import netrc
 import operator
+from getpass import getpass
+
 import urllib.request
 import urllib.error
 import urllib.parse
@@ -211,7 +213,7 @@ class GConfig:
         parser.add_argument("-v", "--version", action="version", version="%(prog)s " + self.VERSION,
                             help="Show version number and supported Transmission versions.")
         parser.add_argument("-c", "--connect", action="store", dest="connection", default="",
-                            help="Point to the server using pattern [username:password@]host[:port]/[path]")
+                            help="Point to the server using pattern [username[:password]@]host[:port]/[path]. User will be prompted for a password if required.")
         parser.add_argument("-s", "--ssl", action="store_true", dest="ssl", default=False,
                             help="Connect to Transmission using SSL.")
         parser.add_argument("-f", "--config", action="store", dest="configfile", default=default_config_path,
@@ -289,7 +291,9 @@ class GConfig:
             try:
                 if self.connection.count('@') == 1:
                     auth, self.connection = self.connection.split('@')
-                    if auth.count(':') == 1:
+                    if auth.count(':') == 0:
+                        self.username = auth
+                    elif auth.count(':') == 1:
                         self.username, self.password = auth.split(':')
                 if self.connection.count(':') == 1:
                     self.host, port = self.connection.split(':')
@@ -632,6 +636,10 @@ class GConfig:
         self.config.update_file(fp)
 
 
+class LoginException(Exception):
+    pass
+
+
 class Keys:
     TAB = 9
     LF = 10
@@ -771,6 +779,8 @@ class TransmissionRequest:
                 self.server.session_id = m.group(1)
                 self.send_request()
             except AttributeError:
+                if e.code == 401:
+                    raise LoginException
                 exit_prog(str(msg) + "\n", gconfig.errors.CONNECTION_ERROR)
 
         except urllib.error.URLError as msg:
@@ -845,15 +855,22 @@ class Transmission:
         self.session_id = 0
 
         if username and password:
-            password_mgr = urllib.request.HTTPPasswordMgrWithDefaultRealm()
-            password_mgr.add_password(None, url, username, password)
-            authhandler = urllib.request.HTTPBasicAuthHandler(password_mgr)
-            opener = urllib.request.build_opener(authhandler)
-            urllib.request.install_opener(opener)
+            register_credentials(username, password, url)
 
         # check rpc version
         request = TransmissionRequest(url, 'session-get', self.TAG_SESSION_GET, server=self)
-        request.send_request()
+        try:
+            request.send_request()
+        except LoginException:
+            try:
+                if not username:
+                    username = input('Username: ')
+                password = getpass()
+            except:
+                print('')
+                exit()
+            register_credentials(username, password, url)
+            request.send_request()
         response = request.get_response()
 
         self.rpc_version = response['arguments']['rpc-version']
@@ -5378,6 +5395,13 @@ def read_netrc(file=os.environ['HOME'] + '/.netrc', hostname=None):
     except IOError as msg:
         exit_prog("Cannot read %s: %s\n" % (file, msg))
     return login, password
+
+def register_credentials(username, password, url):
+    password_mgr = urllib.request.HTTPPasswordMgrWithDefaultRealm()
+    password_mgr.add_password(None, url, username, password)
+    authhandler = urllib.request.HTTPBasicAuthHandler(password_mgr)
+    opener = urllib.request.build_opener(authhandler)
+    urllib.request.install_opener(opener)
 
 
 # create initial config file
