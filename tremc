@@ -47,6 +47,7 @@ from subprocess import call, Popen
 import netrc
 import operator
 from distutils.spawn import find_executable
+from getpass import getpass
 
 import urllib.request
 import urllib.error
@@ -136,6 +137,9 @@ config.set('Colors', 'file_prio_normal', 'bg:white,fg:black')
 config.set('Colors', 'file_prio_low',    'bg:yellow,fg:black')
 config.set('Colors', 'file_prio_off',    'bg:blue,fg:black')
 
+
+class LoginException(Exception):
+    pass
 
 class ColorManager(object):
     def __init__(self, config):
@@ -235,6 +239,8 @@ class TransmissionRequest(object):
                 session_id = m.group(1)
                 self.send_request()
             except AttributeError:
+                if e.code == 401:
+                    raise LoginException
                 quit(str(msg) + "\n", CONNECTION_ERROR)
 
         except urllib.error.URLError as msg:
@@ -299,15 +305,22 @@ class Transmission(object):
         self.path = path
 
         if username and password:
-            password_mgr = urllib.request.HTTPPasswordMgrWithDefaultRealm()
-            password_mgr.add_password(None, create_url(host, port, path), username, password)
-            authhandler = urllib.request.HTTPBasicAuthHandler(password_mgr)
-            opener = urllib.request.build_opener(authhandler)
-            urllib.request.install_opener(opener)
+            register_credentials(username, password)
 
         # check rpc version
         request = TransmissionRequest(host, port, path, 'session-get', self.TAG_SESSION_GET)
-        request.send_request()
+        try:
+            request.send_request()
+        except LoginException:
+            try:
+                if not username:
+                    username = input('Username: ')
+                password = getpass()
+            except:
+                print('')
+                exit()
+            register_credentials(username, password)
+            request.send_request()
         response = request.get_response()
 
         self.rpc_version = response['arguments']['rpc-version']
@@ -3530,7 +3543,9 @@ def explode_connection_string(connection):
     try:
         if connection.count('@') == 1:
             auth, connection = connection.split('@')
-            if auth.count(':') == 1:
+            if auth.count(':') == 0:
+                username = auth
+            elif auth.count(':') == 1:
                 username, password = auth.split(':')
         if connection.count(':') == 1:
             host, port = connection.split(':')
@@ -3574,6 +3589,13 @@ def read_netrc(file=os.environ['HOME'] + '/.netrc', hostname=None):
     except IOError as msg:
         quit("Cannot read %s: %s\n" % (file, msg))
     return login, password
+
+def register_credentials(username, password):
+            password_mgr = urllib.request.HTTPPasswordMgrWithDefaultRealm()
+            password_mgr.add_password(None, create_url(host, port, path), username, password)
+            authhandler = urllib.request.HTTPBasicAuthHandler(password_mgr)
+            opener = urllib.request.build_opener(authhandler)
+            urllib.request.install_opener(opener)
 
 
 # create initial config file
@@ -3650,7 +3672,7 @@ if __name__ == '__main__':
     parser.add_option("-v", "--version", action="callback", callback=show_version,
                       help="Show version number and supported Transmission versions.")
     parser.add_option("-c", "--connect", action="store", dest="connection", default="",
-                      help="Point to the server using pattern [username:password@]host[:port]/[path]")
+                      help="Point to the server using pattern [username[:password]@]host[:port]/[path]. User will be prompted for a password if required.")
     parser.add_option("-s", "--ssl", action="store_true", dest="ssl", default=False,
                       help="Connect to Transmission using SSL.")
     parser.add_option("-f", "--config", action="store", dest="configfile", default=default_config_path,
