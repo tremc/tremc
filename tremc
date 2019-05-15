@@ -3098,10 +3098,10 @@ class Interface(object):
                     if input == '': input = 0
                     if floating_point: number = float(input)
                     else:              number = int(input)
-                    if c == curses.KEY_LEFT or c == ord('h'):    number -= smallstep
-                    elif c == curses.KEY_RIGHT or c == ord('l'): number += smallstep
-                    elif c == curses.KEY_DOWN or c == ord('j'):  number -= bigstep
-                    elif c == curses.KEY_UP or c == ord('k'):    number += bigstep
+                    if c == curses.KEY_LEFT or c == ord('h'):    number = round(number - smallstep, 1)
+                    elif c == curses.KEY_RIGHT or c == ord('l'): number = round(number + smallstep, 1)
+                    elif c == curses.KEY_DOWN or c == ord('j'):  number = round(number - bigstep, 1)
+                    elif c == curses.KEY_UP or c == ord('k'):    number = round(number + bigstep, 1)
                     if not allow_zero and number <= 0:
                         number = 1
                     elif not allow_negative_one and number < 0:
