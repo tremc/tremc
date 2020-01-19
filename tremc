@@ -3497,14 +3497,13 @@ def num2str(num, format='%s'):
 
 def debug(data):
     if cmd_args.DEBUG:
-        file = open("debug.log", 'a')
-        if isinstance(data, str) or isinstance(data, str):
-            file.write(data.encode(ENCODING, 'replace'))
-        else:
-            import pprint
-            pp = pprint.PrettyPrinter(indent=4)
-            file.write("\n====================\n" + pp.pformat(data) + "\n====================\n\n")
-        file.close
+        with open("debug.log", 'a') as file:
+            if isinstance(data, str) or isinstance(data, str):
+                file.write(data.encode(ENCODING, 'replace'))
+            else:
+                import pprint
+                pp = pprint.PrettyPrinter(indent=4)
+                file.write("\n====================\n" + pp.pformat(data) + "\n====================\n\n")
 
 
 def quit(msg='', exitcode=0):
