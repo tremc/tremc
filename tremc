@@ -1506,11 +1506,17 @@ class Interface(object):
             elif c == curses.KEY_DOWN or c == ord('j') or c == curses.ascii.ctrl(ord('n')):
                 self.focus, self.scrollpos = self.move_down(self.focus, self.scrollpos, self.tlist_item_height,
                                                             self.torrents_per_page, len(self.torrents))
-            elif c == curses.KEY_PPAGE or c == curses.ascii.ctrl(ord('b')) or c == curses.ascii.ctrl(ord('u')):
+            elif c == curses.KEY_PPAGE or c == curses.ascii.ctrl(ord('u')):
                 self.focus, self.scrollpos = self.move_page_up(self.focus, self.scrollpos, self.tlist_item_height,
                                                                self.torrents_per_page)
-            elif c == curses.KEY_NPAGE or c == curses.ascii.ctrl(ord('f')) or c == curses.ascii.ctrl(ord('d')):
+            elif c == curses.KEY_NPAGE or c == curses.ascii.ctrl(ord('d')):
                 self.focus, self.scrollpos = self.move_page_down(self.focus, self.scrollpos, self.tlist_item_height,
+                                                                 self.torrents_per_page, len(self.torrents))
+            elif c == curses.ascii.ctrl(ord('f')):
+                self.focus, self.scrollpos = self.scroll_line_down(self.focus, self.scrollpos, self.tlist_item_height,
+                                                                   self.torrents_per_page, len(self.torrents))
+            elif c == curses.ascii.ctrl(ord('b')):
+                self.focus, self.scrollpos = self.scroll_line_up(self.focus, self.scrollpos, self.tlist_item_height,
                                                                  self.torrents_per_page, len(self.torrents))
             elif c == curses.KEY_HOME or c == ord('g'):
                 self.focus, self.scrollpos = self.move_to_top()
@@ -2615,6 +2621,18 @@ class Interface(object):
         if focus < 0: focus = 0
         for x in range(elements_per_page - 1):
             focus, scrollpos = self.move_down(focus, scrollpos, step_size, elements_per_page, list_height)
+        return focus, scrollpos
+
+    def scroll_line_down(self, focus, scrollpos, step_size, elements_per_page, list_height):
+        if focus < 0: focus = 0
+        if focus > scrollpos/step_size:
+            # when focus isn't at the top of the view.
+            scrollpos += step_size
+        return focus, scrollpos
+
+    def scroll_line_up(self, focus, scrollpos, step_size, elements_per_page, list_height):
+        if focus - scrollpos/step_size < elements_per_page:
+            scrollpos -= step_size
         return focus, scrollpos
 
     def move_to_top(self):
