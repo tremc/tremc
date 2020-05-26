@@ -905,6 +905,7 @@ class Interface(object):
         self.keybindings = {
             ord('?'):               self.call_list_key_bindings,
             curses.KEY_F1:          self.call_list_key_bindings,
+            7:                      self.go_back_or_unfocus,
             27:                     self.go_back_or_unfocus,
             curses.KEY_BREAK:       self.go_back_or_unfocus,
             12:                     self.go_back_or_unfocus,
@@ -2925,7 +2926,7 @@ class Interface(object):
                 input = False
             elif c == ord("\n") or c == ord(' '):
                 return input
-            elif c == 27 or c == curses.KEY_BREAK:
+            elif c in (27, 7, curses.KEY_BREAK):
                 return -1
 
     def dialog_input_text(self, message, input='', on_change=None, on_enter=None, tab_complete=None):
@@ -2957,7 +2958,7 @@ class Interface(object):
             win.addstr(height - 2, 2, displaytext.ljust(textwidth), color)
             win.move(height - 2, displayindex + 2)
             c = win.getch()
-            if c == 27 or c == curses.KEY_BREAK:
+            if c in (27, 7, curses.KEY_BREAK):
                 hide_cursor()
                 return ''
             elif index < len(input) and ( c == curses.KEY_RIGHT or c == curses.ascii.ctrl(ord('f')) ):
@@ -3062,7 +3063,7 @@ class Interface(object):
             win.addstr(height-2, 2, input.ljust(width-4), curses.color_pair(self.colors.id('dialog')))
             win.move(height - 2, len(input) + 2)
             c = win.getch()
-            if c == 27 or c == ord('q') or c == curses.KEY_BREAK:
+            if c in (27, 7, ord('q'), curses.KEY_BREAK):
                 hide_cursor()
                 return -128
             elif c == ord("\n"):
@@ -3127,7 +3128,7 @@ class Interface(object):
 
             if c > 96 and c < 123 and chr(c) in keymap:
                 return options[keymap[chr(c)]][0]
-            elif c == 27 or c == ord('q'):
+            elif c in (27, 7, ord('q')):
                 return -128
             elif c == ord("\n"):
                 return options[focus-1][0]
@@ -3200,7 +3201,7 @@ class Interface(object):
                 line_num += 1
 
             c = win.getch()
-            if c == 27 or c == ord('q') or c == ord("\n"):
+            if c in (27, 7, ord('q'), ord("\n")):
                 return
             elif c == ord('p'):
                 port = self.dialog_input_number("Port for incoming connections",
