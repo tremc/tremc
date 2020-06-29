@@ -3757,4 +3757,10 @@ if __name__ == '__main__':
                           config.get('Connection', 'path'),
                           config.get('Connection', 'username'),
                           config.get('Connection', 'password'))
-    Interface()
+    try:
+        Interface()
+    except Exception as e: 
+        import traceback
+        traceback.print_exc(file=sys.stdout)
+    finally:
+       quit() 
