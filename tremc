@@ -1039,7 +1039,7 @@ class Interface(object):
             self.screen.refresh()
             self.height, self.width = self.screen.getmaxyx()
             # Tracker list breaks if width smaller than 73
-            if self.width < 73 or self.height < 16:
+            if not cmd_args.SKIPVERSIONCHECK and (self.width < 73 or self.height < 16):
                 self.screen.erase()
                 self.screen.addstr(0,0, "Terminal too small", curses.A_REVERSE + curses.A_BOLD)
                 time.sleep(1)
@@ -3691,7 +3691,7 @@ if __name__ == '__main__':
                       help="Create configuration file CONFIGFILE with default values.")
     parser.add_option("-n", "--netrc", action="store_true", dest="use_netrc", default=False,
                       help="Get authentication info from your ~/.netrc file.")
-    parser.add_option("--skip-version-check", action="store_true", dest="SKIPVERSIONCHECK", default=False,
+    parser.add_option("-X", "--skip-version-check", "--permissive", action="store_true", dest="SKIPVERSIONCHECK", default=False,
                       help="Proceed even if the running transmission daemon seems incompatible.")
     parser.add_option("--debug", action="store_true", dest="DEBUG", default=False,
                       help="Everything passed to the debug() function will be added to the file debug.log.")
