@@ -885,9 +885,17 @@ class Interface(object):
     TRACKER_ITEM_HEIGHT = 6
 
     def __init__(self):
+        self.sort_options = [
+            ('name','_Name'), ('addedDate','_Age'), ('percentDone','_Progress'),
+            ('seeders','_Seeds'), ('leechers','Lee_ches'), ('sizeWhenDone', 'Si_ze'),
+            ('status','S_tatus'), ('uploadedEver','Up_loaded'),
+            ('rateUpload','_Upload Speed'), ('rateDownload','_Download Speed'),
+            ('uploadRatio','_Ratio'), ('peersConnected','P_eers'),
+            ('downloadDir', 'L_ocation'), ('mainTrackerDomain', 'Trac_ker') ]
+
         self.filter_list    = config.get('Filtering', 'filter')
         self.filter_inverse = config.getboolean('Filtering', 'invert')
-        self.sort_orders    = parse_sort_str(config.get('Sorting', 'order'))
+        self.sort_orders    = parse_sort_str(config.get('Sorting', 'order'), [x[0] for x in self.sort_options])
         self.tlist_item_height = config.getint('Misc', 'lines_per_torrent')
         self.torrentname_is_progressbar = config.getboolean('Misc', 'torrentname_is_progressbar')
         self.file_viewer    = config.get('Misc', 'file_viewer')
@@ -983,13 +991,6 @@ class Interface(object):
             curses.KEY_SRIGHT:      lambda c: self.move_queue('npage')
         }
 
-        self.sort_options = [
-            ('name','_Name'), ('addedDate','_Age'), ('percentDone','_Progress'),
-            ('seeders','_Seeds'), ('leechers','Lee_ches'), ('sizeWhenDone', 'Si_ze'),
-            ('status','S_tatus'), ('uploadedEver','Up_loaded'),
-            ('rateUpload','_Upload Speed'), ('rateDownload','_Download Speed'),
-            ('uploadRatio','_Ratio'), ('peersConnected','P_eers'),
-            ('downloadDir', 'L_ocation'), ('mainTrackerDomain', 'Trac_ker') ]
 
         # queue was implemmented in transmission 2.4
         if server.get_rpc_version() >= 14:
@@ -1326,8 +1327,11 @@ class Interface(object):
                        ('private','P_rivate'), ('isolated', '_Isolated'),
                        ('tracker','Trac_ker'),
                        ('invert','In_vert'), ('','_All')]
-            choice = self.dialog_menu(('Show only','Filter all')[self.filter_inverse], options,
-                                      list(map(lambda x: x[0]==self.filter_list, options)).index(True)+1)
+            try:
+                s=list(map(lambda x: x[0]==self.filter_list, options)).index(True)+1
+            except:
+                s=0
+            choice = self.dialog_menu(('Show only','Filter all')[self.filter_inverse], options, s)
             if choice != -128:
                 if choice == 'invert':
                     self.filter_inverse = not self.filter_inverse
@@ -3649,14 +3653,16 @@ def save_config(filepath, force=False):
     return -1
 
 
-def parse_sort_str(sort_str):
+def parse_sort_str(sort_str, orders):
     sort_orders = []
     for i in sort_str.split(','):
         x = i.split(':')
-        if len(x) > 1:
+        if len(x) > 1 and x[1] in orders:
             sort_orders.append( { 'name':x[1], 'reverse':True } )
-        else:
+        elif x[0] in orders:
             sort_orders.append( { 'name':x[0], 'reverse':False } )
+    if sort_orders==[]:
+        sort_orders= [{ 'name':'name', 'reverse':False }]
     return sort_orders
 
 
@@ -3672,7 +3678,6 @@ def xdg_config_home(*args):
         p = os.path.expanduser('~/.config')
 
     return os.path.join(p, *args)
-
 
 if __name__ == '__main__':
     # command line parameters
