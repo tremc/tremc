@@ -285,7 +285,9 @@ class Transmission(object):
                    'peersConnected', 'uploadLimit', 'downloadLimit',
                    'uploadLimited', 'downloadLimited', 'bandwidthPriority',
                    'peersSendingToUs', 'peersGettingFromUs',
-                   'seedRatioLimit', 'seedRatioMode', 'isPrivate', 'magnetLink']
+                   'seedRatioLimit', 'seedRatioMode', 'isPrivate', 'magnetLink',
+                   'honorsSessionLimits', 
+                  ]
 
     DETAIL_FIELDS = ['files', 'priorities', 'wanted', 'peers', 'trackers',
                      'activityDate', 'dateCreated', 'startDate', 'doneDate',
@@ -856,6 +858,12 @@ class Transmission(object):
             return '+'
         else:
             return '?'
+
+    def get_honors_session_limits(self, torrent):
+        if torrent['honorsSessionLimits']:
+            return ' '
+        else:
+            return '*'
 
     def get_stats(self):
         request = TransmissionRequest(self.host, self.port, self.path, 'session-stats', 1)
@@ -2041,10 +2049,10 @@ class Interface(object):
         else:
             tags = 0
 
-        remaining_space = self.torrent_title_width - sum([len(x) for x in parts], len(peers)) - 2
+        remaining_space = self.torrent_title_width - sum([len(x) for x in parts], len(peers)) - 3
         delimiter = ' ' * int(remaining_space / (len(parts)))
 
-        line = server.get_bandwidth_priority(torrent) + ' ' + delimiter.join(parts)
+        line = server.get_bandwidth_priority(torrent) + server.get_honors_session_limits(torrent) + ' ' + delimiter.join(parts)
 
         # make sure the peers element is always right justified
         line += ' ' * int(self.torrent_title_width - len(line) - len(peers)) + peers
