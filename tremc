@@ -907,6 +907,7 @@ class Interface(object):
         self.filter_list    = config.get('Filtering', 'filter')
         self.filter_inverse = config.getboolean('Filtering', 'invert')
         self.sort_orders    = parse_sort_str(config.get('Sorting', 'order'), [x[0] for x in self.sort_options])
+        self.filter_regex   = ''
         self.tlist_item_height = config.getint('Misc', 'lines_per_torrent')
         self.torrentname_is_progressbar = config.getboolean('Misc', 'torrentname_is_progressbar')
         self.file_viewer    = config.get('Misc', 'file_viewer')
@@ -1338,6 +1339,7 @@ class Interface(object):
                        ('incomplete','In_complete'), ('verifying','Verif_ying'),
                        ('private','P_rivate'), ('isolated', '_Isolated'),
                        ('tracker','Trac_ker'),
+                       ('regex','Regular e_xpression'),
                        ('invert','In_vert'), ('','_All')]
             try:
                 s=list(map(lambda x: x[0]==self.filter_list, options)).index(True)+1
@@ -1368,6 +1370,12 @@ class Interface(object):
                                 self.filter_tracker=''
                             else:
                                 self.filter_tracker=selected
+                    elif choice == 'regex':
+                        regex = self.dialog_input_text('Regular expression to filter (case insensitive):', self.filter_regex)
+                        if regex == '':
+                            choice = ''
+                        else:
+                            self.filter_regex = regex
                     if choice == '':
                         self.filter_inverse = False
                     self.filter_list = choice
@@ -1873,6 +1881,8 @@ class Interface(object):
             self.torrents = [t for t in self.torrents if t['isIsolated']]
         elif self.filter_list == 'tracker':
             self.torrents = [t for t in self.torrents if t['mainTrackerDomain']==self.filter_tracker]
+        elif self.filter_list == 'regex':
+            self.torrents = [t for t in self.torrents if re.search(self.filter_regex, t['name'], flags=re.I)]
         # invert list?
         if self.filter_inverse:
             self.torrents = [t for t in unfiltered if t not in self.torrents]
