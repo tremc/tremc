@@ -363,6 +363,7 @@ class Transmission(object):
                              TransmissionRequest(host, port, path)}
 
         self.torrent_cache = []
+        self.trackers = set()
         self.status_cache = dict()
         self.torrent_details_cache = dict()
         self.peer_progress_cache = dict()
@@ -430,6 +431,8 @@ class Transmission(object):
                     t['seeders'] = t['leechers'] = -1
                 t['isIsolated'] = not self.can_has_peers(t)
                 t['mainTrackerDomain'] = get_main_tracker_domain(t)
+                if t['mainTrackerDomain']:
+                    self.trackers.add(t['mainTrackerDomain'])
 
             if response['tag'] == self.TAG_TORRENT_LIST:
                 self.torrent_cache = response['arguments']['torrents']
@@ -440,7 +443,7 @@ class Transmission(object):
                 # TAG_TORRENT_DETAILS, but just passing seems to help.(?)
                 try:
                     torrent_details = response['arguments']['torrents'][0]
-                    torrent_details['pieces'] = base64.decodestring(bytes(torrent_details['pieces'], ENCODING))
+                    torrent_details['pieces'] = base64.decodebytes(bytes(torrent_details['pieces'], ENCODING))
                     self.torrent_details_cache = torrent_details
                     self.upgrade_peerlist()
                 except IndexError:
@@ -892,6 +895,7 @@ class Interface(object):
 
         self.torrents         = server.get_torrent_list(self.sort_orders)
         self.stats            = server.get_global_stats()
+        self.trackers         = server.trackers
         self.torrent_details  = []
         self.selected_torrent = -1  # changes to >-1 when focus >-1 & user hits return
         self.highlight_dialog = False
@@ -1320,6 +1324,7 @@ class Interface(object):
                        ('active','Ac_tive'), ('paused','_Paused'), ('seeding','_Seeding'),
                        ('incomplete','In_complete'), ('verifying','Verif_ying'),
                        ('private','P_rivate'), ('isolated', '_Isolated'),
+                       ('tracker','Trac_ker'),
                        ('invert','In_vert'), ('','_All')]
             choice = self.dialog_menu(('Show only','Filter all')[self.filter_inverse], options,
                                       list(map(lambda x: x[0]==self.filter_list, options)).index(True)+1)
@@ -1327,6 +1332,26 @@ class Interface(object):
                 if choice == 'invert':
                     self.filter_inverse = not self.filter_inverse
                 else:
+                    if choice == 'tracker':
+                        if len(self.trackers) < 2:
+                            choice = ''
+                        else:
+                            indexes='abcdefghijklmnopqrstuvwxyz'
+                            trackers=[]
+                            i=0
+                            for x in self.trackers:
+                                trackers.append((x,'_'+indexes[i]+'. '+x))
+                                i=i+1
+                            try:
+                                s=list(map(lambda x: x[0]==self.filter_tracker, trackers)).index(True)+1
+                            except:
+                                s=0
+                            selected=self.dialog_menu('Select tracker', trackers, s)
+                            if not selected in self.trackers:
+                                choice=''
+                                self.filter_tracker=''
+                            else:
+                                self.filter_tracker=selected
                     if choice == '':
                         self.filter_inverse = False
                     self.filter_list = choice
@@ -1827,6 +1852,8 @@ class Interface(object):
                                  or t['status'] == Transmission.STATUS_CHECK_WAIT]
         elif self.filter_list == 'isolated':
             self.torrents = [t for t in self.torrents if t['isIsolated']]
+        elif self.filter_list == 'tracker':
+            self.torrents = [t for t in self.torrents if t['mainTrackerDomain']==self.filter_tracker]
         # invert list?
         if self.filter_inverse:
             self.torrents = [t for t in unfiltered if t not in self.torrents]
