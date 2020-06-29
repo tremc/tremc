@@ -112,7 +112,7 @@ config.add_section('Filtering')
 config.set('Filtering', 'filter', '')
 config.set('Filtering', 'invert', 'False')
 config.add_section('Misc')
-config.set('Misc', 'compact_list', 'False')
+config.set('Misc', 'lines_per_torrent', '2')
 config.set('Misc', 'torrentname_is_progressbar', 'True')
 config.set('Misc', 'file_viewer', 'xdg-open %%s')
 config.set('Misc', 'file_open_in_terminal', 'True')
@@ -877,7 +877,7 @@ class Interface(object):
         self.filter_list    = config.get('Filtering', 'filter')
         self.filter_inverse = config.getboolean('Filtering', 'invert')
         self.sort_orders    = parse_sort_str(config.get('Sorting', 'order'))
-        self.compact_list   = config.getboolean('Misc', 'compact_list')
+        self.tlist_item_height = config.getint('Misc', 'lines_per_torrent')
         self.torrentname_is_progressbar = config.getboolean('Misc', 'torrentname_is_progressbar')
         self.file_viewer    = config.get('Misc', 'file_viewer')
         self.file_open_in_terminal = config.getboolean('Misc', 'file_open_in_terminal')
@@ -899,7 +899,6 @@ class Interface(object):
         self.selected_files         = [] # marked files in details
         self.file_index_map         = {} # Maps local torrent's file indices to server file indices
         self.scrollpos_detaillist   = 0  # same as scrollpos but for details
-        self.compact_torrentlist    = False # draw only one line for each torrent in compact mode
         self.exit_now               = False
 
         self.keybindings = {
@@ -1078,8 +1077,6 @@ class Interface(object):
         return new_width
 
     def recalculate_torrents_per_page(self):
-        self.lines_per_entry = 2
-        self.tlist_item_height = self.lines_per_entry if not self.compact_list else 1
         self.mainview_height = self.height - 2
         self.torrents_per_page = self.mainview_height // self.tlist_item_height
 
@@ -1770,7 +1767,7 @@ class Interface(object):
         self.list_key_bindings()
 
     def toggle_compact_torrentlist(self, c):
-        self.compact_list = not self.compact_list
+        self.tlist_item_height = self.tlist_item_height % 3 + 1
         self.recalculate_torrents_per_page()
         self.follow_list_focus()
 
@@ -1879,7 +1876,7 @@ class Interface(object):
         for i in range(len(self.visible_torrents)):
             ypos += self.draw_torrentlist_item(self.visible_torrents[i],
                                                (i == self.focus-self.visible_torrents_start),
-                                               self.compact_list,
+                                               self.tlist_item_height==1,
                                                ypos)
 
         self.pad.refresh(0, 0, 1, 0, self.mainview_height, self.width-1)
@@ -1903,7 +1900,7 @@ class Interface(object):
             self.draw_ratio(torrent, y)
             self.draw_torrentlist_status(torrent, focused, y)
 
-            return self.lines_per_entry # number of lines that were used for drawing the list item
+            return self.tlist_item_height # number of lines that were used for drawing the list item
         else:
             # Draw ratio in place of upload rate if upload rate = 0
             if not torrent['rateUpload']:
@@ -2785,7 +2782,7 @@ class Interface(object):
                        "    Enter/Right  View torrent's details\n" + \
                        "              o  Configuration options\n" + \
                        "              t  Toggle turtle mode\n" + \
-                       "              C  Toggle compact list mode\n" + \
+                       "              C  Cycle torrent line height\n" + \
                        "            Esc  Unfocus\n" + \
                        "              q  Quit"
         else:
