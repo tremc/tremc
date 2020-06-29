@@ -9,7 +9,7 @@ A console client for the BitTorrent client
 
 ## Requirements
 
-Python 3.0 bitch.
+Python 3.0
 
 ### Optional Modules
 
