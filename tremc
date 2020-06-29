@@ -617,6 +617,17 @@ class Transmission(object):
         request.send_request()
         self.wait_for_torrentlist_update()
 
+    def toggle_honors_session_limits(self, torrent_id):
+        torrent = self.get_torrent_by_id(torrent_id)
+        if torrent is None:
+            return False
+        else:
+            new_honors = not torrent['honorsSessionLimits'] 
+            request = TransmissionRequest(self.host, self.port, self.path, 'torrent-set', 1,
+                                          {'ids': [torrent_id], 'honorsSessionLimits':new_honors})
+            request.send_request()
+            self.wait_for_torrentlist_update()
+
     def increase_bandwidth_priority(self, torrent_id):
         torrent = self.get_torrent_by_id(torrent_id)
         if torrent is None or torrent['bandwidthPriority'] >= 1:
@@ -943,6 +954,7 @@ class Interface(object):
             ord('D'):               self.torrent_download,
             ord('L'):               self.seed_ratio,
             ord('t'):               self.t_key,
+            ord('*'):               self.honors_limits,
             ord('+'):               self.bandwidth_priority,
             ord('-'):               self.bandwidth_priority,
             ord('J'):               self.J_key,
@@ -1407,6 +1419,9 @@ class Interface(object):
             if limit == -2: # -2 means 'empty' in dialog_input_number return codes
                 limit = -1
             server.set_seed_ratio(float(limit), self.torrents[self.focus]['id'])
+
+    def honors_limits(self, c):
+        server.toggle_honors_session_limits(self.torrents[self.focus]['id'])
 
     def bandwidth_priority(self, c):
         if c == ord('-') and self.focus > -1:
