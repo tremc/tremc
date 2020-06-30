@@ -700,8 +700,8 @@ class Transmission(object):
         request.send_request()
         self.wait_for_torrentlist_update()
 
-    def reannounce_torrent(self, id):
-        request = TransmissionRequest(self.host, self.port, self.path, 'torrent-reannounce', 1, {'ids': [id]})
+    def reannounce_torrent(self, ids):
+        request = TransmissionRequest(self.host, self.port, self.path, 'torrent-reannounce', 1, {'ids': ids})
         request.send_request()
         self.wait_for_torrentlist_update()
 
@@ -1500,8 +1500,9 @@ class Interface(object):
                 server.verify_torrent(self.torrents[self.focus]['id'])
 
     def reannounce_torrent(self, c):
-        if self.focus > -1:
-            server.reannounce_torrent(self.torrents[self.focus]['id'])
+        ids = self.selected_ids()
+        if ids:
+            server.reannounce_torrent(ids)
 
     def remove_torrent(self, c):
         if self.focus > -1:
