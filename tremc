@@ -123,6 +123,7 @@ config.set('Colors', 'title_idle',       'bg:cyan,fg:black')
 config.set('Colors', 'title_verify',     'bg:magenta,fg:black')
 config.set('Colors', 'title_paused',     'bg:black,fg:white')
 config.set('Colors', 'title_error',      'bg:red,fg:white')
+config.set('Colors', 'title_selected',   'bg:white,fg:black')
 config.set('Colors', 'download_rate',    'bg:black,fg:blue')
 config.set('Colors', 'upload_rate',      'bg:black,fg:red')
 config.set('Colors', 'eta+ratio',        'bg:black,fg:white')
@@ -922,6 +923,7 @@ class Interface(object):
         self.search_focus = 0   # like self.focus but for searches in torrent list
         self.focused_id   = -1  # the id (provided by Transmission) of self.torrents[self.focus]
         self.focus        = -1  # -1: nothing focused; 0: top of list; <# of torrents>-1: bottom of list
+        self.selected     = set()
         self.scrollpos    = 0   # start of torrentlist
         self.torrents_per_page  = 0 # will be set by manage_layout()
         self.rateDownload_width = self.rateUpload_width = len(scale_bytes())
@@ -1168,7 +1170,7 @@ class Interface(object):
             self.select_unselect_file(c)
         # Torrent list
         elif self.selected_torrent == -1:
-            self.enter_key(c)
+            self.select_unselect_torrent()
 
     def A_key(self, c):
         # File list
@@ -1176,7 +1178,9 @@ class Interface(object):
             self.select_unselect_file(c)
         # Do nothing in other detail tabs
         elif self.selected_torrent > -1:
-            pass
+            return
+        if  self.selected_torrent == -1:
+            self.select_unselect_torrent(all=True)
 
     def a_key(self, c):
         # File list
@@ -1855,6 +1859,16 @@ class Interface(object):
             debug('caught %s in handle_user_input(): %s\n' % (type(e), str(e)))
             pass
 
+    def select_unselect_torrent(self, all=False):
+        if all:
+            if self.selected:
+                self.selected=set()
+            else:
+                self.selected=set([x['id'] for x in self.torrents])
+        else:
+            if self.focus != -1:
+                self.selected.symmetric_difference_update(set([self.torrents[self.focus]['id']]))
+
     def filter_torrent_list(self):
         unfiltered = self.torrents
         if self.filter_list == 'downloading':
@@ -1886,6 +1900,9 @@ class Interface(object):
         # invert list?
         if self.filter_inverse:
             self.torrents = [t for t in unfiltered if t not in self.torrents]
+
+        # Also filter selected:
+        self.selected.intersection_update(set([t['id'] for t in self.torrents]))
 
     def follow_list_focus(self):
         if self.focus == -1:
@@ -1948,50 +1965,60 @@ class Interface(object):
 
     def draw_torrentlist_item(self, torrent, focused, compact, y):
         # the torrent name is also a progress bar
+        selected=torrent['id'] in self.selected
         self.draw_torrentlist_title(torrent, focused, self.torrent_title_width, y)
 
         rates = ''
         if torrent['status'] == Transmission.STATUS_DOWNLOAD:
-            self.draw_downloadrate(torrent, y)
-        if torrent['status'] == Transmission.STATUS_DOWNLOAD or torrent['status'] == Transmission.STATUS_SEED:
-            self.draw_uploadrate(torrent, y)
+            self.draw_downloadrate(torrent, y, selected)
+        if torrent['status'] == Transmission.STATUS_DOWNLOAD or torrent['status'] == Transmission.STATUS_SEED or selected:
+            self.draw_uploadrate(torrent, y, selected)
 
         if not compact:
             # the line below the title/progress
             if torrent['percentDone'] < 100 and torrent['status'] == Transmission.STATUS_DOWNLOAD:
                 self.draw_eta(torrent, y)
 
-            self.draw_ratio(torrent, y)
+            self.draw_ratio(torrent, y, False)
             self.draw_torrentlist_status(torrent, focused, y)
 
             return self.tlist_item_height # number of lines that were used for drawing the list item
         else:
             # Draw ratio in place of upload rate if upload rate = 0
             if not torrent['rateUpload']:
-                self.draw_ratio(torrent, y - 1)
+                self.draw_ratio(torrent, y - 1, selected)
 
             return 1
 
-    def draw_downloadrate(self, torrent, ypos):
+    def draw_downloadrate(self, torrent, ypos, selected, draw=True):
+        if selected:
+            tag=curses.color_pair(self.colors.id('title_selected'))+curses.A_REVERSE
+        else:
+            tag=curses.color_pair(self.colors.id('download_rate')) + curses.A_BOLD + curses.A_REVERSE
         self.pad.move(ypos, self.width-self.rateDownload_width-self.rateUpload_width-3)
         self.pad.addch(curses.ACS_DARROW, (0, curses.A_BOLD)[torrent['downloadLimited']])
         rate = ('', scale_bytes(torrent['rateDownload']))[torrent['rateDownload']>0]
-        self.pad.addstr(rate.rjust(self.rateDownload_width),
-                        curses.color_pair(self.colors.id('download_rate')) + curses.A_BOLD + curses.A_REVERSE)
+        self.pad.addstr(rate.rjust(self.rateDownload_width), tag)
 
-    def draw_uploadrate(self, torrent, ypos):
+    def draw_uploadrate(self, torrent, ypos, selected):
+        if selected:
+            tag=curses.color_pair(self.colors.id('title_selected'))+curses.A_REVERSE
+        else:
+            tag=curses.color_pair(self.colors.id('upload_rate')) + curses.A_BOLD + curses.A_REVERSE
         self.pad.move(ypos, self.width-self.rateUpload_width-1)
         self.pad.addch(curses.ACS_UARROW, (0, curses.A_BOLD)[torrent['uploadLimited']])
         rate = ('', scale_bytes(torrent['rateUpload']))[torrent['rateUpload']>0]
-        self.pad.addstr(rate.rjust(self.rateUpload_width),
-                        curses.color_pair(self.colors.id('upload_rate')) + curses.A_BOLD + curses.A_REVERSE)
+        self.pad.addstr(rate.rjust(self.rateUpload_width), tag)
 
-    def draw_ratio(self, torrent, ypos):
+    def draw_ratio(self, torrent, ypos, selected):
+        if selected:
+            tag=curses.color_pair(self.colors.id('title_selected'))+curses.A_REVERSE
+        else:
+            tag=curses.color_pair(self.colors.id('eta+ratio')) + curses.A_BOLD + curses.A_REVERSE
         self.pad.addch(ypos+1, self.width-self.rateUpload_width-1, curses.ACS_BULLET,
                        (0, curses.A_BOLD)[torrent['uploadRatio'] < 1 and torrent['uploadRatio'] >= 0])
         self.pad.addstr(ypos+1, self.width-self.rateUpload_width,
-                        num2str(torrent['uploadRatio'], '%.02f').rjust(self.rateUpload_width),
-                        curses.color_pair(self.colors.id('eta+ratio')) + curses.A_BOLD + curses.A_REVERSE)
+                        num2str(torrent['uploadRatio'], '%.02f').rjust(self.rateUpload_width), tag)
 
     def draw_eta(self, torrent, ypos):
         self.pad.addch(ypos+1, self.width-self.rateDownload_width-self.rateUpload_width-3, curses.ACS_PLMINUS)
