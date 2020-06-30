@@ -618,38 +618,32 @@ class Transmission(object):
         request.send_request()
         self.wait_for_torrentlist_update()
 
-    def toggle_honors_session_limits(self, torrent_id):
-        torrent = self.get_torrent_by_id(torrent_id)
-        if torrent is None:
-            return False
-        else:
-            new_honors = not torrent['honorsSessionLimits'] 
+    def toggle_honors_session_limits(self, torrent_ids):
+        if torrent_ids:
+            new_honors = not all([self.get_torrent_by_id(t)['honorsSessionLimits'] for t in torrent_ids])
             request = TransmissionRequest(self.host, self.port, self.path, 'torrent-set', 1,
-                                          {'ids': [torrent_id], 'honorsSessionLimits':new_honors})
+                                          {'ids': torrent_ids, 'honorsSessionLimits':new_honors})
             request.send_request()
             self.wait_for_torrentlist_update()
 
-    def increase_bandwidth_priority(self, torrent_id):
-        torrent = self.get_torrent_by_id(torrent_id)
-        if torrent is None or torrent['bandwidthPriority'] >= 1:
-            return False
-        else:
-            new_priority = torrent['bandwidthPriority'] + 1
-            request = TransmissionRequest(self.host, self.port, self.path, 'torrent-set', 1,
-                                          {'ids': [torrent_id], 'bandwidthPriority':new_priority})
-            request.send_request()
-            self.wait_for_torrentlist_update()
+    def increase_bandwidth_priority(self, torrent_ids):
+        if torrent_ids:
+            current=min([self.get_torrent_by_id(t)['bandwidthPriority'] for t in torrent_ids])
+            if current < 1:
+                request = TransmissionRequest(self.host, self.port, self.path, 'torrent-set', 1,
+                                          {'ids': torrent_ids, 'bandwidthPriority':current+1})
+                request.send_request()
+                self.wait_for_torrentlist_update()
 
-    def decrease_bandwidth_priority(self, torrent_id):
-        torrent = self.get_torrent_by_id(torrent_id)
-        if torrent is None or torrent['bandwidthPriority'] <= -1:
-            return False
-        else:
-            new_priority = torrent['bandwidthPriority'] - 1
-            request = TransmissionRequest(self.host, self.port, self.path, 'torrent-set', 1,
-                                          {'ids': [torrent_id], 'bandwidthPriority':new_priority})
-            request.send_request()
-            self.wait_for_torrentlist_update()
+    def decrease_bandwidth_priority(self, torrent_ids):
+        if torrent_ids:
+            print(torrent_ids,file=sys.stderr)
+            current=max([self.get_torrent_by_id(t)['bandwidthPriority'] for t in torrent_ids])
+            if current > -1:
+                request = TransmissionRequest(self.host, self.port, self.path, 'torrent-set', 1,
+                                          {'ids': torrent_ids, 'bandwidthPriority':current-1})
+                request.send_request()
+                self.wait_for_torrentlist_update()
 
     def move_queue(self, torrent_id, new_position):
         args = {'ids': [torrent_id]}
@@ -1398,6 +1392,15 @@ class Interface(object):
            return
        server.set_rate_limit('down', limit)
 
+    def selected_ids(self):
+        if self.selected:
+            return list(self.selected)
+        else:
+            if self.focus == -1:
+                return []
+            else:
+                return [self.torrents[self.focus]['id']]
+
     def torrent_upload(self, c):
         if self.focus > -1:
             current_limit = (-1,self.torrents[self.focus]['uploadLimit'])[self.torrents[self.focus]['uploadLimited']]
@@ -1433,13 +1436,14 @@ class Interface(object):
             server.set_seed_ratio(float(limit), self.torrents[self.focus]['id'])
 
     def honors_limits(self, c):
-        server.toggle_honors_session_limits(self.torrents[self.focus]['id'])
+        print(self.selected_ids(),file=sys.stderr)
+        server.toggle_honors_session_limits(self.selected_ids())
 
     def bandwidth_priority(self, c):
         if c == ord('-') and self.focus > -1:
-            server.decrease_bandwidth_priority(self.torrents[self.focus]['id'])
+            server.decrease_bandwidth_priority(self.selected_ids())
         elif c == ord('+') and self.focus > -1:
-            server.increase_bandwidth_priority(self.torrents[self.focus]['id'])
+            server.increase_bandwidth_priority(self.selected_ids())
 
     def copy_magnet_link(self, c):
         if self.focus > -1 and features['clipboard']:
