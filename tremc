@@ -3819,5 +3819,6 @@ if __name__ == '__main__':
     except Exception as e: 
         import traceback
         traceback.print_exc(file=sys.stderr)
+        sys.stderr.flush()
     finally:
-       quit() 
+        quit() 
