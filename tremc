@@ -3791,6 +3791,6 @@ if __name__ == '__main__':
         Interface()
     except Exception as e: 
         import traceback
-        traceback.print_exc(file=sys.stdout)
+        traceback.print_exc(file=sys.stderr)
     finally:
        quit() 
