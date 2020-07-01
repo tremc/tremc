@@ -2424,7 +2424,7 @@ class Interface(object):
             start=line_to_show-lines_before
         else:
             start=0
-        if len(self.filelist_cache) >= line_to_show+lines_after+1:
+        if len(self.filelist_cache) >= start+self.detaillistitems_per_page:
             end=start+self.detaillistitems_per_page
         else:
             end=len(self.filelist_cache)
