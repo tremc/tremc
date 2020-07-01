@@ -1668,6 +1668,7 @@ class Interface(object):
                         server.increase_file_priority(files)
                     elif self.focus_detaillist > -1:
                         server.increase_file_priority([self.file_index_map[self.focus_detaillist]])
+                    self.filelist_needs_refresh = True
                 else:
                     self.scrollpos_detaillist = 0
                     self.next_details()
@@ -1679,6 +1680,7 @@ class Interface(object):
                         server.decrease_file_priority(files)
                     elif self.focus_detaillist > -1:
                         server.decrease_file_priority([self.file_index_map[self.focus_detaillist]])
+                    self.filelist_needs_refresh = True
                 else:
                     self.scrollpos_detaillist = 0
                     self.prev_details()
@@ -2392,33 +2394,51 @@ class Interface(object):
             for index, file in enumerate(self.sorted_files):
                 self.file_index_map[index] = self.torrent_details['files'].index(file)
 
-        files = sorted(self.torrent_details['files'], key=lambda x: x['name'])
+            files = sorted(self.torrent_details['files'], key=lambda x: x['name'])
 
-        filelist = []
-        current_folder = []
-        current_depth = 0
-        pos = 0
-        pos_before_focus = 0
-        index = 0
-        for file in self.sorted_files:
-            f = file['name'].split('/')
-            f_len = len(f) - 1
-            if f[:f_len] != current_folder:
-                [current_depth, pos] = self.create_filelist_transition(f, current_folder, filelist, current_depth, pos)
-                current_folder = f[:f_len]
-            filelist.append(self.create_filelist_line(f[-1], index, percent(file['length'], file['bytesCompleted']),
-                file['length'], current_depth))
-            index += 1
-            if self.focus_detaillist == index - 1:
-                pos_before_focus = pos
-            if index + pos >= self.focus_detaillist + 1 + pos + self.detaillistitems_per_page/2 \
-            and index + pos >= self.detaillistitems_per_page:
-                if self.focus_detaillist + 1 + pos_before_focus < self.detaillistitems_per_page / 2:
-                    return filelist
-                return filelist[int(self.focus_detaillist + 1 + pos_before_focus - self.detaillistitems_per_page / 2)
-                        : int(self.focus_detaillist + 1 + pos_before_focus + self.detaillistitems_per_page / 2)]
-        begin = len(filelist) - self.detaillistitems_per_page
-        return filelist[begin > 0 and begin or 0:]
+            self.filelist_cache = []
+            self.filelist_cache_pos = []
+            self.filelist_cache_pos_dict = dict()
+            current_folder = []
+            current_depth = 0
+            pos = 0
+            pos_before_focus = 0
+            index = 0
+            for file in self.sorted_files:
+                f = file['name'].split('/')
+                f_len = len(f) - 1
+                if f[:f_len] != current_folder:
+                    [current_depth, pos] = self.create_filelist_transition(f, current_folder, self.filelist_cache, current_depth, pos)
+                    current_folder = f[:f_len]
+                self.filelist_cache.append(self.create_filelist_line(f[-1], index, percent(file['length'], file['bytesCompleted']),
+                    file['length'], current_depth))
+                self.filelist_cache_pos.append(pos)
+                self.filelist_cache_pos_dict[index+pos]=index
+                index += 1
+
+        if self.focus_detaillist==-1:
+            return self.filelist_cache[:self.detaillistitems_per_page]
+        pos_before_focus = self.filelist_cache_pos[self.focus_detaillist]
+        line_to_show = self.focus_detaillist + pos_before_focus
+        lines_before = self.detaillistitems_per_page//2
+        lines_after = self.detaillistitems_per_page - 1 - lines_before
+        if line_to_show >= lines_before:
+            start=line_to_show-lines_before
+        else:
+            start=0
+        if len(self.filelist_cache) >= line_to_show+lines_after+1:
+            end=start+self.detaillistitems_per_page
+        else:
+            end=len(self.filelist_cache)
+            start=end-self.detaillistitems_per_page if end>=self.detaillistitems_per_page else 0
+        ret=[]
+        for i in range(start,end):
+            ret.append(
+                ('_S' if i in self.filelist_cache_pos_dict and self.filelist_cache_pos_dict[i] in self.selected_files else '')+
+                ('_F' if i==line_to_show else '')+
+                self.filelist_cache[i]
+            )
+        return ret
 
     def create_filelist_transition(self, f, current_folder, filelist, current_depth, pos):
         """ Create directory transition from <current_folder> to <f>,
@@ -2459,10 +2479,6 @@ class Interface(object):
             '  '+scale_bytes(length).rjust(7) + \
             '  '+server.get_file_priority(self.torrent_details['id'], self.file_index_map[index]).center(8) + \
             " %s| %s" % ('  '*current_depth, name[0:self.width-34-current_depth])
-        if index == self.focus_detaillist:
-            line = '_F' + line
-        if index in self.selected_files:
-            line = '_S' + line
         return line
 
     def draw_peerlist(self, ypos):
