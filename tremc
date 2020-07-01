@@ -2394,8 +2394,6 @@ class Interface(object):
             for index, file in enumerate(self.sorted_files):
                 self.file_index_map[index] = self.torrent_details['files'].index(file)
 
-            files = sorted(self.torrent_details['files'], key=lambda x: x['name'])
-
             self.filelist_cache = []
             self.filelist_cache_pos = []
             self.filelist_cache_pos_dict = dict()
