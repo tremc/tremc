@@ -903,10 +903,18 @@ class Interface(object):
             ('rateUpload','_Upload Speed'), ('rateDownload','_Download Speed'),
             ('uploadRatio','_Ratio'), ('peersConnected','P_eers'),
             ('downloadDir', 'L_ocation'), ('mainTrackerDomain', 'Trac_ker') ]
+        self.file_sort_options = [
+            ('name','_Name'), ('progress','_Progress'),
+            ('length', 'Si_ze'), ('bytesCompleted', '_Downloaded'),
+            ('none', '_Torrent order'),
+            ('reverse', 'Re_verse')
+            ]
 
         self.filter_list    = config.get('Filtering', 'filter')
         self.filter_inverse = config.getboolean('Filtering', 'invert')
         self.sort_orders    = parse_sort_str(config.get('Sorting', 'order'), [x[0] for x in self.sort_options])
+        self.file_sort_key  = 'name'
+        self.file_sort_reverse = False
         self.filter_regex   = ''
         self.tlist_item_height = config.getint('Misc', 'lines_per_torrent')
         self.torrentname_is_progressbar = config.getboolean('Misc', 'torrentname_is_progressbar')
@@ -1295,6 +1303,16 @@ class Interface(object):
                     self.sort_orders.append({'name': choice, 'reverse': False})
                     while len(self.sort_orders) > 2:
                         self.sort_orders.pop(0)
+        elif self.details_category_focus == 1:
+            choice = self.dialog_menu('Sort order', self.file_sort_options)
+            if choice != -128:
+                if choice != self.file_sort_key:
+                    self.focus_detaillist=-1
+                    self.filelist_needs_refresh=True
+                if choice == 'reverse':
+                    self.file_sort_reverse=not self.file_sort_reverse
+                else:
+                    self.file_sort_key=choice
 
     def show_stats(self, c):
         title = "Global statistics"
@@ -2394,7 +2412,15 @@ class Interface(object):
         if self.filelist_needs_refresh:
             self.filelist_needs_refresh = False
             self.file_index_map = {}
-            self.sorted_files = sorted(self.torrent_details['files'], key=lambda x: x['name'])
+            if self.file_sort_key in ['name', 'length', 'bytesCompleted']:
+                self.sorted_files = sorted(self.torrent_details['files'], key=lambda x: x[self.file_sort_key], reverse=self.file_sort_reverse)
+            elif self.file_sort_key=='progress':
+                self.sorted_files = sorted(self.torrent_details['files'], key=lambda x: x['bytesCompleted']/x['length'], reverse=self.file_sort_reverse)
+            else:
+                if self.file_sort_reverse:
+                    self.sorted_files = self.torrent_details['files'].reverse()
+                else:
+                    self.sorted_files = self.torrent_details['files'][:]
             for index, file in enumerate(self.sorted_files):
                 self.file_index_map[index] = self.torrent_details['files'].index(file)
 
@@ -2928,7 +2954,8 @@ class Interface(object):
                            " Shift+Tab/Left  Jump to previous view\n"
                 if self.details_category_focus == 1:  # files
                     if self.focus_detaillist > -1:
-                        message += "     Left/Right  Decrease/Increase file priority\n"
+                        message += "              s  Sort torrent list\n" + \
+                        "     Left/Right  Decrease/Increase file priority\n"
                     message += "        Up/Down  Select file\n" + \
                                "          Space  Select/Deselect focused file\n" + \
                                "              a  Select/Deselect all files\n" + \
