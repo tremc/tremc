@@ -96,6 +96,11 @@ if features['geoip']:
         if hasattr(geo_ip6, 'country_code_by_addr_v6'):
             return geo_ip6.country_code_by_addr_v6(addr)
 
+starttime=time.time()
+debug=True
+def pdebug(*argv):
+    if debug:
+        print(time.time()-starttime,": ",*argv,file=sys.stderr,flush=True)
 
 # define config defaults
 config = configparser.ConfigParser()
