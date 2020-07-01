@@ -667,8 +667,8 @@ class Transmission(object):
     def toggle_turtle_mode(self):
         self.set_option('alt-speed-enabled', not self.status_cache['alt-speed-enabled'])
 
-    def add_torrent(self, location):
-        args = {}
+    def add_torrent(self, location, paused=False):
+        args = {'paused': paused}
         try:
             with  open(location, 'rb') as fp:
                 args['metainfo'] = base64.b64encode(fp.read()).decode()
@@ -993,6 +993,7 @@ class Interface(object):
             ord('h'):               self.file_pritority_or_switch_details,
             curses.KEY_LEFT:        self.file_pritority_or_switch_details,
             ord(' '):               self.space_key,
+            curses.ascii.ctrl(ord('a')): self.add_torrent_paused,
             ord('a'):               self.a_key,
             ord('A'):               self.A_key,
             ord('m'):               self.move_torrent,
@@ -1249,7 +1250,10 @@ class Interface(object):
         else:
             self.file_pritority_or_switch_details(c)
 
-    def add_torrent(self):
+    def add_torrent_paused(self, c):
+        self.add_torrent(paused=True)
+
+    def add_torrent(self, paused=False):
         free_space = None
         if server.get_rpc_version() >= 15:
             # 10^9 instead of 2^30 to be consistent with web interface
@@ -1263,7 +1267,7 @@ class Interface(object):
             if re.match('^[0-9a-fA-F]{40}$', location):
                 location = 'magnet:?xt=urn:btih:{}'.format(location)
 
-            error = server.add_torrent(tilde2homedir(location))
+            error = server.add_torrent(tilde2homedir(location), paused=paused)
             if error:
                 msg = wrap("Couldn't add torrent \"%s\":" % location)
                 msg.extend(wrap(error, self.width-4))
