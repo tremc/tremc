@@ -1024,8 +1024,6 @@ class Interface(object):
         else:
             self.restore_screen()
 
-        print()
-
     def init_screen(self):
         os.environ['ESCDELAY'] = '0' # make escape usable
         self.screen = curses.initscr()
