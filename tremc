@@ -2876,7 +2876,7 @@ class Interface(object):
                   "              m  Move torrent\n" + \
                   "              F  Rename torrent/file\n" + \
                   "              n  Reannounce torrent\n" + \
-                  "              a  Add torrent\n" + \
+                  "           a/^a  Add torrent / paused\n" + \
                   "              S  Show upload/download stats\n" + \
                   "          Del/r  Remove torrent and keep content\n" + \
                   "    Shift+Del/R  Remove torrent and delete content\n"
