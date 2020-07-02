@@ -695,13 +695,13 @@ class Transmission(object):
         request.send_request()
         self.wait_for_torrentlist_update()
 
-    def start_now_torrent(self, id):
-        request = TransmissionRequest(self.host, self.port, self.path, 'torrent-start-now', 1, {'ids': [id]})
+    def start_now_torrent(self, ids):
+        request = TransmissionRequest(self.host, self.port, self.path, 'torrent-start-now', 1, {'ids': ids})
         request.send_request()
         self.wait_for_torrentlist_update()
 
-    def verify_torrent(self, id):
-        request = TransmissionRequest(self.host, self.port, self.path, 'torrent-verify', 1, {'ids': [id]})
+    def verify_torrent(self, ids):
+        request = TransmissionRequest(self.host, self.port, self.path, 'torrent-verify', 1, {'ids': ids})
         request.send_request()
         self.wait_for_torrentlist_update()
 
@@ -1513,12 +1513,9 @@ class Interface(object):
                 server.stop_torrents([t['id']])
 
     def start_now_torrent(self, c):
-        if self.focus > -1:
-            if self.selected_torrent > -1:
-                t = self.torrent_details
-            else:
-                t = self.torrents[self.focus]
-            server.start_now_torrent(t['id'])
+        ids = self.selected_ids()
+        if ids:
+            server.start_now_torrent(ids)
 
     def pause_unpause_all_torrent(self, c):
         if len(self.torrents) > 0:
@@ -1529,10 +1526,11 @@ class Interface(object):
                 server.stop_torrents([t['id'] for t in self.torrents])
 
     def verify_torrent(self, c):
-        if self.focus > -1:
-            if self.torrents[self.focus]['status'] != Transmission.STATUS_CHECK \
-            and self.torrents[self.focus]['status'] != Transmission.STATUS_CHECK_WAIT:
-                server.verify_torrent(self.torrents[self.focus]['id'])
+        ids = self.selected_ids()
+        ids=[i for i in ids if not server.get_torrent_by_id(i)['status'] in 
+                        [ Transmission.STATUS_CHECK, Transmission.STATUS_CHECK_WAIT]]
+        if ids:
+                server.verify_torrent(ids)
 
     def reannounce_torrent(self, c):
         ids = self.selected_ids()
