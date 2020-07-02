@@ -808,7 +808,7 @@ class Transmission(object):
         self.wait_for_update(7)
 
     def wait_for_details_update(self):
-        self.wait_for_update(77)
+        self.wait_for_update(self.TAG_TORRENT_DETAILS)
 
     def wait_for_status_update(self):
         self.wait_for_update(22)
@@ -1131,7 +1131,13 @@ class Interface(object):
             self.draw_title_bar()  # show shortcuts and stuff
             self.draw_stats()      # show global states
             self.screen.move(0, 0)  # in case cursor can't be invisible
-            self.handle_user_input()
+            if self.handle_user_input() == -1:
+                # No input for one second, so update file list.
+                # It takes a long time, so avoid when handling user input
+                if self.selected_torrent > -1 and self.details_category_focus == 1:
+                    self.filelist_needs_refresh = True
+                    server.set_torrent_details_id(self.torrents[self.focus]['id'])
+                    server.wait_for_details_update()
             if self.exit_now:
                 return
 
@@ -1876,7 +1882,7 @@ class Interface(object):
     def handle_user_input(self):
         c = self.screen.getch()
         if c == -1:
-            return 0
+            return -1
         f = self.keybindings.get(c, None)
         if f:
             f(c)
@@ -1888,6 +1894,7 @@ class Interface(object):
         except Exception as e:
             debug('caught %s in handle_user_input(): %s\n' % (type(e), str(e)))
             pass
+        return c
 
     def select_unselect_torrent(self, all=False):
         if all:
