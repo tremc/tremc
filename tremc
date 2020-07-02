@@ -1064,7 +1064,11 @@ class Interface(object):
             if not cmd_args.SKIPVERSIONCHECK and (self.width < 73 or self.height < 16):
                 self.screen.erase()
                 self.screen.addstr(0,0, "Terminal too small", curses.A_REVERSE + curses.A_BOLD)
-                time.sleep(1)
+                self.screen.addstr(1,0, "Resize terminal or")
+                self.screen.addstr(2,0, "Press 'q' to  quit")
+                c = self.screen.getch()
+                if c in [ 27, ord('q')]:
+                    quit()
             else:
                 break
         self.manage_layout()
