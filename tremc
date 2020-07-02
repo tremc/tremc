@@ -939,7 +939,7 @@ class Interface(object):
         self.focus_detaillist       = -1 # same as focus but for details
         self.selected_files         = [] # marked files in details
         self.file_index_map         = {} # Maps local torrent's file indices to server file indices
-        self.scrollpos_detaillist   = 0  # same as scrollpos but for details
+        self.scrollpos_detaillist   = [0]*5  # same as scrollpos but for details
         self.exit_now               = False
 
         self.keybindings = {
@@ -1138,7 +1138,7 @@ class Interface(object):
     def go_back_or_unfocus(self, c):
         if self.focus_detaillist > -1:   # unfocus and deselect file
             self.focus_detaillist     = -1
-            self.scrollpos_detaillist = 0
+            self.scrollpos_detaillist = [0]*5
             self.selected_files       = []
         elif self.selected_torrent > -1: # return from details
             self.details_category_focus = 0
@@ -1156,7 +1156,7 @@ class Interface(object):
             server.set_torrent_details_id(-1)
             self.selected_torrent       = -1
             self.details_category_focus = 0
-            self.scrollpos_detaillist   = 0
+            self.scrollpos_detaillist   = [0]*5
             self.selected_files         = []
 
     def go_back_or_quit(self, c):
@@ -1167,7 +1167,7 @@ class Interface(object):
             self.selected_torrent       = -1
             self.details_category_focus = 0
             self.focus_detaillist       = -1
-            self.scrollpos_detaillist   = 0
+            self.scrollpos_detaillist   = [0]*5
             self.selected_files         = []
 
     def space_key(self, c):
@@ -1576,11 +1576,11 @@ class Interface(object):
             return
 
         t = self.torrent_details
-        if (self.scrollpos_detaillist >= 0 and \
-            self.scrollpos_detaillist < len(t['trackerStats']) and \
+        if (self.scrollpos_detaillist[3] >= 0 and \
+            self.scrollpos_detaillist[3] < len(t['trackerStats']) and \
             self.dialog_yesno("Do you want to remove this tracker?") is True):
 
-            tracker = t['trackerStats'][self.scrollpos_detaillist]
+            tracker = t['trackerStats'][self.scrollpos_detaillist[3]]
             response = server.remove_torrent_tracker(t['id'], tracker['id'])
 
             if response:
@@ -1610,32 +1610,32 @@ class Interface(object):
             if self.details_category_focus == 1:
                 # focus/movement
                 if c == curses.KEY_UP or c == ord('k') or c == curses.ascii.ctrl(ord('p')):
-                    self.focus_detaillist, self.scrollpos_detaillist = \
-                        self.move_up(self.focus_detaillist, self.scrollpos_detaillist, 1)
+                    self.focus_detaillist, self.scrollpos_detaillist[1] = \
+                        self.move_up(self.focus_detaillist, self.scrollpos_detaillist[1], 1)
                 elif c == curses.KEY_DOWN or c == ord('j') or c == curses.ascii.ctrl(ord('n')):
-                    self.focus_detaillist, self.scrollpos_detaillist = \
-                        self.move_down(self.focus_detaillist, self.scrollpos_detaillist, 1,
+                    self.focus_detaillist, self.scrollpos_detaillist[1] = \
+                        self.move_down(self.focus_detaillist, self.scrollpos_detaillist[1], 1,
                                        self.detaillistitems_per_page, len(self.torrent_details['files']))
                 elif c == curses.KEY_PPAGE or c == curses.ascii.ctrl(ord('b')):
-                    self.focus_detaillist, self.scrollpos_detaillist = \
-                        self.move_page_up(self.focus_detaillist, self.scrollpos_detaillist, 1,
+                    self.focus_detaillist, self.scrollpos_detaillist[1] = \
+                        self.move_page_up(self.focus_detaillist, self.scrollpos_detaillist[1], 1,
                                           self.detaillistitems_per_page)
                 elif c == curses.KEY_NPAGE or c == curses.ascii.ctrl(ord('f')):
-                    self.focus_detaillist, self.scrollpos_detaillist = \
-                        self.move_page_down(self.focus_detaillist, self.scrollpos_detaillist, 1,
+                    self.focus_detaillist, self.scrollpos_detaillist[1] = \
+                        self.move_page_down(self.focus_detaillist, self.scrollpos_detaillist[1], 1,
                                             self.detaillistitems_per_page, len(self.torrent_details['files']))
                 elif c == curses.KEY_HOME or c == ord('g'):
-                    self.focus_detaillist, self.scrollpos_detaillist = self.move_to_top()
+                    self.focus_detaillist, self.scrollpos_detaillist[1] = self.move_to_top()
                 elif c == curses.KEY_END or c == ord('G'):
-                    self.focus_detaillist, self.scrollpos_detaillist = \
+                    self.focus_detaillist, self.scrollpos_detaillist[1] = \
                         self.move_to_end(1, self.detaillistitems_per_page, len(self.torrent_details['files']))
                 # visual mode
                 global vmode_id
                 if vmode_id > -1:
-                    if vmode_id < self.focus_detaillist:
-                        self.selected_files = list(range(vmode_id, self.focus_detaillist + 1))
+                    if vmode_id < self.focus_detaillist[1]:
+                        self.selected_files = list(range(vmode_id, self.focus_detaillist[1] + 1))
                     else:
-                        self.selected_files = list(range(self.focus_detaillist, vmode_id + 1))
+                        self.selected_files = list(range(self.focus_detaillist[1], vmode_id + 1))
             list_len = 0
 
             # peer list movement
@@ -1655,28 +1655,28 @@ class Interface(object):
 
             if list_len:
                 if c == curses.KEY_UP or c == ord('k') or c == curses.ascii.ctrl(ord('p')):
-                    if self.scrollpos_detaillist > 0:
-                        self.scrollpos_detaillist -= 1
+                    if self.scrollpos_detaillist[self.details_category_focus] > 0:
+                        self.scrollpos_detaillist[self.details_category_focus] -= 1
                 elif c == curses.KEY_DOWN or c == ord('j') or c == curses.ascii.ctrl(ord('n')):
-                    if self.scrollpos_detaillist < list_len - 1:
-                        self.scrollpos_detaillist += 1
+                    if self.scrollpos_detaillist[self.details_category_focus] < list_len - 1:
+                        self.scrollpos_detaillist[self.details_category_focus] += 1
                 elif c == curses.KEY_PPAGE or c == curses.ascii.ctrl(ord('b')):
-                    self.scrollpos_detaillist = \
-                        max(self.scrollpos_detaillist - self.detaillistitems_per_page - 1, 0)
+                    self.scrollpos_detaillist[self.details_category_focus] = \
+                        max(self.scrollpos_detaillist[self.details_category_focus] - self.detaillistitems_per_page - 1, 0)
                 elif c == curses.KEY_NPAGE or c == curses.ascii.ctrl(ord('f')):
-                    if self.scrollpos_detaillist + self.detaillistitems_per_page >= list_len:
-                        self.scrollpos_detaillist = list_len - 1
+                    if self.scrollpos_detaillist[self.details_category_focus] + self.detaillistitems_per_page >= list_len:
+                        self.scrollpos_detaillist[self.details_category_focus] = list_len - 1
                     else:
-                        self.scrollpos_detaillist += self.detaillistitems_per_page
+                        self.scrollpos_detaillist[self.details_category_focus] += self.detaillistitems_per_page
                 elif c == curses.KEY_HOME or c == ord('g'):
-                    self.scrollpos_detaillist = 0
+                    self.scrollpos_detaillist[self.details_category_focus] = 0
                 elif c == curses.KEY_END or c == ord('G'):
-                    self.scrollpos_detaillist = list_len - 1
+                    self.scrollpos_detaillist[self.details_category_focus] = list_len - 1
 
             # Disallow scrolling past the last item that would cause blank
             # space to be displayed in pieces and peer lists.
             if self.details_category_focus in (2, 4):
-                self.scrollpos_detaillist = min(self.scrollpos_detaillist,
+                self.scrollpos_detaillist[self.details_category_focus] = min(self.scrollpos_detaillist[self.details_category_focus],
                     max(0, list_len - self.detaillistitems_per_page))
 
     def file_pritority_or_switch_details(self, c):
@@ -1692,7 +1692,6 @@ class Interface(object):
                         server.increase_file_priority([self.file_index_map[self.focus_detaillist]])
                     self.filelist_needs_refresh = True
                 else:
-                    self.scrollpos_detaillist = 0
                     self.next_details()
             elif c == curses.KEY_LEFT or c == ord('h'):
                 if self.details_category_focus == 1 and \
@@ -1704,7 +1703,6 @@ class Interface(object):
                         server.decrease_file_priority([self.file_index_map[self.focus_detaillist]])
                     self.filelist_needs_refresh = True
                 else:
-                    self.scrollpos_detaillist = 0
                     self.prev_details()
 
     def rename_torrent_selected_file(self, c):
@@ -2513,7 +2511,7 @@ class Interface(object):
         # Start drawing list either at the "selected" index, or at the index
         # that is required to display all remaining items without further scrolling.
         last_possible_index = max(0, len(self.torrent_details['peers']) - self.detaillistitems_per_page)
-        start = min(self.scrollpos_detaillist, last_possible_index)
+        start = min(self.scrollpos_detaillist[2], last_possible_index)
         end = start + self.detaillistitems_per_page
         peers = self.torrent_details['peers'][start:end]
 
@@ -2598,22 +2596,22 @@ class Interface(object):
                 self.pad.addstr(ypos, xpos, *args)
 
         tracker_per_page = self.detaillistitems_per_page // self.TRACKER_ITEM_HEIGHT
-        page = self.scrollpos_detaillist // tracker_per_page
+        page = self.scrollpos_detaillist[3] // tracker_per_page
         start = tracker_per_page * page
         end = tracker_per_page * (page + 1)
         tlist = self.torrent_details['trackerStats'][start:end]
 
         # keep position in range when last tracker gets deleted
-        self.scrollpos_detaillist = min(self.scrollpos_detaillist,
+        self.scrollpos_detaillist[3] = min(self.scrollpos_detaillist[3],
                                         len(self.torrent_details['trackerStats'])-1)
         # show newly added tracker when list was empty before
         if self.torrent_details['trackerStats']:
-            self.scrollpos_detaillist = max(0, self.scrollpos_detaillist)
+            self.scrollpos_detaillist[3] = max(0, self.scrollpos_detaillist[3])
 
         current_tier = -1
         for index, t in enumerate(tlist):
             announce_msg_size = scrape_msg_size = 0
-            selected = t == self.torrent_details['trackerStats'][self.scrollpos_detaillist]
+            selected = t == self.torrent_details['trackerStats'][self.scrollpos_detaillist[3]]
 
             if current_tier != t['tier']:
                 current_tier = t['tier']
@@ -2662,7 +2660,7 @@ class Interface(object):
         for x in range(10, map_width, 10):
             self.pad.addstr(ypos, x+margin-1, str(x), curses.A_BOLD)
 
-        start = self.scrollpos_detaillist * map_width
+        start = self.scrollpos_detaillist[4] * map_width
         end = min(start + (self.height - ypos - 3) * map_width, piece_count)
         if end <= start:
             return
@@ -2712,7 +2710,6 @@ class Interface(object):
         if self.details_category_focus == 1: # We moved to file list
             self.filelist_needs_refresh = True
         self.focus_detaillist     = -1
-        self.scrollpos_detaillist = 0
         self.pad.erase()
 
     def prev_details(self):
