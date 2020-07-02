@@ -97,9 +97,9 @@ if features['geoip']:
             return geo_ip6.country_code_by_addr_v6(addr)
 
 starttime=time.time()
-debug=True
+debug_time=True
 def pdebug(*argv):
-    if debug:
+    if debug_time:
         print(time.time()-starttime,": ",*argv,file=sys.stderr,flush=True)
 
 # define config defaults
