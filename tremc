@@ -1560,9 +1560,15 @@ class Interface(object):
                 self.focus_next_after_delete()
 
     def focus_next_after_delete(self):
-        """ Focus next torrent after user deletes torrent """
+        """ Focus next torrent after user deletes torrent
+            self.torrents still includes the deleted torrent
+        """
+
         new_focus = min(self.focus + 1, len(self.torrents) - 2)
-        self.focused_id = self.torrents[new_focus]['id']
+        if new_focus != self.focus:
+            self.focused_id = self.torrents[new_focus]['id']
+        else:
+            self.focused_id = self.torrents[new_focus+1]['id']
 
     def add_tracker(self):
         if server.get_rpc_version() < 10:
