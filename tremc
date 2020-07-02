@@ -1424,6 +1424,10 @@ class Interface(object):
        server.set_rate_limit('down', limit)
 
     def selected_ids(self):
+        # If viewing torrent details, act on viewed torrent, even if there is a
+        # selection.
+        if self.selected_torrent > -1:
+            return [self.torrent_details['id']]
         if self.selected:
             return list(self.selected)
         else:
