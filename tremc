@@ -940,6 +940,9 @@ class Interface(object):
         self.torrentname_is_progressbar = config.getboolean('Misc', 'torrentname_is_progressbar')
         self.file_viewer    = config.get('Misc', 'file_viewer')
         self.file_open_in_terminal = config.getboolean('Misc', 'file_open_in_terminal')
+        self.profiles       = parse_config_profiles(config,[x[0] for x in self.sort_options])
+        if cmd_args.profile in self.profiles:
+            self.apply_profile(self.profiles[cmd_args.profile])
 
         self.torrents         = server.get_torrent_list(self.sort_orders)
         self.stats            = server.get_global_stats()
@@ -1028,6 +1031,16 @@ class Interface(object):
             ord('M'):               self.copy_magnet_link,
             ord('n'):               self.reannounce_torrent,
             ord('/'):               self.dialog_search_torrentlist,
+            ord('0'):               self.profile_selected,
+            ord('1'):               self.profile_selected,
+            ord('2'):               self.profile_selected,
+            ord('3'):               self.profile_selected,
+            ord('4'):               self.profile_selected,
+            ord('5'):               self.profile_selected,
+            ord('6'):               self.profile_selected,
+            ord('7'):               self.profile_selected,
+            ord('8'):               self.profile_selected,
+            ord('9'):               self.profile_selected,
             curses.KEY_SEND:        lambda c: self.move_queue('bottom'),
             curses.KEY_SHOME:       lambda c: self.move_queue('top'),
             curses.KEY_SLEFT:       lambda c: self.move_queue('ppage'),
@@ -1052,6 +1065,21 @@ class Interface(object):
             raise
         else:
             self.restore_screen()
+
+    def apply_profile(self, profile):
+        self.sort_orders  = profile['sort']
+        self.filter_list  = profile['filter']
+        if self.filter_list == 'tracker':
+            self.filter_tracker = profile['filter_param']
+        if self.filter_list == 'regex':
+            self.filter_regex = profile['filter_param']
+        self.filter_inverse = profile['filter_inverse']
+
+    def profile_selected(self, p):
+        if p in range(ord('0'),ord('9')+1):
+            p=chr(p)
+        if p in self.profiles:
+            self.apply_profile(self.profiles[p])
 
     def init_screen(self):
         os.environ['ESCDELAY'] = '0' # make escape usable
@@ -2684,7 +2712,7 @@ class Interface(object):
                 for i in range(self.TRACKER_ITEM_HEIGHT):
                     addstr(ypos+i, 0, ' ', curses.A_BOLD + curses.A_REVERSE)
 
-            format = "%X" if self.narrow else "%x %X" 
+            format = "%X" if self.narrow else "%x %X"
             addstr(ypos+1, 4, "Last announce: %s" % timestamp(t['lastAnnounceTime'], narrow=self.narrow, format=format))
             addstr(ypos+2, 4, "Next announce: %s" % timestamp(t['nextAnnounceTime'], narrow=self.narrow, format=format))
             addstr(ypos+3, 4, "  Last scrape: %s" % timestamp(t['lastScrapeTime'], narrow=self.narrow, format=format))
@@ -3859,6 +3887,33 @@ def parse_sort_str(sort_str, orders):
     return sort_orders
 
 
+def parse_config_profiles(config,orders):
+    if not 'Profiles' in config:
+        return {}
+    ret = {}
+    for i in config['Profiles']:
+        if i.startswith('profile'):
+            name=i[7:]
+            if name:
+                s = config['Profiles'][i].split('#=',3)
+                pdebug(i, config['Profiles'][i], s)
+                if s == ['']:
+                    ret[name]={ 'sort': [{ 'name':'name', 'reverse':False }], 'filter':'none', 'filter_inverse': False}
+                elif len(s)==3:
+                    ret[name]={}
+                    if s[0].startswith(':'):
+                        ret[name]['filter_inverse']=True
+                        s[0]=s[0][1:]
+                    else:
+                        ret[name]['filter_inverse']=False
+                    ret[name]['filter']=s[0]
+                    if s[0] in ['tracker', 'regex']:
+                        ret[name]['filter_param']=s[1]
+                    ret[name]['sort'] = parse_sort_str(s[2],orders)
+    pdebug(ret)
+    return ret
+
+
 def show_version(option, opt_str, value, parser):
     quit("tremc %s  (supports Transmission %s-%s)\n" % \
          (VERSION, TRNSM_VERSION_MIN, TRNSM_VERSION_MAX))
@@ -3890,7 +3945,9 @@ if __name__ == '__main__':
     parser.add_option("-n", "--netrc", action="store_true", dest="use_netrc", default=False,
                       help="Get authentication info from your ~/.netrc file.")
     parser.add_option("-X", "--skip-version-check", "--permissive", action="store_true", dest="SKIPVERSIONCHECK", default=False,
-                      help="Proceed even if the running transmission daemon seems incompatible.")
+                      help="Proceed even if the running transmission daemon seems incompatible, or the terminal is too small.")
+    parser.add_option("-p", "--profile", action="store", dest="profile",
+                      help="Select profile to use.")
     parser.add_option("--debug", action="store_true", dest="DEBUG", default=False,
                       help="Everything passed to the debug() function will be added to the file debug.log.")
     (cmd_args, transmissionremote_args) = parser.parse_args()
