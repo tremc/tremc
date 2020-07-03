@@ -1081,7 +1081,7 @@ class Interface(object):
             self.screen.refresh()
             self.height, self.width = self.screen.getmaxyx()
             # Tracker list breaks if width smaller than 73
-            if not cmd_args.SKIPVERSIONCHECK and (self.width < 73 or self.height < 16):
+            if not cmd_args.SKIPVERSIONCHECK and (self.width < 40 or self.height < 16):
                 self.screen.erase()
                 self.screen.addstr(0,0, "Terminal too small", curses.A_REVERSE + curses.A_BOLD)
                 self.screen.addstr(1,0, "Resize terminal or")
