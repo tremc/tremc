@@ -292,7 +292,7 @@ class Transmission(object):
                    'uploadLimited', 'downloadLimited', 'bandwidthPriority',
                    'peersSendingToUs', 'peersGettingFromUs',
                    'seedRatioLimit', 'seedRatioMode', 'isPrivate', 'magnetLink',
-                   'honorsSessionLimits', 
+                   'honorsSessionLimits',
                   ]
 
     DETAIL_FIELDS = ['files', 'priorities', 'wanted', 'peers', 'trackers',
@@ -1531,7 +1531,7 @@ class Interface(object):
 
     def verify_torrent(self, c):
         ids = self.selected_ids()
-        ids=[i for i in ids if not server.get_torrent_by_id(i)['status'] in 
+        ids=[i for i in ids if not server.get_torrent_by_id(i)['status'] in
                         [ Transmission.STATUS_CHECK, Transmission.STATUS_CHECK_WAIT]]
         if ids:
                 server.verify_torrent(ids)
@@ -3885,9 +3885,9 @@ if __name__ == '__main__':
                           config.get('Connection', 'password'))
     try:
         Interface()
-    except Exception as e: 
+    except Exception as e:
         import traceback
         traceback.print_exc(file=sys.stderr)
         sys.stderr.flush()
     finally:
-        quit() 
+        quit()
