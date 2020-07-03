@@ -642,7 +642,6 @@ class Transmission(object):
 
     def decrease_bandwidth_priority(self, torrent_ids):
         if torrent_ids:
-            print(torrent_ids,file=sys.stderr)
             current=max([self.get_torrent_by_id(t)['bandwidthPriority'] for t in torrent_ids])
             if current > -1:
                 request = TransmissionRequest(self.host, self.port, self.path, 'torrent-set', 1,
@@ -1524,7 +1523,6 @@ class Interface(object):
             server.set_seed_ratio(float(limit), self.torrents[self.focus]['id'])
 
     def honors_limits(self, c):
-        print(self.selected_ids(),file=sys.stderr)
         server.toggle_honors_session_limits(self.selected_ids())
 
     def bandwidth_priority(self, c):
