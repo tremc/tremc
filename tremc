@@ -3901,7 +3901,6 @@ def parse_config_profiles(config,orders):
             name=i[7:]
             if name:
                 s = config['Profiles'][i].split('#=',3)
-                pdebug(i, config['Profiles'][i], s)
                 if s == ['']:
                     ret[name]={ 'sort': [{ 'name':'name', 'reverse':False }], 'filter':'none', 'filter_inverse': False}
                 elif len(s)==3:
@@ -3915,7 +3914,6 @@ def parse_config_profiles(config,orders):
                     if s[0] in ['tracker', 'regex']:
                         ret[name]['filter_param']=s[1]
                     ret[name]['sort'] = parse_sort_str(s[2],orders)
-    pdebug(ret)
     return ret
 
 
