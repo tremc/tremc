@@ -2656,8 +2656,6 @@ class Interface(object):
 
         tracker_per_page = max(1,self.detaillistitems_per_page // (self.TRACKER_ITEM_HEIGHT+2))
         page = self.scrollpos_detaillist[3] // tracker_per_page
-        pdebug(self.scrollpos_detaillist[3], self.detaillistitems_per_page,
-        self.TRACKER_ITEM_HEIGHT, tracker_per_page, page)
         start = tracker_per_page * page
         end = tracker_per_page * (page + 1)
         tlist = self.torrent_details['trackerStats'][start:end]
@@ -3047,12 +3045,9 @@ class Interface(object):
         height = min(self.height, message.count("\n")+3)
         while True:
             win,last = self.help_window(height, width, message=message, title=title)
-            pdebug('last=',last)
             while True:
                 c = win.getch()
-                pdebug('c=',c)
                 if c == ord(' '):
-                    pdebug('here', last)
                     win, last = self.help_window(height, width, message=message, title=title, first=last, win=win)
                 elif c>=0:
                     self.clear_userinput(win)
@@ -3065,7 +3060,6 @@ class Interface(object):
         return self.real_window(height, width, message=message, title=title, first=first, win=win)
 
     def real_window(self, height, width, message='', title='', first=0, win=None):
-        pdebug('here first=',first)
         height = min(self.height, height)
         width  = min(self.width, width)
         ypos = int( (self.height - height) / 2 )
@@ -3089,7 +3083,6 @@ class Interface(object):
 
         ypos = 1
         for line in message.split("\n")[first:]:
-            pdebug('line=',line)
             if len_columns(line) > width-3:
                 line = ljust_columns(line, width-6) + '...'
 
