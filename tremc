@@ -819,25 +819,45 @@ class Transmission(object):
             if self.update(0, update_id): break
             time.sleep(0.1)
 
-    def get_status(self, torrent):
-        if torrent['status'] == Transmission.STATUS_STOPPED:
-            status = 'paused'
-        elif torrent['status'] == Transmission.STATUS_CHECK:
-            status = 'verifying'
-        elif torrent['status'] == Transmission.STATUS_CHECK_WAIT:
-            status = 'will verify'
-        elif torrent['isIsolated']:
-            status = 'isolated'
-        elif torrent['status'] == Transmission.STATUS_DOWNLOAD:
-            status = ('idle', 'downloading')[torrent['rateDownload'] > 0]
-        elif torrent['status'] == Transmission.STATUS_DOWNLOAD_WAIT:
-            status = 'will download (%d)' % torrent['queuePosition']
-        elif torrent['status'] == Transmission.STATUS_SEED:
-            status = 'seeding'
-        elif torrent['status'] == Transmission.STATUS_SEED_WAIT:
-            status = 'will seed (%d)' % torrent['queuePosition']
+    def get_status(self, torrent, narrow):
+        if narrow:
+            if torrent['status'] == Transmission.STATUS_STOPPED:
+                status = 'P'
+            elif torrent['status'] == Transmission.STATUS_CHECK:
+                status = 'V'
+            elif torrent['status'] == Transmission.STATUS_CHECK_WAIT:
+                status = 'wV'
+            elif torrent['isIsolated']:
+                status = 'X'
+            elif torrent['status'] == Transmission.STATUS_DOWNLOAD:
+                status = ('I', 'D')[torrent['rateDownload'] > 0]
+            elif torrent['status'] == Transmission.STATUS_DOWNLOAD_WAIT:
+                status = 'wD%d' % torrent['queuePosition']
+            elif torrent['status'] == Transmission.STATUS_SEED:
+                status = 'S'
+            elif torrent['status'] == Transmission.STATUS_SEED_WAIT:
+                status = 'wS%d' % torrent['queuePosition']
+            else:
+                status = '?'
         else:
-            status = 'unknown state'
+            if torrent['status'] == Transmission.STATUS_STOPPED:
+                status = 'paused'
+            elif torrent['status'] == Transmission.STATUS_CHECK:
+                status = 'verifying'
+            elif torrent['status'] == Transmission.STATUS_CHECK_WAIT:
+                status = 'will verify'
+            elif torrent['isIsolated']:
+                status = 'isolated'
+            elif torrent['status'] == Transmission.STATUS_DOWNLOAD:
+                status = ('idle', 'downloading')[torrent['rateDownload'] > 0]
+            elif torrent['status'] == Transmission.STATUS_DOWNLOAD_WAIT:
+                status = 'will download (%d)' % torrent['queuePosition']
+            elif torrent['status'] == Transmission.STATUS_SEED:
+                status = 'seeding'
+            elif torrent['status'] == Transmission.STATUS_SEED_WAIT:
+                status = 'will seed (%d)' % torrent['queuePosition']
+            else:
+                status = 'unknown state'
         return status
 
     def can_has_peers(self, torrent):
@@ -1078,6 +1098,7 @@ class Interface(object):
         self.pad_height = max((len(self.torrents)+1) * self.tlist_item_height, self.height)
         self.pad = curses.newpad(self.pad_height, self.width)
         self.detaillistitems_per_page = self.height - 8
+        self.narrow = self.width<73
 
         if self.selected_torrent > -1:
             self.rateDownload_width = self.get_rateDownload_width([self.torrent_details])
@@ -2096,11 +2117,13 @@ class Interface(object):
         else:
             percentDone = torrent['percentDone']
 
-        size = "%7s" % scale_bytes(torrent['sizeWhenDone'])
+        str_f = "%s" if self.narrow else "%7s"
+
+        size = str_f % scale_bytes(torrent['sizeWhenDone'])
         if torrent['percentDone'] < 100:
             if torrent['seeders'] <= 0 and torrent['status'] != Transmission.STATUS_CHECK:
-                size = "%7s / " % scale_bytes(torrent['available']) + size
-            size = "%7s / " % scale_bytes(torrent['haveValid'] + torrent['haveUnchecked']) + size
+                size = str_f % scale_bytes(torrent['available']) + "/" + size
+            size = str_f % scale_bytes(torrent['haveValid'] + torrent['haveUnchecked']) + "/" + size
         size = '| ' + size
         title = ljust_columns(torrent['name'], width - len(size)) + size
 
@@ -2147,33 +2170,46 @@ class Interface(object):
 
     def draw_torrentlist_status(self, torrent, focused, ypos):
         peers = ''
-        parts = [server.get_status(torrent)]
+        parts = [server.get_status(torrent, self.narrow)]
 
         if torrent['isIsolated'] and torrent['peersConnected'] <= 0:
             if not torrent['trackerStats']:
-                parts[0] = "Unable to find peers without trackers and DHT disabled"
+                parts[0] = "No tracker and no DHT" if self.narrow else "Unable to find peers without trackers and DHT disabled"
             else:
                 tracker_errors = [tracker['lastAnnounceResult'] or tracker['lastScrapeResult']
                                   for tracker in torrent['trackerStats']]
                 parts[0] = [te for te in tracker_errors if te][0]
         else:
+            pct_f = "%.0f%%" if self.narrow else " (%.2f%%)"
             if torrent['status'] == Transmission.STATUS_CHECK:
-                parts[0] += " (%.2f%%)" % (torrent['recheckProgress'] * 100)
+                parts[0] += pct_f % (torrent['recheckProgress'] * 100)
             elif torrent['status'] == Transmission.STATUS_DOWNLOAD:
-                parts[0] += " (%.2f%%)" % torrent['percentDone']
-            parts[0] = parts[0].ljust(20)
+                parts[0] += pct_f % torrent['percentDone']
+            if not self.narrow:
+                parts[0] = parts[0].ljust(20)
 
             # seeds and leeches will be appended right justified later
-            peers = "%5s seed%s " % (num2str(torrent['seeders']), ('s', ' ')[torrent['seeders']==1])
-            peers += "%5s leech%s" % (num2str(torrent['leechers']), ('es', '  ')[torrent['leechers']==1])
+            if self.narrow:
+                peers = "s:%s l:%s" % (num2str(torrent['seeders']), num2str(torrent['leechers']))
+            else:
+                peers = "%5s seed%s " % (num2str(torrent['seeders']), ('s', ' ')[torrent['seeders']==1])
+                peers += "%5s leech%s" % (num2str(torrent['leechers']), ('es', '  ')[torrent['leechers']==1])
 
             # show additional information if enough room
-            if self.torrent_title_width - sum([len(x) for x in parts]) - len(peers) > 18:
-                uploaded = scale_bytes(torrent['uploadedEver'])
-                parts.append("%7s uploaded" % ('nothing', uploaded)[uploaded != '0B'])
+            if self.narrow:
+                pdebug(self.torrent_title_width, sum([len(x) for x in parts]), len(peers), parts)
+                if self.torrent_title_width - sum([len(x) for x in parts]) - len(peers) > 9 and torrent['uploadedEver'] > 0:
+                    uploaded = scale_bytes(torrent['uploadedEver'])
+                    parts.append("U:%s" % uploaded)
+                if self.torrent_title_width - sum([len(x) for x in parts]) - len(peers) > 6:
+                    parts.append("P:%d" % torrent['peersConnected'])
+            else:
+                if self.torrent_title_width - sum([len(x) for x in parts]) - len(peers) > 18:
+                    uploaded = scale_bytes(torrent['uploadedEver'])
+                    parts.append("%7s uploaded" % ('nothing', uploaded)[uploaded != '0B'])
 
-            if self.torrent_title_width - sum([len(x) for x in parts]) - len(peers) > 22:
-                parts.append("%4s peer%s connected" % (torrent['peersConnected'],
+                if self.torrent_title_width - sum([len(x) for x in parts]) - len(peers) > 22:
+                    parts.append("%4s peer%s connected" % (torrent['peersConnected'],
                                                        ('s', ' ')[torrent['peersConnected'] == 1]))
 
         if focused:
@@ -2798,7 +2834,12 @@ class Interface(object):
         elif vmode_id > -1:
             self.screen.addstr((self.height-1), 0, "-- VISUAL --", curses.A_REVERSE)
         else:
-            self.screen.addstr((self.height-1), 0, "Torrent%s:" % ('s','')[len(self.torrents) == 1],
+            if self.narrow:
+                strings = [ 'T', 'D', 'S', 'P', 'F:', '!', ' S:' ]
+            else:
+               strings = [ "Torrent%s:" % ('s','')[len(self.torrents) == 1], "Downloading:", "Seeding:", "Paused:",
+                           "Filter:", "not ", " Sort by:"]
+            self.screen.addstr((self.height-1), 0, strings[0],
                                    curses.A_REVERSE)
             self.screen.addstr("%d (" % len(self.torrents), curses.A_REVERSE)
 
@@ -2806,23 +2847,23 @@ class Interface(object):
             seeding = len([x for x in self.torrents if x['status']==Transmission.STATUS_SEED])
             paused = self.stats['pausedTorrentCount']
 
-            self.screen.addstr("Downloading:", curses.A_REVERSE)
+            self.screen.addstr(strings[1], curses.A_REVERSE)
             self.screen.addstr("%d " % downloading, curses.A_REVERSE)
-            self.screen.addstr("Seeding:", curses.A_REVERSE)
+            self.screen.addstr(strings[2], curses.A_REVERSE)
             self.screen.addstr("%d " % seeding, curses.A_REVERSE)
-            self.screen.addstr("Paused:", curses.A_REVERSE)
+            self.screen.addstr(strings[3], curses.A_REVERSE)
             self.screen.addstr("%d) " % paused, curses.A_REVERSE)
 
             if self.filter_list:
-                self.screen.addstr("Filter:", curses.A_REVERSE)
-                self.screen.addstr("%s%s" % (('','not ')[self.filter_inverse], self.filter_list),
+                self.screen.addstr(strings[4], curses.A_REVERSE)
+                self.screen.addstr("%s%s" % (('',strings[5])[self.filter_inverse], self.filter_list),
                                    curses.color_pair(self.colors.id('filter_status'))
                                    + curses.A_REVERSE)
 
             # show last sort order (if terminal size permits it)
             curpos_y, curpos_x = self.screen.getyx()
             if self.sort_orders and self.width - curpos_x > 20:
-                self.screen.addstr(" Sort by:", curses.A_REVERSE)
+                self.screen.addstr(strings[6], curses.A_REVERSE)
                 name = [name[1] for name in self.sort_options if name[0] == self.sort_orders[-1]['name']][0]
                 name = name.replace('_', '').lower()
                 curses_tags = curses.color_pair(self.colors.id('filter_status')) + curses.A_REVERSE
@@ -2870,16 +2911,20 @@ class Interface(object):
 
     def draw_title_bar(self):
         self.screen.insstr(0, 0, ' '.center(self.width), curses.A_REVERSE)
-        self.draw_connection_status()
-        self.draw_quick_help()
+        w = self.draw_connection_status()
+        self.draw_quick_help(self.width-w-2)
 
     def draw_connection_status(self):
-        status = "Transmission %s @ %s:%s" % (server.version, server.host, server.port)
+        if self.narrow:
+            status = "V.%s@%s:%s" % (server.version, server.host, server.port)
+        else:
+            status = "Transmission %s@%s:%s" % (server.version, server.host, server.port)
         if cmd_args.DEBUG:
             status = "%d x %d " % (self.width, self.height) + status
         self.screen.addstr(0, 0, status, curses.A_REVERSE)
+        return len(status)
 
-    def draw_quick_help(self):
+    def draw_quick_help(self, maxwidth):
         help = [('?','Help')]
 
         if self.selected_torrent == -1:
@@ -2894,14 +2939,18 @@ class Interface(object):
                         ('space','(De)Select File'),
                         ('V','Visually Select Files'),
                         ('left/right','De-/Increase Priority'),
-                        ('escape','Unfocus/-select')] + help
+                        ('esc','Unfocus/-select')] + help
             elif self.details_category_focus == 2:
                 help = [('F1/?','Explain flags')] + help
             elif self.details_category_focus == 3:
                 help = [('a','Add Tracker'),('r','Remove Tracker')] + help
 
-        line = '  '.join(["%s:%s" % (x[0], x[1]) for x in help])
-        line = line[0:self.width]
+        # Greedy algorithm
+        line=''
+        for x in help:
+            t = "%s:%s" % (x[0], x[1])
+            if len(line)+len(t)+1<=maxwidth:
+                line = line + ' ' + t
         self.screen.insstr(0, self.width-len(line), line, curses.A_REVERSE)
 
     def list_key_bindings(self):
@@ -3012,7 +3061,7 @@ class Interface(object):
 
         ypos = 1
         for line in message.split("\n"):
-            if len_columns(line) > width:
+            if len_columns(line) > width-3:
                 line = ljust_columns(line, width-7) + '...'
 
             if ypos < height - 1:  # ypos == height-1 is frame border
