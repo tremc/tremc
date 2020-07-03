@@ -2197,7 +2197,6 @@ class Interface(object):
 
             # show additional information if enough room
             if self.narrow:
-                pdebug(self.torrent_title_width, sum([len(x) for x in parts]), len(peers), parts)
                 if self.torrent_title_width - sum([len(x) for x in parts]) - len(peers) > 9 and torrent['uploadedEver'] > 0:
                     uploaded = scale_bytes(torrent['uploadedEver'])
                     parts.append("U:%s" % uploaded)
@@ -2239,7 +2238,7 @@ class Interface(object):
 
         # divider + menu
         menu_items = ['_Overview', "_Files", 'P_eers', '_Trackers', '_Chunks' ]
-        xpos = int((self.width - sum([len(x) for x in menu_items])-len(menu_items)) / 2)
+        xpos = max(0,int((self.width - sum([len(x) for x in menu_items])-len(menu_items)) / 2))
         for item in menu_items:
             self.pad.move(3, xpos)
             tags = curses.A_BOLD
@@ -2587,7 +2586,7 @@ class Interface(object):
         if features['geoip']: column_names += 'Country'
         if features['dns']: column_names += ' Host'
 
-        self.pad.addstr(ypos, 0, column_names.ljust(self.width), curses.A_UNDERLINE)
+        self.pad.addnstr(ypos, 0, column_names.ljust(self.width), self.width, curses.A_UNDERLINE)
         ypos += 1
 
         # Peers
@@ -2623,24 +2622,29 @@ class Interface(object):
             else: self.pad.addstr("%7.2f%%" % (float(peer['progress'])*100), curses.A_BOLD)
 
             # ETA
-            if peer['progress'] < 1 and peer['download_speed'] > 1024:
-                self.pad.addstr(" %8s %4s " % \
-                                    ('~' + scale_bytes(peer['download_speed']),
-                                     '~' + scale_time(peer['time_left'])))
-            else:
-                if peer['progress'] < 1:
-                    self.pad.addstr("   <guessing>  ")
+            if self.width>=55:
+                if peer['progress'] < 1 and peer['download_speed'] > 1024:
+                    self.pad.addstr(" %8s %4s " % \
+                                        ('~' + scale_bytes(peer['download_speed']),
+                                         '~' + scale_time(peer['time_left'])))
                 else:
-                    self.pad.addstr("               ")
+                    if peer['progress'] < 1:
+                        self.pad.addstr("   <guessing>  ")
+                    else:
+                        self.pad.addstr("               ")
             # Client
-            self.pad.addstr(peer['clientName'].ljust(clientname_width + 1))
+            if self.width>=55+clientname_width + 1:
+                self.pad.addstr(peer['clientName'].ljust(clientname_width + 1))
             # Address:Port
-            self.pad.addstr(peer['address'].rjust(address_width) + \
+            if self.width>=55+clientname_width + address_width + port_width + 3:
+                self.pad.addstr(peer['address'].rjust(address_width) + \
                                 ':' + str(peer['port']).ljust(port_width) + ' ')
             # Country
-            if features['geoip']: self.pad.addstr("  %2s   " % geo_ips[peer['address']])
+            if self.width>=55+clientname_width + address_width + port_width + 3 + 7:
+                if features['geoip']: self.pad.addstr("  %2s   " % geo_ips[peer['address']])
             # Host
-            if features['dns']: self.pad.addstr(host_name, curses.A_DIM)
+            if self.width>=55+clientname_width + address_width + port_width + 3 + 10:
+                if features['dns']: self.pad.addnstr(host_name, self.width - self.pad.getyx()[1], curses.A_DIM)
             ypos += 1
 
     def draw_trackerlist(self, ypos):
@@ -2650,8 +2654,10 @@ class Interface(object):
             if ypos > top and ypos < self.height - 2:
                 self.pad.addstr(ypos, xpos, *args)
 
-        tracker_per_page = self.detaillistitems_per_page // self.TRACKER_ITEM_HEIGHT
+        tracker_per_page = max(1,self.detaillistitems_per_page // (self.TRACKER_ITEM_HEIGHT+2))
         page = self.scrollpos_detaillist[3] // tracker_per_page
+        pdebug(self.scrollpos_detaillist[3], self.detaillistitems_per_page,
+        self.TRACKER_ITEM_HEIGHT, tracker_per_page, page)
         start = tracker_per_page * page
         end = tracker_per_page * (page + 1)
         tlist = self.torrent_details['trackerStats'][start:end]
@@ -2680,27 +2686,32 @@ class Interface(object):
                 for i in range(self.TRACKER_ITEM_HEIGHT):
                     addstr(ypos+i, 0, ' ', curses.A_BOLD + curses.A_REVERSE)
 
-            addstr(ypos+1, 4, "Last announce: %s" % timestamp(t['lastAnnounceTime']))
-            addstr(ypos+2, 4, "Next announce: %s" % timestamp(t['nextAnnounceTime']))
-            addstr(ypos+3, 4, "  Last scrape: %s" % timestamp(t['lastScrapeTime']))
-            addstr(ypos+4, 4, "  Next scrape: %s" % timestamp(t['nextScrapeTime']))
+            format = "%X" if self.narrow else "%x %X" 
+            addstr(ypos+1, 4, "Last announce: %s" % timestamp(t['lastAnnounceTime'], narrow=self.narrow, format=format))
+            addstr(ypos+2, 4, "Next announce: %s" % timestamp(t['nextAnnounceTime'], narrow=self.narrow, format=format))
+            addstr(ypos+3, 4, "  Last scrape: %s" % timestamp(t['lastScrapeTime'], narrow=self.narrow, format=format))
+            addstr(ypos+4, 4, "  Next scrape: %s" % timestamp(t['nextScrapeTime'], narrow=self.narrow, format=format))
 
             if t['lastScrapeSucceeded']:
-                seeds   = "%s seed%s" % (num2str(t['seederCount']), ('s', '')[t['seederCount']==1])
-                leeches = "%s leech%s" % (num2str(t['leecherCount']), ('es', '')[t['leecherCount']==1])
+                if self.narrow:
+                    seeds   = "S:%s" % num2str(t['seederCount'])
+                    leeches = "P:%s" % num2str(t['leecherCount'])
+                else:
+                    seeds   = "%s seed%s" % (num2str(t['seederCount']), ('s', '')[t['seederCount']==1])
+                    leeches = "%s leech%s" % (num2str(t['leecherCount']), ('es', '')[t['leecherCount']==1])
                 addstr(ypos+5, 4, "Tracker knows: %s and %s" % (seeds, leeches), curses.A_BOLD)
             else:
                 if t['lastScrapeResult']:
-                    addstr(ypos+5, 9, "Response: %s" % t['lastScrapeResult'])
+                    addstr(ypos+5, 9, "Response: %s" % t['lastScrapeResult'][:self.width-20])
 
             if t['lastAnnounceSucceeded']:
                 peers = "%s peer%s" % (num2str(t['lastAnnouncePeerCount']), ('s', '')[t['lastAnnouncePeerCount']==1])
-                addstr(ypos,   2, t['announce'], curses.A_BOLD + curses.A_UNDERLINE)
+                addstr(ypos,   2, t['announce'][:self.width-2], curses.A_BOLD + curses.A_UNDERLINE)
                 addstr(ypos+6, 11, "Result: %s received" % peers, curses.A_BOLD)
             else:
-                addstr(ypos,   2, t['announce'], curses.A_UNDERLINE)
+                addstr(ypos,   2, t['announce'][:self.width-2], curses.A_UNDERLINE)
                 if t['lastAnnounceResult']:
-                    addstr(ypos+6, 9, "Response: %s" % t['lastAnnounceResult'])
+                    addstr(ypos+6, 9, "Response: %s" % t['lastAnnounceResult'][:self.width-20])
 
             ypos += max(announce_msg_size, scrape_msg_size)
 
@@ -3034,18 +3045,35 @@ class Interface(object):
         width  = max([len(x) for x in message.split("\n")]) + 4
         width  = min(self.width, width)
         height = min(self.height, message.count("\n")+3)
-        win = self.window(height, width, message=message, title=title)
         while True:
-            if win.getch() >= 0:
-                self.clear_userinput(win)
-                return
+            win,last = self.help_window(height, width, message=message, title=title)
+            pdebug('last=',last)
+            while True:
+                c = win.getch()
+                pdebug('c=',c)
+                if c == ord(' '):
+                    pdebug('here', last)
+                    win, last = self.help_window(height, width, message=message, title=title, first=last, win=win)
+                elif c>=0:
+                    self.clear_userinput(win)
+                    return
 
     def window(self, height, width, message='', title=''):
+        return self.real_window(height, width, message=message, title=title)[0]
+
+    def help_window(self, height, width, message='', title='', first=0, win=None):
+        return self.real_window(height, width, message=message, title=title, first=first, win=win)
+
+    def real_window(self, height, width, message='', title='', first=0, win=None):
+        pdebug('here first=',first)
         height = min(self.height, height)
         width  = min(self.width, width)
         ypos = int( (self.height - height) / 2 )
         xpos = int( (self.width  - width) / 2 )
-        win = curses.newwin(height, width, ypos, xpos)
+        if not win:
+            win = curses.newwin(height, width, ypos, xpos)
+        else:
+            win.erase()
         win.box()
         win.bkgd(' ', curses.A_REVERSE + curses.A_BOLD)
 
@@ -3060,9 +3088,10 @@ class Interface(object):
             win.addch(0, len(title) + 4 , curses.ACS_LTEE)
 
         ypos = 1
-        for line in message.split("\n"):
+        for line in message.split("\n")[first:]:
+            pdebug('line=',line)
             if len_columns(line) > width-3:
-                line = ljust_columns(line, width-7) + '...'
+                line = ljust_columns(line, width-6) + '...'
 
             if ypos < height - 1:  # ypos == height-1 is frame border
                 win.addstr(ypos, 2, line)
@@ -3070,8 +3099,8 @@ class Interface(object):
             else:
                 # Do not write outside of frame border
                 win.addstr(ypos, 2, " More... ")
-                break
-        return win
+                return win,ypos+first-1
+        return win,0
 
     def clear_userinput(self, win):
         "Make sure there is no user input left"
@@ -3565,7 +3594,7 @@ def scale_time(seconds, type='short'):
             return "%dy" % years
 
 
-def timestamp(timestamp, format="%x %X"):
+def timestamp(timestamp, format="%x %X", narrow=False):
     if timestamp < 1:
         return 'never'
 
@@ -3583,11 +3612,12 @@ def timestamp(timestamp, format="%x %X"):
     else:
         timeobj = time.localtime(timestamp)
 
+    time_f = '' if narrow else 'long'
     absolute = time.strftime(format, timeobj)
     if timestamp > time.time():
-        relative = 'in ' + scale_time(int(timestamp - time.time()), 'long')
+        relative = '+' + scale_time(int(timestamp - time.time()), time_f)
     else:
-        relative = scale_time(int(time.time() - timestamp), 'long') + ' ago'
+        relative = '-' + scale_time(int(time.time() - timestamp), time_f)
 
     if relative.startswith('now') or relative.endswith('now'):
         relative = 'now'
