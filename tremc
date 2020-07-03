@@ -2997,6 +2997,7 @@ class Interface(object):
                   "            U/D  Adjust maximum up-/download rate for focused torrent\n" + \
                   "              L  Set seed ratio limit for focused torrent\n" + \
                   "            +/-  Adjust bandwidth priority for focused torrent\n" + \
+                  "              *  Toggle honor session limits flag\n" + \
                   "              p  Pause/Unpause torrent\n" + \
                   "              P  Pause/Unpause all torrents\n" + \
                   "              N  Start torrent now\n" + \
@@ -3020,9 +3021,13 @@ class Interface(object):
             message += "            J/K  Jump to next/previous directory\n"
         # Torrent list
         if self.selected_torrent == -1:
+            if self.profiles:
+                message += "           0..9  Select profile\n"
             message += "              /  Search in torrent list\n" + \
                        "              f  Filter torrent list\n" + \
                        "              s  Sort torrent list\n" \
+                       "          Space  Select/Deselect focused torrent\n" + \
+                       "              A  Select/Deselect all torrents\n" + \
                        "    Enter/Right  View torrent's details\n" + \
                        "              o  Configuration options\n" + \
                        "              t  Toggle turtle mode\n" + \
