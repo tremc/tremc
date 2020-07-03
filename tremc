@@ -3640,10 +3640,16 @@ def timestamp(timestamp, format="%x %X", narrow=False):
 
     time_f = '' if narrow else 'long'
     absolute = time.strftime(format, timeobj)
-    if timestamp > time.time():
-        relative = '+' + scale_time(int(timestamp - time.time()), time_f)
+    if narrow:
+        if timestamp > time.time():
+            relative = '+' + scale_time(int(timestamp - time.time()), time_f)
+        else:
+            relative = '-' + scale_time(int(time.time() - timestamp), time_f)
     else:
-        relative = '-' + scale_time(int(time.time() - timestamp), time_f)
+        if timestamp > time.time():
+            relative = 'in ' + scale_time(int(timestamp - time.time()), 'long')
+        else:
+            relative = scale_time(int(time.time() - timestamp), 'long') + ' ago'
 
     if relative.startswith('now') or relative.endswith('now'):
         relative = 'now'
