@@ -57,9 +57,7 @@ locale.setlocale(locale.LC_ALL, '')
 ENCODING = locale.getpreferredencoding() or 'UTF-8'
 
 # optional features provided by non-standard modules
-features = {'dns': False, 'geoip': False, 'ipy': False, 'clipboard': False}
-try:   import adns; features['dns'] = True     # resolve IP to host name
-except ImportError: features['dns'] = False
+features = {'geoip': False, 'ipy': False, 'clipboard': False}
 
 try:   import GeoIP; features['geoip'] = True  # show country peer seems to be in
 except ImportError:  features['geoip'] = False
@@ -374,9 +372,16 @@ class Transmission(object):
         self.torrent_details_cache = dict()
         self.peer_progress_cache = dict()
         self.hosts_cache = dict()
+        self.rdns = config.getboolean('Misc', 'rdns', fallback=False) or cmd_args.rdns
+        if self.rdns:
+            # Only import threading if needed. It was optional until python 3.7
+            try:
+                import threading
+                self.threading = threading
+            except:
+                self.rdns = False
+
         self.geo_ips_cache = dict()
-        if features['dns']:
-            self.resolver = adns.init()
         if features['geoip']:
             self.geo_ip = GeoIP.new(GeoIP.GEOIP_MEMORY_CACHE)
             try:
@@ -505,11 +510,8 @@ class Transmission(object):
             this_torrent['peers'][index].update(this_peer)
 
             # resolve and locate peer's ip
-            if features['dns'] and ip not in self.hosts_cache:
-                try:
-                    self.hosts_cache[ip] = self.resolver.submit_reverse(ip, adns.rr.PTR)
-                except adns.Error:
-                    pass
+            if self.rdns and ip not in self.hosts_cache:
+                self.threading.Thread(target=reverse_dns, args=(self.hosts_cache,ip)).start()
             if features['geoip'] and ip not in self.geo_ips_cache:
                 self.geo_ips_cache[ip] = country_code_by_addr_vany(self.geo_ip, self.geo_ip6, ip)
                 if self.geo_ips_cache[ip] is None:
@@ -943,6 +945,7 @@ class Interface(object):
         if cmd_args.profile in self.profiles:
             self.apply_profile(self.profiles[cmd_args.profile])
 
+        self.rdns             = config.getboolean('Misc', 'rdns', fallback=False) or cmd_args.rdns
         self.torrents         = server.get_torrent_list(self.sort_orders)
         self.stats            = server.get_global_stats()
         self.trackers         = server.trackers
@@ -2616,7 +2619,7 @@ class Interface(object):
         column_names += 'Client'.ljust(clientname_width + 1) \
             + 'Address'.ljust(address_width+port_width+1)
         if features['geoip']: column_names += 'Country'
-        if features['dns']: column_names += ' Host'
+        if self.rdns: column_names += ' Host'
 
         self.pad.addnstr(ypos, 0, column_names.ljust(self.width), self.width, curses.A_UNDERLINE)
         ypos += 1
@@ -2625,17 +2628,11 @@ class Interface(object):
         hosts = server.get_hosts()
         geo_ips = server.get_geo_ips()
         for index, peer in enumerate(peers):
-            if features['dns']:
-                try:
-                    try:
-                        host = hosts[peer['address']].check()
-                        host_name = host[3][0]
-                    except (IndexError, KeyError):
-                        host_name = "<not resolvable>"
-                except adns.NotReady:
+            if self.rdns:
+                if peer['address'] in hosts:
+                    host_name = hosts[peer['address']]
+                else:
                     host_name = "<resolving>"
-                except adns.Error as msg:
-                    host_name = msg
 
             upload_tag = download_tag = line_tag = 0
             if peer['rateToPeer']:   upload_tag   = curses.A_BOLD
@@ -2676,7 +2673,7 @@ class Interface(object):
                 if features['geoip']: self.pad.addstr("  %2s   " % geo_ips[peer['address']])
             # Host
             if self.width>=55+clientname_width + address_width + port_width + 3 + 10:
-                if features['dns']: self.pad.addnstr(host_name, self.width - self.pad.getyx()[1], curses.A_DIM)
+                if self.rdns: self.pad.addnstr(host_name, self.width - self.pad.getyx()[1], curses.A_DIM)
             ypos += 1
 
     def draw_trackerlist(self, ypos):
@@ -3568,6 +3565,11 @@ class Interface(object):
 
 # End of class Interface
 
+def reverse_dns(cache, address):
+    try:
+        cache[address] = socket.gethostbyaddr(address)[0]
+    except:
+        cache[address] = '<not resolvable>'
 
 def percent(full, part):
     try: percent = 100/(float(full) / float(part))
@@ -3967,6 +3969,8 @@ if __name__ == '__main__':
                       help="Proceed even if the running transmission daemon seems incompatible, or the terminal is too small.")
     parser.add_option("-p", "--profile", action="store", dest="profile",
                       help="Select profile to use.")
+    parser.add_option("-d", "--reverse-dns", action="store_true", dest="rdns",
+                      help="Reverse DNS peers addresses.")
     parser.add_option("--debug", action="store_true", dest="DEBUG", default=False,
                       help="Everything passed to the debug() function will be added to the file debug.log.")
     (cmd_args, transmissionremote_args) = parser.parse_args()
