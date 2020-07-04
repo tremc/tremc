@@ -1421,6 +1421,8 @@ class Interface(object):
                        ('private','P_rivate'), ('isolated', '_Isolated'),
                        ('tracker','Trac_ker'),
                        ('regex','Regular e_xpression'),
+                       ('selected', 'S_elected'),
+                       ('honors', '_Honors limits'),
                        ('invert','In_vert'), ('','_All')]
             try:
                 s=list(map(lambda x: x[0]==self.filter_list, options)).index(True)+1
@@ -1989,6 +1991,10 @@ class Interface(object):
                                  or t['status'] == Transmission.STATUS_CHECK_WAIT]
         elif self.filter_list == 'isolated':
             self.torrents = [t for t in self.torrents if t['isIsolated']]
+        elif self.filter_list == 'honors':
+            self.torrents = [t for t in self.torrents if t['honorsSessionLimits']]
+        elif self.filter_list == 'selected':
+            self.torrents = [t for t in self.torrents if t['id'] in self.selected]
         elif self.filter_list == 'tracker':
             self.torrents = [t for t in self.torrents if t['mainTrackerDomain']==self.filter_tracker]
         elif self.filter_list == 'regex':
