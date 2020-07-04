@@ -372,7 +372,7 @@ class Transmission(object):
         self.torrent_details_cache = dict()
         self.peer_progress_cache = dict()
         self.hosts_cache = dict()
-        self.rdns = config.getboolean('Misc', 'rdns', fallback=False) or cmd_args.rdns
+        self.rdns = config.getboolean('Misc', 'rdns', fallback=False) ^ bool(cmd_args.rdns)
         if self.rdns:
             # Only import threading if needed. It was optional until python 3.7
             try:
@@ -945,7 +945,7 @@ class Interface(object):
         if cmd_args.profile in self.profiles:
             self.apply_profile(self.profiles[cmd_args.profile])
 
-        self.rdns             = config.getboolean('Misc', 'rdns', fallback=False) or cmd_args.rdns
+        self.rdns             = config.getboolean('Misc', 'rdns', fallback=False) ^ bool(cmd_args.rdns)
         self.torrents         = server.get_torrent_list(self.sort_orders)
         self.stats            = server.get_global_stats()
         self.trackers         = server.trackers
@@ -3970,7 +3970,7 @@ if __name__ == '__main__':
     parser.add_option("-p", "--profile", action="store", dest="profile",
                       help="Select profile to use.")
     parser.add_option("-d", "--reverse-dns", action="store_true", dest="rdns",
-                      help="Reverse DNS peers addresses.")
+                      help="Toggle reverse DNS peers addresses.")
     parser.add_option("--debug", action="store_true", dest="DEBUG", default=False,
                       help="Everything passed to the debug() function will be added to the file debug.log.")
     (cmd_args, transmissionremote_args) = parser.parse_args()
