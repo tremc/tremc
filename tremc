@@ -2727,9 +2727,9 @@ class Interface(object):
             else:
                 if t['lastScrapeResult']:
                     if self.narrow:
-                        addstr(ypos+5, 9, "Response: %s" % t['lastScrapeResult'].replace("Tracker gave HTTP response code ","")[:self.width-20])
+                        addstr(ypos+5, 11, "Scrape: %s" % t['lastScrapeResult'].replace("Tracker gave HTTP response code ","")[:self.width-20])
                     else:
-                        addstr(ypos+5, 9, "Response: %s" % t['lastScrapeResult'][:self.width-20])
+                        addstr(ypos+5, 11, "Scrape: %s" % t['lastScrapeResult'][:self.width-20])
 
             if t['lastAnnounceSucceeded']:
                 peers = "%s peer%s" % (num2str(t['lastAnnouncePeerCount']), ('s', '')[t['lastAnnouncePeerCount']==1])
@@ -2739,9 +2739,9 @@ class Interface(object):
                 addstr(ypos,   2, t['announce'][:self.width-2], curses.A_UNDERLINE)
                 if t['lastAnnounceResult']:
                     if self.narrow:
-                        addstr(ypos+6, 9, "Response: %s" % t['lastAnnounceResult'].replace("Tracker gave HTTP response code ","")[:self.width-20])
+                        addstr(ypos+6, 9, "Announce: %s" % t['lastAnnounceResult'].replace("Tracker gave HTTP response code ","")[:self.width-20])
                     else:
-                        addstr(ypos+6, 9, "Response: %s" % t['lastAnnounceResult'][:self.width-20])
+                        addstr(ypos+6, 9, "Announce: %s" % t['lastAnnounceResult'][:self.width-20])
 
             ypos += max(announce_msg_size, scrape_msg_size)
 
