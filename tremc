@@ -2975,6 +2975,9 @@ class Interface(object):
                 except curses.error:
                     pass
 
+            if self.selected and self.width - curpos_x > 20:
+                self.screen.addstr(" Selected: %d" % len(self.selected), curses.A_REVERSE)
+
     def draw_global_rates(self):
         # ↑1.2K ↓3.4M
         # ^    ^^     => +3
