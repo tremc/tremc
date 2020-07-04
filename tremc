@@ -1681,8 +1681,12 @@ class Interface(object):
             if self.details_category_focus == 0 and self.narrow:
                 if (c == curses.KEY_UP or c == ord('k') or c == curses.ascii.ctrl(ord('p'))) and self.scrollpos_detaillist[0]>0:
                     self.scrollpos_detaillist[0] -= 1
-                elif (c == curses.KEY_DOWN or c == ord('j') or c == curses.ascii.ctrl(ord('n'))) and self.scrollpos_detaillist[0]<=self.max_overview_scroll:
+                elif (c == curses.KEY_DOWN or c == ord('j') or c == curses.ascii.ctrl(ord('n'))) and self.scrollpos_detaillist[0]<self.max_overview_scroll:
                     self.scrollpos_detaillist[0] += 1
+                elif c == curses.KEY_HOME or c == ord('g'):
+                    self.scrollpos_detaillist[0] = 0
+                elif c == curses.KEY_END or c == ord('G'):
+                    self.scrollpos_detaillist[0] = self.max_overview_scroll
             # file list
             if self.details_category_focus == 1:
                 # focus/movement
