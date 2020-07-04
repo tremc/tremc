@@ -965,6 +965,7 @@ class Interface(object):
         self.selected_files         = [] # marked files in details
         self.file_index_map         = {} # Maps local torrent's file indices to server file indices
         self.scrollpos_detaillist   = [0]*5  # same as scrollpos but for details
+        self.max_overview_scroll    = 1
         self.exit_now               = False
 
         self.keybindings = {
@@ -1676,6 +1677,12 @@ class Interface(object):
                 self.focus, self.scrollpos = self.move_to_end(self.tlist_item_height, self.torrents_per_page, len(self.torrents))
             self.focused_id = self.torrents[self.focus]['id']
         elif self.selected_torrent > -1:
+            # overview
+            if self.details_category_focus == 0 and self.narrow:
+                if (c == curses.KEY_UP or c == ord('k') or c == curses.ascii.ctrl(ord('p'))) and self.scrollpos_detaillist[0]>0:
+                    self.scrollpos_detaillist[0] -= 1
+                elif (c == curses.KEY_DOWN or c == ord('j') or c == curses.ascii.ctrl(ord('n'))) and self.scrollpos_detaillist[0]<=self.max_overview_scroll:
+                    self.scrollpos_detaillist[0] += 1
             # file list
             if self.details_category_focus == 1:
                 # focus/movement
@@ -2302,6 +2309,20 @@ class Interface(object):
 
     def draw_details_overview(self, ypos):
         t = self.torrent_details
+        if self.narrow:
+            strings=[ 'C: ', 'D: ', 'U: ',
+                      '<waiting for %d peers, %d done>',
+                      'Swarm: ',
+                      '<no downloading peers>',
+                    ]
+        else:
+            strings=[ 'connected to ',
+                      'downloading from ',
+                      'uploading to ',
+                      '<gathering info from %d peers, %d done>',
+                      'Swarm speed: ',
+                      '<no downloading peers connected>',
+            ]
         info = []
         info.append(['Hash: ', "%s" % t['hashString']])
         info.append(['ID: ',   "%s" % t['id']])
@@ -2375,9 +2396,9 @@ class Interface(object):
             info[-1].append('unlimited (ignore global limits)')
 
         info.append(['Peers: ',
-                     "connected to %d;  "     % t['peersConnected'],
-                     "downloading from %d;  " % t['peersSendingToUs'],
-                     "uploading to %d"        % t['peersGettingFromUs']])
+                     strings[0]+"%d;  "     % t['peersConnected'],
+                     strings[1]+"%d;  " % t['peersSendingToUs'],
+                     strings[2]+"%d"        % t['peersGettingFromUs']])
 
         # average peer speed
         incomplete_peers = [peer for peer in self.torrent_details['peers'] if peer['progress'] < 1]
@@ -2391,10 +2412,10 @@ class Interface(object):
                              "distribution of 1 copy takes %s" % \
                                  scale_time(int(t['totalSize'] / swarm_speed), 'long')])
             else:
-                info.append(['Swarm speed: ', "<gathering info from %d peers, %d done>" % \
+                info.append(['Swarm speed: ', strings[3] % \
                                  (min_active_peers, len(active_peers))])
         else:
-            info.append(['Swarm speed: ', "<no downloading peers connected>"])
+            info.append([strings[4], strings[5]])
 
         info.append(['Privacy: '])
         if t['isPrivate']:
@@ -2408,21 +2429,24 @@ class Interface(object):
             info.append(['Creator: ',"%s" % t['creator']])
 
         info.append([''])
-        info.append(['Created: ',  "%s" % timestamp(t['dateCreated'])])
-        info.append(['Added: ',    "%s" % timestamp(t['addedDate'])])
-        info.append(['Started: ',  "%s" % timestamp(t['startDate'])])
-        info.append(['Activity: ', "%s" % timestamp(t['activityDate'])])
+
+        format = "%X" if self.narrow else "%x %X"
+        info.append(['Created: ',  "%s" % timestamp(t['dateCreated'], narrow=self.narrow, format=format)])
+        info.append(['Added: ',    "%s" % timestamp(t['addedDate'], narrow=self.narrow, format=format)])
+        info.append(['Started: ',  "%s" % timestamp(t['startDate'], narrow=self.narrow, format=format)])
+        info.append(['Activity: ', "%s" % timestamp(t['activityDate'], narrow=self.narrow, format=format)])
 
         if t['percentDone'] < 100 and t['eta'] > 0:
-            info.append(['Finishing: ', "%s" % timestamp(time.time() + t['eta'])])
+            info.append(['Finishing: ', "%s" % timestamp(time.time() + t['eta'], narrow=self.narrow, format=format)])
         elif t['doneDate'] <= 0:
             info.append(['Finishing: ', 'sometime'])
         else:
-            info.append(['Finished: ', "%s" % timestamp(t['doneDate'])])
+            info.append(['Finished: ', "%s" % timestamp(t['doneDate'], narrow=self.narrow, format=format)])
 
         ypos = self.draw_details_list(ypos, info)
 
-        self.draw_comment(ypos+1)
+        self.max_overview_scroll = max(self.max_overview_scroll, ypos + self.draw_comment(ypos+1) + self.scrollpos_detaillist[0] - self.height + 3 )
+
         return ypos+1
 
     def get_target_ratio(self):
@@ -2443,12 +2467,15 @@ class Interface(object):
 
     def draw_comment(self, ypos):
         t = self.torrent_details
+        n = 0
 
         if t['comment']:
             width = self.width - 2
             comment = wrap_multiline(t['comment'], width, initial_indent='   Comment: ')
             for i, line in enumerate(comment):
                 self.pad.addstr(ypos+i, 2, line)
+                n += 1
+        return n
 
     def draw_filelist(self, ypos):
         column_names = '   #  Progress    Size  Priority  Filename'
@@ -2788,6 +2815,34 @@ class Interface(object):
             self.pad.addstr(int(self.height-3), int(xpos), line, curses.A_REVERSE)
 
     def draw_details_list(self, ypos, info):
+        if self.narrow:
+            yp=ypos-self.scrollpos_detaillist[0]
+            key_width=1
+            self.pad.move(ypos,0)
+            for i in info:
+                xp=0
+                if i[0]=='Hash: ' and self.width<46:
+                    value_x = 0
+                    pass
+                else:
+                    if yp>=ypos:
+                        self.pad.addstr(yp, 0, i[0].rjust(key_width), curses.color_pair(self.colors.id('button'))+curses.A_DIM) # key
+                        xp = key_width
+                    value_x = key_width
+                # value part may be wrapped if it gets too long
+                for v in i[1:]:
+                    if xp + len(v) > self.width:
+                        yp += 1
+                        if yp>=ypos:
+                            self.pad.move(yp, value_x)
+                        xp = value_x
+                    if yp>=ypos:
+                        self.pad.addnstr(v,self.width-value_x)
+                    xp += len(v)
+                yp += 1
+            return yp
+
+        # Not narrow
         key_width = max([len(x[0]) for x in info])
         for i in info:
             self.pad.addstr(ypos, 1, i[0].rjust(key_width)) # key
@@ -3651,6 +3706,8 @@ def timestamp(timestamp, format="%x %X", narrow=False):
         timeobj = time.localtime(timestamp)
 
     time_f = '' if narrow else 'long'
+    if format=="%X" and (timestamp - time.time() < -86400 or timestamp - time.time()>86400):
+        format="%x"
     absolute = time.strftime(format, timeobj)
     if narrow:
         if timestamp > time.time():
