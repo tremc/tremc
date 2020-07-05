@@ -606,7 +606,7 @@ class Transmission(object):
         request.send_request()
         self.wait_for_torrentlist_update()
 
-    def set_seed_ratio(self, ratio, torrent_id=-1):
+    def set_seed_ratio(self, ratio, ids=-1):
         data = dict()
         if ratio == -1:
             ratio = None
@@ -619,7 +619,7 @@ class Transmission(object):
         else:
             return
 
-        data['ids']            = [torrent_id]
+        data['ids']            = ids
         data['seedRatioLimit'] = ratio
         data['seedRatioMode'] = mode
         request = TransmissionRequest(self.host, self.port, self.path, 'torrent-set', 1, data)
@@ -1502,7 +1502,6 @@ class Interface(object):
     def torrent_up_down_load(self, direction):
         ids = self.selected_ids()
         if ids and direction in ['up', 'down']:
-            pdebug(ids, self.focus)
             focused = self.torrents[self.focus] if ( self.focus > -1  and self.torrents[self.focus]['id'] in ids ) \
                         else server.get_torrent_by_id(ids[0])
             current_limit = (-1,focused[direction+'loadLimit'])[focused[direction+'loadLimited']]
@@ -1519,20 +1518,24 @@ class Interface(object):
         self.torrent_up_down_load('down')
 
     def seed_ratio(self, c):
-        if self.focus > -1:
-            if self.torrents[self.focus]['seedRatioMode'] == 0:   # Use global settings
+        ids = self.selected_ids()
+        if ids:
+            focused = self.torrents[self.focus] if ( self.focus > -1  and self.torrents[self.focus]['id'] in ids ) \
+                        else server.get_torrent_by_id(ids[0])
+            if focused['seedRatioMode'] == 0:   # Use global settings
                 current_limit = ''
-            elif self.torrents[self.focus]['seedRatioMode'] == 1: # Stop seeding at seedRatioLimit
-                current_limit = self.torrents[self.focus]['seedRatioLimit']
-            elif self.torrents[self.focus]['seedRatioMode'] == 2: # Seed regardless of ratio
+            elif focused['seedRatioMode'] == 1: # Stop seeding at seedRatioLimit
+                current_limit = focused['seedRatioLimit']
+            elif focused['seedRatioMode'] == 2: # Seed regardless of ratio
                 current_limit = -1
-            limit = self.dialog_input_number("Seed ratio limit for\n%s" % self.torrents[self.focus]['name'],
+            limit = self.dialog_input_number("Seed ratio limit for\n%s" % focused['name'] +
+                                             ("\nand %d more" % (len(ids)-1) if len(ids)>1 else ""),
                                              current_limit, floating_point=True, allow_empty=True)
             if limit == -1:
                 limit = 0
             if limit == -2: # -2 means 'empty' in dialog_input_number return codes
                 limit = -1
-            server.set_seed_ratio(float(limit), self.torrents[self.focus]['id'])
+            server.set_seed_ratio(float(limit), ids)
 
     def honors_limits(self, c):
         server.toggle_honors_session_limits(self.selected_ids())
