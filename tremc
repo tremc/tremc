@@ -2328,6 +2328,12 @@ class Interface(object):
                       '<waiting for %d peers, %d done>',
                       'Swarm: ',
                       '<no downloading peers>',
+                      '%s',
+                      'unlimited',
+                      'BW limits: ',
+                      'D: ',
+                      'U: ',
+                      'Private torrent',
                     ]
         else:
             strings=[ 'connected to ',
@@ -2336,6 +2342,12 @@ class Interface(object):
                       '<gathering info from %d peers, %d done>',
                       'Swarm speed: ',
                       '<no downloading peers connected>',
+                      'pause torrent after distributing %s copies',
+                      'unlimited (ignore global limits)',
+                      'Bandwidth limits: ',
+                      'Download: ',
+                      'Upload: ',
+                      'Private to this tracker -- DHT and PEX disabled',
             ]
         info = []
         info.append(['Hash: ', "%s" % t['hashString']])
@@ -2401,13 +2413,19 @@ class Interface(object):
         info.append(['Seed limit: '])
         if t['seedRatioMode'] == 0:
             if self.stats['seedRatioLimited']:
-                info[-1].append('default (pause torrent after distributing %s copies)' % self.stats['seedRatioLimit'])
+                info[-1].append('default (' + strings[6] % self.stats['seedRatioLimit']+ ')')
             else:
                 info[-1].append('default (unlimited)')
         elif t['seedRatioMode'] == 1:
-            info[-1].append('pause torrent after distributing %s copies' % t['seedRatioLimit'])
+            info[-1].append( strings[6] % t['seedRatioLimit'])
         elif t['seedRatioMode'] == 2:
-            info[-1].append('unlimited (ignore global limits)')
+            info[-1].append(strings[7])
+
+        info.append([strings[8]])
+        unlimited = 'session' if t['honorsSessionLimits'] else 'unlimited'
+        pdebug(unlimited , t['downloadLimit'], num2str(t['downloadLimit']))
+        info[-1].append(strings[9] + ( scale_bytes(t['downloadLimit']*1024) if t['downloadLimited'] else unlimited) + ";  ")
+        info[-1].append(strings[10] + ( scale_bytes(t['uploadLimit']*1024) if t['uploadLimited'] else unlimited))
 
         info.append(['Peers: ',
                      strings[0]+"%d;  "     % t['peersConnected'],
