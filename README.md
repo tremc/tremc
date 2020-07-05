@@ -1,5 +1,3 @@
-Die python2 die.
-
 This is the python3 fork of https://github.com/fagga/transmission-remote-cli
 
 ## About
