@@ -583,6 +583,7 @@ class Transmission(object):
         request.send_request()
         self.wait_for_status_update()
 
+    # torrent_id is -1 for global or a non-empty list of ids
     def set_rate_limit(self, direction, new_limit, torrent_id=-1):
         data = dict()
         if new_limit <= -1:
@@ -591,13 +592,13 @@ class Transmission(object):
         else:
             limit_enabled = True
 
-        if torrent_id < 0:
+        if torrent_id == -1:
             type = 'session-set'
             data['speed-limit-'+direction]            = new_limit
             data['speed-limit-'+direction+'-enabled'] = limit_enabled
         else:
             type = 'torrent-set'
-            data['ids'] = [torrent_id]
+            data['ids'] = torrent_id
             data[direction+'loadLimit']   = new_limit
             data[direction+'loadLimited'] = limit_enabled
 
@@ -1498,23 +1499,24 @@ class Interface(object):
             else:
                 return [self.torrents[self.focus]['id']]
 
-    def torrent_upload(self, c):
-        if self.focus > -1:
-            current_limit = (-1,self.torrents[self.focus]['uploadLimit'])[self.torrents[self.focus]['uploadLimited']]
-            limit = self.dialog_input_number("Upload limit in kilobytes per second for\n%s" % \
-                                                 self.torrents[self.focus]['name'], current_limit)
+    def torrent_up_down_load(self, direction):
+        ids = self.selected_ids()
+        if ids and direction in ['up', 'down']:
+            pdebug(ids, self.focus)
+            focused = self.torrents[self.focus] if ( self.focus > -1  and self.torrents[self.focus]['id'] in ids ) \
+                        else server.get_torrent_by_id(ids[0])
+            current_limit = (-1,focused[direction+'loadLimit'])[focused[direction+'loadLimited']]
+            limit = self.dialog_input_number(direction.capitalize()+"load limit in kilobytes per second for\n%s" % focused['name'] +
+                                                 ("\nand %d more" % (len(ids)-1) if len(ids)>1 else ""), current_limit)
             if limit == -128:
                 return
-            server.set_rate_limit('up', limit, self.torrents[self.focus]['id'])
+            server.set_rate_limit(direction, limit, ids)
+
+    def torrent_upload(self, c):
+        self.torrent_up_down_load('up')
 
     def torrent_download(self, c):
-        if self.focus > -1:
-            current_limit = (-1,self.torrents[self.focus]['downloadLimit'])[self.torrents[self.focus]['downloadLimited']]
-            limit = self.dialog_input_number("Download limit in Kilobytes per second for\n%s" % \
-                                                 self.torrents[self.focus]['name'], current_limit)
-            if limit == -128:
-                return
-            server.set_rate_limit('down', limit, self.torrents[self.focus]['id'])
+        self.torrent_up_down_load('down')
 
     def seed_ratio(self, c):
         if self.focus > -1:
