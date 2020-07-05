@@ -3306,7 +3306,7 @@ class Interface(object):
             win.addstr(height - 2, 2, displaytext.ljust(textwidth), color)
             win.move(height - 2, displayindex + 2)
             c = self.wingetch(win)
-            if c == 27 or c == curses.KEY_BREAK:
+            if c in [ 27, curses.KEY_BREAK, curses.ascii.ctrl(ord('w'))]:
                 hide_cursor()
                 return ''
             elif index < len(input) and ( c == curses.KEY_RIGHT or c == curses.ascii.ctrl(ord('f')) ):
