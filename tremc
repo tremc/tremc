@@ -976,6 +976,7 @@ class Interface(object):
             12:                     self.go_back_or_unfocus,
             curses.KEY_BACKSPACE:   self.leave_details,
             ord('q'):               self.go_back_or_quit,
+            curses.ascii.ctrl(ord('w')): self.quit_now,
             ord('o'):               self.o_key,
             ord('\n'):              self.enter_key,
             curses.KEY_RIGHT:       self.right_key,
@@ -1118,7 +1119,7 @@ class Interface(object):
                 self.screen.addstr(1,0, "Resize terminal or")
                 self.screen.addstr(2,0, "Press 'q' to  quit")
                 c = self.screen.getch()
-                if c in [ 27, ord('q')]:
+                if c in [ 27, ord('q'), curses.ascii.ctrl(ord('w'))]:
                     quit()
             else:
                 break
@@ -1220,6 +1221,9 @@ class Interface(object):
             self.details_category_focus = 0
             self.scrollpos_detaillist   = [0]*5
             self.selected_files         = []
+
+    def quit_now(self, c):
+        self.exit_now = True
 
     def go_back_or_quit(self, c):
         if self.selected_torrent == -1:
@@ -1413,7 +1417,7 @@ class Interface(object):
         height = min(self.height, message.count("\n")+3)
         win = self.window(height, width, message=message, title=title)
         while True:
-            if win.getch() >= 0:
+            if self.wingetch(win) >= 0:
                 self.clear_userinput(win)
                 return
 
@@ -3148,12 +3152,17 @@ class Interface(object):
         while True:
             win,last = self.help_window(height, width, message=message, title=title)
             while True:
-                c = win.getch()
+                c = self.wingetch(win)
                 if c == ord(' '):
                     win, last = self.help_window(height, width, message=message, title=title, first=last, win=win)
                 elif c>=0:
                     self.clear_userinput(win)
                     return
+    def wingetch(self, win):
+        c = win.getch()
+        if c == curses.ascii.ctrl(ord('w')):
+            self.exit_now = True
+        return c
 
     def window(self, height, width, message='', title=''):
         return self.real_window(height, width, message=message, title=title)[0]
@@ -3200,7 +3209,7 @@ class Interface(object):
     def clear_userinput(self, win):
         "Make sure there is no user input left"
         curses.halfdelay(1)
-        while win.getch() != -1:
+        while self.wingetch(win) != -1:
             pass
         curses.halfdelay(10)
 
@@ -3209,7 +3218,7 @@ class Interface(object):
         width  = max(max([len_columns(x) for x in message.split("\n")]), 40) + 4
         win = self.window(height, width, message=message)
         while True:
-            if win.getch() >= 0:
+            if self.wingetch(win) >= 0:
                 self.clear_userinput(win)
                 return
 
@@ -3242,7 +3251,7 @@ class Interface(object):
                 win.addstr('N',  focus_tags + curses.A_UNDERLINE)
                 win.addstr('o', focus_tags)
 
-            c = win.getch()
+            c = self.wingetch(win)
             if c == ord('y'):
                 return True
             elif c == ord('n'):
@@ -3286,7 +3295,7 @@ class Interface(object):
                      else curses.color_pair(self.colors.id('dialog')))
             win.addstr(height - 2, 2, displaytext.ljust(textwidth), color)
             win.move(height - 2, displayindex + 2)
-            c = win.getch()
+            c = self.wingetch(win)
             if c == 27 or c == curses.KEY_BREAK:
                 hide_cursor()
                 return ''
@@ -3391,7 +3400,7 @@ class Interface(object):
         while True:
             win.addstr(height-2, 2, input.ljust(width-4), curses.color_pair(self.colors.id('dialog')))
             win.move(height - 2, len(input) + 2)
-            c = win.getch()
+            c = self.wingetch(win)
             if c == 27 or c == ord('q') or c == curses.KEY_BREAK:
                 hide_cursor()
                 return -128
@@ -3453,7 +3462,7 @@ class Interface(object):
         old_focus = focus
         while True:
             keymap = self.dialog_list_menu_options(win, width, options, focus)
-            c = win.getch()
+            c = self.wingetch(win)
 
             if c > 96 and c < 123 and chr(c) in keymap:
                 return options[keymap[chr(c)]][0]
@@ -3529,7 +3538,7 @@ class Interface(object):
                     win.addstr(part[1:] + ': ' + option[1])
                 line_num += 1
 
-            c = win.getch()
+            c = self.wingetch(win)
             if c == 27 or c == ord('q') or c == ord("\n"):
                 return
             elif c == ord('p'):
