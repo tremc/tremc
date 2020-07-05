@@ -1827,7 +1827,7 @@ class Interface(object):
                     self.selected_files.pop(self.selected_files.index(self.focus_detaillist))
                 except ValueError:
                     self.selected_files.append(self.focus_detaillist)
-                curses.ungetch(curses.KEY_DOWN) # move down
+                self.movement_keys(curses.KEY_DOWN)
             # (un)select directory
             elif c == ord('A'):
                 file_id = self.file_index_map[self.focus_detaillist]
