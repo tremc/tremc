@@ -1130,7 +1130,7 @@ class Interface(object):
         self.recalculate_torrents_per_page()
         self.pad_height = max((len(self.torrents)+1) * self.tlist_item_height, self.height)
         self.pad = curses.newpad(self.pad_height, self.width)
-        self.detaillistitems_per_page = self.height - 8
+        self.detaillines_per_page = self.height - 8
         self.narrow = self.width<73
 
         if self.selected_torrent > -1:
@@ -1702,20 +1702,20 @@ class Interface(object):
                 elif c == curses.KEY_DOWN or c == ord('j') or c == curses.ascii.ctrl(ord('n')):
                     self.focus_detaillist, self.scrollpos_detaillist[1] = \
                         self.move_down(self.focus_detaillist, self.scrollpos_detaillist[1], 1,
-                                       self.detaillistitems_per_page, len(self.torrent_details['files']))
+                                       self.detaillines_per_page, len(self.torrent_details['files']))
                 elif c == curses.KEY_PPAGE or c == curses.ascii.ctrl(ord('b')):
                     self.focus_detaillist, self.scrollpos_detaillist[1] = \
                         self.move_page_up(self.focus_detaillist, self.scrollpos_detaillist[1], 1,
-                                          self.detaillistitems_per_page)
+                                          self.detaillines_per_page)
                 elif c == curses.KEY_NPAGE or c == curses.ascii.ctrl(ord('f')):
                     self.focus_detaillist, self.scrollpos_detaillist[1] = \
                         self.move_page_down(self.focus_detaillist, self.scrollpos_detaillist[1], 1,
-                                            self.detaillistitems_per_page, len(self.torrent_details['files']))
+                                            self.detaillines_per_page, len(self.torrent_details['files']))
                 elif c == curses.KEY_HOME or c == ord('g'):
                     self.focus_detaillist, self.scrollpos_detaillist[1] = self.move_to_top()
                 elif c == curses.KEY_END or c == ord('G'):
                     self.focus_detaillist, self.scrollpos_detaillist[1] = \
-                        self.move_to_end(1, self.detaillistitems_per_page, len(self.torrent_details['files']))
+                        self.move_to_end(1, self.detaillines_per_page, len(self.torrent_details['files']))
                 # visual mode
                 global vmode_id
                 if vmode_id > -1:
@@ -1728,10 +1728,12 @@ class Interface(object):
             # peer list movement
             if self.details_category_focus == 2:
                 list_len = len(self.torrent_details['peers'])
+                lines_per_page = self.detaillines_per_page
 
             # tracker list movement
             elif self.details_category_focus == 3:
                 list_len = len(self.torrent_details['trackerStats'])
+                lines_per_page = max(1,self.detaillines_per_page // (self.TRACKER_ITEM_HEIGHT+2))
 
             # pieces list movement
             elif self.details_category_focus == 4:
@@ -1739,6 +1741,7 @@ class Interface(object):
                 margin = len(str(piece_count)) + 2
                 map_width = int(str(self.width-margin-1)[0:-1] + '0')
                 list_len = (piece_count // map_width) + 1
+                lines_per_page = self.detaillines_per_page
 
             if list_len:
                 if c == curses.KEY_UP or c == ord('k') or c == curses.ascii.ctrl(ord('p')):
@@ -1749,12 +1752,10 @@ class Interface(object):
                         self.scrollpos_detaillist[self.details_category_focus] += 1
                 elif c == curses.KEY_PPAGE or c == curses.ascii.ctrl(ord('b')):
                     self.scrollpos_detaillist[self.details_category_focus] = \
-                        max(self.scrollpos_detaillist[self.details_category_focus] - self.detaillistitems_per_page - 1, 0)
+                        max(self.scrollpos_detaillist[self.details_category_focus] - lines_per_page - 1, 0)
                 elif c == curses.KEY_NPAGE or c == curses.ascii.ctrl(ord('f')):
-                    if self.scrollpos_detaillist[self.details_category_focus] + self.detaillistitems_per_page >= list_len:
-                        self.scrollpos_detaillist[self.details_category_focus] = list_len - 1
-                    else:
-                        self.scrollpos_detaillist[self.details_category_focus] += self.detaillistitems_per_page
+                        self.scrollpos_detaillist[self.details_category_focus] = min( list_len - 1,
+                            self.scrollpos_detaillist[self.details_category_focus] + lines_per_page )
                 elif c == curses.KEY_HOME or c == ord('g'):
                     self.scrollpos_detaillist[self.details_category_focus] = 0
                 elif c == curses.KEY_END or c == ord('G'):
@@ -1764,7 +1765,7 @@ class Interface(object):
             # space to be displayed in pieces and peer lists.
             if self.details_category_focus in (2, 4):
                 self.scrollpos_detaillist[self.details_category_focus] = min(self.scrollpos_detaillist[self.details_category_focus],
-                    max(0, list_len - self.detaillistitems_per_page))
+                    max(0, list_len - self.detaillines_per_page))
 
     def file_pritority_or_switch_details(self, c):
         if self.selected_torrent > -1:
@@ -2587,20 +2588,20 @@ class Interface(object):
                 index += 1
 
         if self.focus_detaillist==-1:
-            return self.filelist_cache[:self.detaillistitems_per_page]
+            return self.filelist_cache[:self.detaillines_per_page]
         pos_before_focus = self.filelist_cache_pos[self.focus_detaillist]
         line_to_show = self.focus_detaillist + pos_before_focus
-        lines_before = self.detaillistitems_per_page//2
-        lines_after = self.detaillistitems_per_page - 1 - lines_before
+        lines_before = self.detaillines_per_page//2
+        lines_after = self.detaillines_per_page - 1 - lines_before
         if line_to_show >= lines_before:
             start=line_to_show-lines_before
         else:
             start=0
-        if len(self.filelist_cache) >= start+self.detaillistitems_per_page:
-            end=start+self.detaillistitems_per_page
+        if len(self.filelist_cache) >= start+self.detaillines_per_page:
+            end=start+self.detaillines_per_page
         else:
             end=len(self.filelist_cache)
-            start=end-self.detaillistitems_per_page if end>=self.detaillistitems_per_page else 0
+            start=end-self.detaillines_per_page if end>=self.detaillines_per_page else 0
         ret=[]
         for i in range(start,end):
             ret.append(
@@ -2654,9 +2655,9 @@ class Interface(object):
     def draw_peerlist(self, ypos):
         # Start drawing list either at the "selected" index, or at the index
         # that is required to display all remaining items without further scrolling.
-        last_possible_index = max(0, len(self.torrent_details['peers']) - self.detaillistitems_per_page)
+        last_possible_index = max(0, len(self.torrent_details['peers']) - self.detaillines_per_page)
         start = min(self.scrollpos_detaillist[2], last_possible_index)
-        end = start + self.detaillistitems_per_page
+        end = start + self.detaillines_per_page
         peers = self.torrent_details['peers'][start:end]
 
         # Find width of columns
@@ -2738,7 +2739,7 @@ class Interface(object):
             if ypos > top and ypos < self.height - 2:
                 self.pad.addstr(ypos, xpos, *args)
 
-        tracker_per_page = max(1,self.detaillistitems_per_page // (self.TRACKER_ITEM_HEIGHT+2))
+        tracker_per_page = max(1,self.detaillines_per_page // (self.TRACKER_ITEM_HEIGHT+2))
         page = self.scrollpos_detaillist[3] // tracker_per_page
         start = tracker_per_page * page
         end = tracker_per_page * (page + 1)
