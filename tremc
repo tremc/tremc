@@ -1984,6 +1984,7 @@ class Interface(object):
         else:
             if self.focus != -1:
                 self.selected.symmetric_difference_update(set([self.torrents[self.focus]['id']]))
+                self.movement_keys(curses.KEY_DOWN)
 
     def filter_torrent_list(self):
         unfiltered = self.torrents
