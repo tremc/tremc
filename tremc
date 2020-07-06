@@ -2995,7 +2995,8 @@ class Interface(object):
 
             downloading = len([x for x in self.torrents if x['status']==Transmission.STATUS_DOWNLOAD])
             seeding = len([x for x in self.torrents if x['status']==Transmission.STATUS_SEED])
-            paused = self.stats['pausedTorrentCount']
+            paused = len([x for x in self.torrents if x['status'] in [ Transmission.STATUS_STOPPED, Transmission.STATUS_CHECK_WAIT, 
+                        Transmission.STATUS_CHECK, Transmission.STATUS_DOWNLOAD_WAIT, Transmission.STATUS_SEED_WAIT] ])
 
             self.screen.addstr(strings[1], curses.A_REVERSE)
             self.screen.addstr("%d " % downloading, curses.A_REVERSE)
