@@ -368,6 +368,7 @@ class Transmission(object):
 
         self.torrent_cache = []
         self.trackers = set()
+        self.locations = set()
         self.status_cache = dict()
         self.torrent_details_cache = dict()
         self.peer_progress_cache = dict()
@@ -444,6 +445,7 @@ class Transmission(object):
                 t['mainTrackerDomain'] = get_main_tracker_domain(t)
                 if t['mainTrackerDomain']:
                     self.trackers.add(t['mainTrackerDomain'])
+                self.locations.add(t['downloadDir'])
 
             if response['tag'] == self.TAG_TORRENT_LIST:
                 self.torrent_cache = response['arguments']['torrents']
@@ -938,6 +940,8 @@ class Interface(object):
         self.file_sort_key  = 'name'
         self.file_sort_reverse = False
         self.filter_regex   = ''
+        self.filter_tracker   = ''
+        self.filter_location  = ''
         self.tlist_item_height = config.getint('Misc', 'lines_per_torrent')
         self.torrentname_is_progressbar = config.getboolean('Misc', 'torrentname_is_progressbar')
         self.file_viewer    = config.get('Misc', 'file_viewer')
@@ -949,7 +953,6 @@ class Interface(object):
         self.rdns             = config.getboolean('Misc', 'rdns', fallback=False) ^ bool(cmd_args.rdns)
         self.torrents         = server.get_torrent_list(self.sort_orders)
         self.stats            = server.get_global_stats()
-        self.trackers         = server.trackers
         self.torrent_details  = []
         self.selected_torrent = -1  # changes to >-1 when focus >-1 & user hits return
         self.highlight_dialog = False
@@ -1078,6 +1081,8 @@ class Interface(object):
             self.filter_tracker = profile['filter_param']
         if self.filter_list == 'regex':
             self.filter_regex = profile['filter_param']
+        if self.filter_list == 'location':
+            self.filter_locateion = profile['filter_param']
         self.filter_inverse = profile['filter_inverse']
 
     def profile_selected(self, p):
@@ -1430,6 +1435,7 @@ class Interface(object):
                        ('private','P_rivate'), ('isolated', '_Isolated'),
                        ('tracker','Trac_ker'),
                        ('regex','Regular e_xpression'),
+                       ('location', 'L_ocation'),
                        ('selected', 'S_elected'),
                        ('honors', '_Honors limits'),
                        ('invert','In_vert'), ('','_All')]
@@ -1442,26 +1448,36 @@ class Interface(object):
                 if choice == 'invert':
                     self.filter_inverse = not self.filter_inverse
                 else:
-                    if choice == 'tracker':
-                        if len(self.trackers) < 2:
+                    if choice in ['tracker', 'location']:
+                        if choice == 'tracker':
+                            select = server.trackers
+                            current_choice = self.filter_tracker
+                        elif choice == 'location':
+                            select = server.locations
+                            current_choice = self.filter_location
+                        if len(select) < 2:
                             choice = ''
                         else:
                             indexes='abcdefghijklmnopqrstuvwxyz'
-                            trackers=[]
+                            select_list=[]
                             i=0
-                            for x in self.trackers:
-                                trackers.append((x,'_'+indexes[i]+'. '+x))
+                            for x in select:
+                                select_list.append((x,'_'+indexes[i]+'. '+x))
                                 i=i+1
                             try:
-                                s=list(map(lambda x: x[0]==self.filter_tracker, trackers)).index(True)+1
+                                s=list(map(lambda x: x[0]==current_choice, select_list)).index(True)+1
                             except:
                                 s=0
-                            selected=self.dialog_menu('Select tracker', trackers, s)
-                            if not selected in self.trackers:
+                            selected=self.dialog_menu('Select '+choice, select_list, s)
+                            if not selected in select:
                                 choice=''
-                                self.filter_tracker=''
+                                selected=''
                             else:
                                 self.filter_tracker=selected
+                        if choice == 'tracker':
+                            self.filter_tracker = selected
+                        elif choice == 'location':
+                            self.filter_location = selected
                     elif choice == 'regex':
                         regex = self.dialog_input_text('Regular expression to filter (case insensitive):', self.filter_regex)
                         if regex == '':
@@ -1503,7 +1519,7 @@ class Interface(object):
     # If focused torret is in the selection - select it.
     # Otherwise, the first selected torrent.
     # Also calculate the extra line: "and %d more", if more than one
-    # torrent is selected. 
+    # torrent is selected.
     def get_focused(self, ids):
         if ids==[]:
             return (None, "")
@@ -2038,6 +2054,8 @@ class Interface(object):
             self.torrents = [t for t in self.torrents if t['mainTrackerDomain']==self.filter_tracker]
         elif self.filter_list == 'regex':
             self.torrents = [t for t in self.torrents if re.search(self.filter_regex, t['name'], flags=re.I)]
+        elif self.filter_list == 'location':
+            self.torrents = [t for t in self.torrents if t['downloadDir']==self.filter_location]
         # invert list?
         if self.filter_inverse:
             self.torrents = [t for t in unfiltered if t not in self.torrents]
