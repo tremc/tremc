@@ -1499,14 +1499,26 @@ class Interface(object):
             else:
                 return [self.torrents[self.focus]['id']]
 
+    # Decide which torrent name to show for confirmation/prompt:
+    # If focused torret is in the selection - select it.
+    # Otherwise, the first selected torrent.
+    # Also calculate the extra line: "and %d more", if more than one
+    # torrent is selected. 
+    def get_focused(self, ids):
+        if ids==[]:
+            return (None, "")
+        focused = self.torrents[self.focus] if ( self.focus > -1  and self.torrents[self.focus]['id'] in ids ) \
+                        else server.get_torrent_by_id(ids[0])
+        extraline = "\nand %d more" % (len(ids)-1) if len(ids)>1 else ""
+        return (focused, extraline)
+
     def torrent_up_down_load(self, direction):
         ids = self.selected_ids()
         if ids and direction in ['up', 'down']:
-            focused = self.torrents[self.focus] if ( self.focus > -1  and self.torrents[self.focus]['id'] in ids ) \
-                        else server.get_torrent_by_id(ids[0])
+            focused, extraline = self.get_focused(ids)
             current_limit = (-1,focused[direction+'loadLimit'])[focused[direction+'loadLimited']]
             limit = self.dialog_input_number(direction.capitalize()+"load limit in kilobytes per second for\n%s" % focused['name'] +
-                                                 ("\nand %d more" % (len(ids)-1) if len(ids)>1 else ""), current_limit)
+                                                 extraline, current_limit)
             if limit == -128:
                 return
             server.set_rate_limit(direction, limit, ids)
