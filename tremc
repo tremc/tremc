@@ -1417,7 +1417,10 @@ class Interface(object):
         width = min(self.width, width)
         height = min(self.height, message.count("\n")+3)
         win = self.window(height, width, message=message, title=title)
-        self.wingetch(win)
+        while True:
+            c = self.wingetch(win)
+            if c in [ 27, ord('q'), curses.ascii.ctrl(ord('w'))]:
+                return -1
 
     def show_state_filter_menu(self, c):
         if self.selected_torrent == -1:
@@ -3253,7 +3256,11 @@ class Interface(object):
         height = 3 + message.count("\n")
         width  = max(max([len_columns(x) for x in message.split("\n")]), 40) + 4
         win = self.window(height, width, message=message)
-        self.wingetch(win)
+        while True:
+            c = self.wingetch(win)
+            if c in [ 27, ord('q'), curses.ascii.ctrl(ord('w'))]:
+                return -1
+
 
     def dialog_yesno(self, message, important=False):
         height = 5 + message.count("\n")
