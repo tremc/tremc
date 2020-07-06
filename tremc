@@ -1969,12 +1969,14 @@ class Interface(object):
         self.follow_list_focus()
 
     def move_torrent(self, c):
-        if self.focus > -1:
+        ids = self.selected_ids()
+        if ids:
+            focused, extraline = self.get_focused(ids)
             location = homedir2tilde(self.torrents[self.focus]['downloadDir'])
-            msg = 'Move "%s" from\n%s to' % (self.torrents[self.focus]['name'], location)
+            msg = ('Move "%s"' % focused['name']) + extraline +  '\nfrom %s to' % location
             path = self.dialog_input_text(msg, location, tab_complete='dirs')
             if path:
-                server.move_torrent(self.torrents[self.focus]['id'], tilde2homedir(path))
+                server.move_torrent(ids, tilde2homedir(path))
 
     def handle_user_input(self):
         c = self.screen.getch()
