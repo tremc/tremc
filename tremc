@@ -57,10 +57,8 @@ locale.setlocale(locale.LC_ALL, '')
 ENCODING = locale.getpreferredencoding() or 'UTF-8'
 
 # optional features provided by non-standard modules
-features = {'geoip': False, 'ipy': False, 'clipboard': False}
+features = {'ipy': False, 'clipboard': False}
 
-try:   import GeoIP; features['geoip'] = True  # show country peer seems to be in
-except ImportError:  features['geoip'] = False
 
 try:   import IPy;  features['ipy'] = True  # extract ipv4 from ipv6 addresses
 except ImportError: features['ipy'] = False
@@ -77,22 +75,26 @@ if features['ipy']:
     IPV6_RANGE_TEREDO = IPy.IP('2001::/32')
     IPV4_ONES = 0xffffffff
 
-if features['geoip']:
-    def country_code_by_addr_vany(geo_ip, geo_ip6, addr):
-        if '.' in addr:
-            return geo_ip.country_code_by_addr(addr)
-        if ':' not in addr:
+def country_code_by_addr_vany(geo_ip, geo_ip6, addr):
+    if have_geoip2:
+        try:
+            return geo_ip.country(addr).country.iso_code
+        except:
             return None
-        if features['ipy']:
-            ip = IPy.IP(addr)
-            if ip in IPV6_RANGE_6TO4:
-                addr = str(IPy.IP(ip.int() >> 80 & IPV4_ONES))
-                return geo_ip.country_code_by_addr(addr)
-            elif ip in IPV6_RANGE_TEREDO:
-                addr = str(IPy.IP(ip.int() & IPV4_ONES ^ IPV4_ONES))
-                return geo_ip.country_code_by_addr(addr)
-        if hasattr(geo_ip6, 'country_code_by_addr_v6'):
-            return geo_ip6.country_code_by_addr_v6(addr)
+    if '.' in addr:
+        return geo_ip.country_code_by_addr(addr)
+    if ':' not in addr:
+        return None
+    if features['ipy']:
+        ip = IPy.IP(addr)
+        if ip in IPV6_RANGE_6TO4:
+            addr = str(IPy.IP(ip.int() >> 80 & IPV4_ONES))
+            return geo_ip.country_code_by_addr(addr)
+        elif ip in IPV6_RANGE_TEREDO:
+            addr = str(IPy.IP(ip.int() & IPV4_ONES ^ IPV4_ONES))
+            return geo_ip.country_code_by_addr(addr)
+    if hasattr(geo_ip6, 'country_code_by_addr_v6'):
+        return geo_ip6.country_code_by_addr_v6(addr)
 
 starttime=time.time()
 debug_time=True
@@ -383,12 +385,18 @@ class Transmission(object):
                 self.rdns = False
 
         self.geo_ips_cache = dict()
-        if features['geoip']:
+        if have_geoip1:
             self.geo_ip = GeoIP.new(GeoIP.GEOIP_MEMORY_CACHE)
             try:
                 self.geo_ip6 = GeoIP.open_type(GeoIP.GEOIP_COUNTRY_EDITION_V6, GeoIP.GEOIP_MEMORY_CACHE)
             except AttributeError: self.geo_ip6 = None
             except GeoIP.error: self.geo_ip6 = None
+        elif have_geoip2:
+            self.geo_ip6 = None
+            try:
+                self.geo_ip = geoip2.database.Reader(geoip2_database)
+            except:
+                have_geoip = False
 
         # make sure there are no undefined values
         self.wait_for_torrentlist_update()
@@ -514,7 +522,7 @@ class Transmission(object):
             # resolve and locate peer's ip
             if self.rdns and ip not in self.hosts_cache:
                 self.threading.Thread(target=reverse_dns, args=(self.hosts_cache,ip)).start()
-            if features['geoip'] and ip not in self.geo_ips_cache:
+            if have_geoip and ip not in self.geo_ips_cache:
                 self.geo_ips_cache[ip] = country_code_by_addr_vany(self.geo_ip, self.geo_ip6, ip)
                 if self.geo_ips_cache[ip] is None:
                     self.geo_ips_cache[ip] = '?'
@@ -2728,7 +2736,8 @@ class Interface(object):
             (self.torrent_details['peersSendingToUs'], self.torrent_details['peersGettingFromUs'])
         column_names += 'Client'.ljust(clientname_width + 1) \
             + 'Address'.ljust(address_width+port_width+1)
-        if features['geoip']: column_names += 'Country'
+        if have_geoip:
+            column_names += 'Country'
         if self.rdns: column_names += ' Host'
 
         self.pad.addnstr(ypos, 0, column_names.ljust(self.width), self.width, curses.A_UNDERLINE)
@@ -2780,7 +2789,8 @@ class Interface(object):
                                 ':' + str(peer['port']).ljust(port_width) + ' ')
             # Country
             if self.width>=55+clientname_width + address_width + port_width + 3 + 7:
-                if features['geoip']: self.pad.addstr("  %2s   " % geo_ips[peer['address']])
+                if have_geoip:
+                    self.pad.addstr("  %2s   " % geo_ips[peer['address']])
             # Host
             if self.width>=55+clientname_width + address_width + port_width + 3 + 10:
                 if self.rdns: self.pad.addnstr(host_name, self.width - self.pad.getyx()[1], curses.A_DIM)
@@ -3027,7 +3037,7 @@ class Interface(object):
 
             downloading = len([x for x in self.torrents if x['status']==Transmission.STATUS_DOWNLOAD])
             seeding = len([x for x in self.torrents if x['status']==Transmission.STATUS_SEED])
-            paused = len([x for x in self.torrents if x['status'] in [ Transmission.STATUS_STOPPED, Transmission.STATUS_CHECK_WAIT, 
+            paused = len([x for x in self.torrents if x['status'] in [ Transmission.STATUS_STOPPED, Transmission.STATUS_CHECK_WAIT,
                         Transmission.STATUS_CHECK, Transmission.STATUS_DOWNLOAD_WAIT, Transmission.STATUS_SEED_WAIT] ])
 
             self.screen.addstr(strings[1], curses.A_REVERSE)
@@ -4195,6 +4205,37 @@ if __name__ == '__main__':
         except OSError as msg:
             quit("Could not execute the above command: %s\n" % msg.strerror, 128)
         quit('', retcode)
+
+    have_geoip1 = False
+    have_geoip2 = False
+    try:
+        import geoip2.database
+        have_geoip2 = True
+    except ImportError:
+        pass
+    if have_geoip2:
+        geoip2_database = config.get('Misc', 'geoip2_database', fallback='')
+        if not os.path.isfile(geoip2_database):
+            try:
+                for l in open('/etc/GeoIP.conf',"r").read():
+                    s=l.split()
+                    if len(s)==2 and s[0]=='DatabaseDirectory':
+                        geoip2_database = s[1] + '/GeoLite2-Country.mmdb'
+            except:
+                pass
+        if not os.path.isfile(geoip2_database):
+            geoip2_database = "/usr/share/GeoIP/GeoLite2-Country.mmdb"
+        if not os.path.isfile(geoip2_database):
+            geoip2_database = "/var/lib/GeoIP/GeoLite2-Country.mmdb"
+        if not os.path.isfile(geoip2_database):
+            have_geoip2 = False
+    if not have_geoip2:
+        try:
+            import GeoIP
+            have_geoip1 = True
+        except ImportError:
+            pass
+    have_geoip = have_geoip1 or have_geoip2
 
     norm = Normalizer()
     server = Transmission(config.get('Connection', 'host'),
