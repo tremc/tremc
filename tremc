@@ -988,6 +988,7 @@ class Interface(object):
             ord('\n'):              self.enter_key,
             curses.KEY_RIGHT:       self.right_key,
             ord('l'):               self.l_key,
+            ord('i'):               self.invert_selection,
             ord('s'):               self.show_sort_order_menu,
             ord('S'):               self.show_stats,
             ord('f'):               self.f_key,
@@ -1253,6 +1254,16 @@ class Interface(object):
         # Torrent list
         elif self.selected_torrent == -1:
             self.select_unselect_torrent()
+
+    def invert_selection(self, c):
+        # File list
+        if self.selected_torrent > -1 and self.details_category_focus == 1:
+            self.select_unselect_file(c)
+        # Do nothing in other detail tabs
+        elif self.selected_torrent > -1:
+            return
+        if  self.selected_torrent == -1:
+            self.select_unselect_torrent(invert=True)
 
     def A_key(self, c):
         # File list
@@ -1906,6 +1917,8 @@ class Interface(object):
                     self.selected_files = []
                 else:
                     self.selected_files = list(range(0, len(self.torrent_details['files'])))
+            elif c == ord('i'):
+                self.selected_files = [ f for f in range(0, len(self.torrent_details['files'])) if not f in self.selected_files ]
             elif c == ord('V'):
                 global vmode_id
                 if self.selected_files:
@@ -2030,12 +2043,14 @@ class Interface(object):
             pass
         return c
 
-    def select_unselect_torrent(self, all=False):
+    def select_unselect_torrent(self, all=False, invert=False):
         if all:
             if self.selected:
                 self.selected=set()
             else:
                 self.selected=set([x['id'] for x in self.torrents])
+        elif invert:
+            self.selected.symmetric_difference_update(set([x['id'] for x in self.torrents]))
         else:
             if self.focus != -1:
                 self.selected.symmetric_difference_update(set([self.torrents[self.focus]['id']]))
@@ -3199,6 +3214,7 @@ class Interface(object):
                        "              s  Sort torrent list\n" \
                        "          Space  Select/Deselect focused torrent\n" + \
                        "              A  Select/Deselect all torrents\n" + \
+                       "              i  Invert selection\n" + \
                        "    Enter/Right  View torrent's details\n" + \
                        "              o  Configuration options\n" + \
                        "              t  Toggle turtle mode\n" + \
@@ -3239,6 +3255,7 @@ class Interface(object):
                                "          Space  Select/Deselect focused file\n" + \
                                "              a  Select/Deselect all files\n" + \
                                "              A  Select/Deselect directory\n" + \
+                               "              i  Invert selection\n" + \
                                "              V  Visually select files\n" + \
                                "            Esc  Unfocus+Unselect or Back to torrent list\n" + \
                                "    q/Backspace  Back to torrent list"
