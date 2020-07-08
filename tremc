@@ -1764,6 +1764,7 @@ class Interface(object):
                     else:
                         self.selected_files = list(range(self.focus_detaillist[1], vmode_id + 1))
             list_len = 0
+            ppage = 1
 
             # peer list movement
             if self.details_category_focus == 2:
@@ -1774,6 +1775,7 @@ class Interface(object):
             elif self.details_category_focus == 3:
                 list_len = len(self.torrent_details['trackerStats'])
                 lines_per_page = max(1,self.detaillines_per_page // (self.TRACKER_ITEM_HEIGHT+2))
+                ppage = 0
 
             # pieces list movement
             elif self.details_category_focus == 4:
@@ -1792,7 +1794,7 @@ class Interface(object):
                         self.scrollpos_detaillist[self.details_category_focus] += 1
                 elif c == curses.KEY_PPAGE or c == curses.ascii.ctrl(ord('b')):
                     self.scrollpos_detaillist[self.details_category_focus] = \
-                        max(self.scrollpos_detaillist[self.details_category_focus] - lines_per_page - 1, 0)
+                        max(self.scrollpos_detaillist[self.details_category_focus] - lines_per_page - ppage, 0)
                 elif c == curses.KEY_NPAGE or c == curses.ascii.ctrl(ord('f')):
                         self.scrollpos_detaillist[self.details_category_focus] = min( list_len - 1,
                             self.scrollpos_detaillist[self.details_category_focus] + lines_per_page )
