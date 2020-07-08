@@ -1013,6 +1013,7 @@ class Interface(object):
             curses.KEY_DC:          self.r_key,
             ord('R'):               self.remove_torrent_local_data,
             curses.KEY_SDC:         self.remove_torrent_local_data,
+            curses.ascii.ctrl(ord('r')): self.remove_selected_torrents,
             curses.KEY_UP:          self.movement_keys,
             ord('k'):               self.movement_keys,
             curses.KEY_DOWN:        self.movement_keys,
@@ -1634,6 +1635,18 @@ class Interface(object):
         ids = self.selected_ids()
         if ids:
             server.reannounce_torrent(ids)
+
+    def remove_selected_torrents(self, c):
+        if not self.selected:
+            return
+        ids = self.selected_ids()
+        if self.selected_torrent > -1:
+            return
+        if ids:
+            focused, extraline = self.get_focused(ids)
+            name = focused['name'][:self.width - 15]
+            if self.dialog_yesno("Remove %s?" % name + extraline, hard="WARNING: this will remove more than one torrent"):
+                server.remove_torrent(ids)
 
     def remove_torrent(self, c):
         if self.focus > -1:
@@ -3164,7 +3177,8 @@ class Interface(object):
                   "              n  Reannounce torrent\n" + \
                   "              S  Show upload/download stats\n" + \
                   ("          Del/r  Remove torrent and keep content\n" if self.selected_torrent == -1 else "")+ \
-                  "    Shift+Del/R  Remove torrent and delete content\n"
+                  "    Shift+Del/R  Remove torrent and delete content\n" + \
+                  "             ^r  Remove selected torrents\n"
 
         if features['clipboard']:
             message += "              M  Copy Magnet Link to the System Clipboard\n"
