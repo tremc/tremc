@@ -3095,8 +3095,14 @@ class Interface(object):
                 except curses.error:
                     pass
 
-            if self.selected and self.width - curpos_x > 20:
-                self.screen.addstr(" Selected: %d" % len(self.selected), curses.A_REVERSE)
+            if self.selected_torrent == -1 and self.selected and self.width - curpos_x > 20:
+                self.screen.addstr(" Selected:%d" % len(self.selected), curses.A_REVERSE)
+
+            if ( self.selected_torrent > -1 and self.details_category_focus == 1
+                    and self.width - curpos_x > 20 and len(self.torrent_details['files'])>1 ):
+                self.screen.addstr(" Files:%d" % len(self.torrent_details['files']), curses.A_REVERSE)
+            if self.selected_torrent > -1 and self.details_category_focus == 1 and self.width - curpos_x > 20 and self.selected_files:
+                self.screen.addstr(" Selected:%d" % len(self.selected_files), curses.A_REVERSE)
 
     def draw_global_rates(self):
         # ↑1.2K ↓3.4M
