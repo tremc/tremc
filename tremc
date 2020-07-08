@@ -3166,7 +3166,7 @@ class Interface(object):
                   "              F  Rename torrent/file\n" + \
                   "              n  Reannounce torrent\n" + \
                   "              S  Show upload/download stats\n" + \
-                  "          Del/r  Remove torrent and keep content\n" + \
+                  ("          Del/r  Remove torrent and keep content\n" if self.selected_torrent == -1 else "")+ \
                   "    Shift+Del/R  Remove torrent and delete content\n"
 
         if features['clipboard']:
@@ -3231,6 +3231,8 @@ class Interface(object):
                                "              V  Visually select files\n" + \
                                "            Esc  Unfocus+Unselect or Back to torrent list\n" + \
                                "    q/Backspace  Back to torrent list"
+                elif self.details_category_focus == 3:  # trackers
+                    message += "          Del/r  Remove tracker\n"
                 else:
                     message += "q/Backspace/Esc  Back to torrent list"
 
