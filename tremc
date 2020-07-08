@@ -1638,7 +1638,7 @@ class Interface(object):
     def remove_torrent(self, c):
         if self.focus > -1:
             name = self.torrents[self.focus]['name'][0:self.width - 15]
-            if self.dialog_yesno("Remove %s?" % name) == True:
+            if self.dialog_yesno("Remove %s?" % name):
                 if self.selected_torrent > -1:  # leave details
                     server.set_torrent_details_id(-1)
                     self.selected_torrent = -1
@@ -1649,7 +1649,7 @@ class Interface(object):
     def remove_torrent_local_data(self, c):
         if self.focus > -1:
             name = self.torrents[self.focus]['name'][0:self.width - 15]
-            if self.dialog_yesno("Remove and delete %s?" % name, important=True) is True:
+            if self.dialog_yesno("Remove and delete %s?" % name, important=True):
                 if self.selected_torrent > -1:  # leave details
                     server.set_torrent_details_id(-1)
                     self.selected_torrent = -1
@@ -1690,7 +1690,7 @@ class Interface(object):
         t = self.torrent_details
         if (self.scrollpos_detaillist[3] >= 0 and \
             self.scrollpos_detaillist[3] < len(t['trackerStats']) and \
-            self.dialog_yesno("Do you want to remove this tracker?") is True):
+            self.dialog_yesno("Do you want to remove this tracker?")):
 
             tracker = t['trackerStats'][self.scrollpos_detaillist[3]]
             response = server.remove_torrent_tracker(t['id'], tracker['id'])
@@ -3305,9 +3305,12 @@ class Interface(object):
                 return -1
 
 
-    def dialog_yesno(self, message, important=False):
+    def dialog_yesno(self, message, important=False, hard=None):
         height = 5 + message.count("\n")
         width  = max(len_columns(message), 8) + 4
+        if hard:
+            important = True
+            message = message + "\n" + hard + "\n" + "Press ctrl-y to accept.\n"
         win = self.window(height, width, message=message)
 
         if important:
@@ -3320,34 +3323,43 @@ class Interface(object):
         input = False
         while True:
             win.move(int(height-2), int(width/2)-4)
-            if input:
-                win.addstr('Y',  focus_tags + curses.A_UNDERLINE)
-                win.addstr('es', focus_tags)
-                win.addstr('   ')
-                win.addstr('N',  curses.A_UNDERLINE)
-                win.addstr('o')
-            else:
-                win.addstr('Y', curses.A_UNDERLINE)
-                win.addstr('es')
-                win.addstr('   ')
-                win.addstr('N',  focus_tags + curses.A_UNDERLINE)
-                win.addstr('o', focus_tags)
+            if not hard:
+                if input:
+                    win.addstr('Y',  focus_tags + curses.A_UNDERLINE)
+                    win.addstr('es', focus_tags)
+                    win.addstr('   ')
+                    win.addstr('N',  curses.A_UNDERLINE)
+                    win.addstr('o')
+                else:
+                    win.addstr('Y', curses.A_UNDERLINE)
+                    win.addstr('es')
+                    win.addstr('   ')
+                    win.addstr('N',  focus_tags + curses.A_UNDERLINE)
+                    win.addstr('o', focus_tags)
 
             c = self.wingetch(win)
-            if c == ord('y'):
-                return True
-            elif c == ord('n'):
-                return False
-            elif c == ord("\t"):
-                input = not input
-            elif c == curses.KEY_LEFT or c == ord('h'):
-                input = True
-            elif c == curses.KEY_RIGHT or c == ord('l'):
-                input = False
-            elif c == ord("\n") or c == ord(' '):
-                return input
-            elif c == 27 or c == curses.KEY_BREAK:
-                return -1
+            if hard:
+                if c == curses.ascii.ctrl(ord('y')):
+                    return True
+                if c in [ord('n'), ord("\n"), ord(' ')]:
+                    return False
+                if c in [27, curses.KEY_BREAK]:
+                    return 0
+            else:
+                if c == ord('y'):
+                    return True
+                elif c == ord('n'):
+                    return False
+                elif c == ord("\t"):
+                    input = not input
+                elif c == curses.KEY_LEFT or c == ord('h'):
+                    input = True
+                elif c == curses.KEY_RIGHT or c == ord('l'):
+                    input = False
+                elif c == ord("\n") or c == ord(' '):
+                    return input
+                elif c == 27 or c == curses.KEY_BREAK:
+                    return 0
 
     def dialog_input_text(self, message, input='', on_change=None, on_enter=None, tab_complete=None, maxwidth=9999, align='center'):
         """tab_complete values:
