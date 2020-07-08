@@ -728,13 +728,8 @@ class Transmission(object):
         request.send_request()
         self.wait_for_torrentlist_update()
 
-    def remove_torrent(self, id):
-        request = TransmissionRequest(self.host, self.port, self.path, 'torrent-remove', 1, {'ids': [id]})
-        request.send_request()
-        self.wait_for_torrentlist_update()
-
-    def remove_torrent_local_data(self, id):
-        request = TransmissionRequest(self.host, self.port, self.path, 'torrent-remove', 1, {'ids': [id], 'delete-local-data':True})
+    def remove_torrent(self, ids, data=False):
+        request = TransmissionRequest(self.host, self.port, self.path, 'torrent-remove', 1, {'ids': ids, 'delete-local-data':data})
         request.send_request()
         self.wait_for_torrentlist_update()
 
@@ -1648,7 +1643,7 @@ class Interface(object):
                     server.set_torrent_details_id(-1)
                     self.selected_torrent = -1
                     self.details_category_focus = 0
-                server.remove_torrent(self.torrents[self.focus]['id'])
+                server.remove_torrent([self.torrents[self.focus]['id']])
                 self.focus_next_after_delete()
 
     def remove_torrent_local_data(self, c):
@@ -1659,7 +1654,7 @@ class Interface(object):
                     server.set_torrent_details_id(-1)
                     self.selected_torrent = -1
                     self.details_category_focus = 0
-                server.remove_torrent_local_data(self.torrents[self.focus]['id'])
+                server.remove_torrent([self.torrents[self.focus]['id']], data=True)
                 self.focus_next_after_delete()
 
     def focus_next_after_delete(self):
