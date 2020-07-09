@@ -2058,15 +2058,15 @@ class Interface(object):
 
     def filter_torrent(self, t, filter):
         if filter['name'] == 'downloading':
-            return filter['inverse'] != t['rateDownload'] > 0
+            return filter['inverse'] != ( t['rateDownload'] > 0 )
         elif filter['name'] == 'uploading':
-            return filter['inverse'] != t['rateUpload'] > 0
+            return filter['inverse'] != ( t['rateUpload'] > 0 )
         elif filter['name'] == 'paused':
-            return filter['inverse'] != t['status'] == Transmission.STATUS_STOPPED
+            return filter['inverse'] != ( t['status'] == Transmission.STATUS_STOPPED )
         elif filter['name'] == 'seeding':
             return filter['inverse'] != ( t['status'] == Transmission.STATUS_SEED or t['status'] == Transmission.STATUS_SEED_WAIT )
         elif filter['name'] == 'incomplete':
-            return filter['inverse'] != t['percentDone'] < 100
+            return filter['inverse'] != ( t['percentDone'] < 100 )
         elif filter['name'] == 'private':
             return filter['inverse'] != t['isPrivate']
         elif filter['name'] == 'active':
@@ -2078,13 +2078,13 @@ class Interface(object):
         elif filter['name'] == 'honors':
             return filter['inverse'] != t['honorsSessionLimits']
         elif filter['name'] == 'selected':
-            return filter['inverse'] != t['id'] in self.selected
+            return filter['inverse'] != ( t['id'] in self.selected )
         elif filter['name'] == 'tracker':
-            return filter['inverse'] != t['mainTrackerDomain']==filter['tracker']
+            return filter['inverse'] != ( t['mainTrackerDomain']==filter['tracker'] )
         elif filter['name'] == 'regex':
             return filter['inverse'] != bool(re.search(filter['regex'], t['name'], flags=re.I))
         elif filter['name'] == 'location':
-            return filter['inverse'] != t['downloadDir']==filter['location']
+            return filter['inverse'] != ( t['downloadDir']==filter['location'] )
 
         return True # Unknown filters does not filter anything
 
