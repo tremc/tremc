@@ -358,6 +358,10 @@ class Transmission(object):
             self.LIST_FIELDS.append('queuePosition')
             self.DETAIL_FIELDS.append('queuePosition')
 
+        if self.rpc_version >= 16:
+            self.LIST_FIELDS.append('labels')
+            self.DETAIL_FIELDS.append('labels')
+
         # set up request list
         self.requests = {'torrent-list':
                              TransmissionRequest(host, port, path, 'torrent-get', self.TAG_TORRENT_LIST, {'fields': self.LIST_FIELDS}),
@@ -371,6 +375,7 @@ class Transmission(object):
         self.torrent_cache = []
         self.trackers = set()
         self.locations = set()
+        self.labels = set()
         self.status_cache = dict()
         self.torrent_details_cache = dict()
         self.peer_progress_cache = dict()
@@ -454,6 +459,9 @@ class Transmission(object):
                 if t['mainTrackerDomain']:
                     self.trackers.add(t['mainTrackerDomain'])
                 self.locations.add(t['downloadDir'])
+                if self.rpc_version >= 16:
+                    for l in t['labels']:
+                        self.labels.add(l)
 
             if response['tag'] == self.TAG_TORRENT_LIST:
                 self.torrent_cache = response['arguments']['torrents']
@@ -1462,6 +1470,8 @@ class Interface(object):
                        ('selected', 'S_elected'),
                        ('honors', '_Honors limits'),
                        ('invert','In_vert'), ('','_All')]
+            if server.rpc_version >= 16:
+                options.insert(-2, ('label', 'La_bel'))
             try:
                 s=list(map(lambda x: x[0]==self.filters[0][0]['name'], options)).index(True)+1
             except:
@@ -1471,15 +1481,20 @@ class Interface(object):
                 if choice == 'invert':
                     self.filters[0][0]['inverse'] = not self.filters[0][0]['inverse']
                 else:
-                    if choice in ['tracker', 'location']:
+                    if choice in ['tracker', 'location', 'label']:
                         if choice == 'tracker':
                             select = server.trackers
-                            current_choice = self.filters[0][0]['tracker']
+                            min_select = 2
                         elif choice == 'location':
                             select = server.locations
-                            current_choice = self.filters[0][0]['location']
-                        if len(select) < 2:
-                            choice = ''
+                            min_select = 2
+                        elif choice == 'label':
+                            select = server.labels
+                            min_select = 1
+                        current_choice = self.filters[0][0][choice] if choice in self.filters[0][0] else ''
+                        if len(select) < min_select:
+                            # Nothing to select
+                            return
                         else:
                             indexes='abcdefghijklmnopqrstuvwxyz'
                             select_list=[]
@@ -1491,20 +1506,15 @@ class Interface(object):
                                 s=list(map(lambda x: x[0]==current_choice, select_list)).index(True)+1
                             except:
                                 s=0
-                            selected=self.dialog_menu('Select '+choice, select_list, s)
+                            selected = self.dialog_menu('Select '+choice, select_list, s)
                             if not selected in select:
-                                choice=''
-                                selected=''
-                            else:
-                                self.filters[0][0]['tracker']=selected
-                        if choice == 'tracker':
-                            self.filters[0][0]['tracker'] = selected
-                        elif choice == 'location':
-                            self.filters[0][0]['location'] = selected
+                                return
+                            self.filters[0][0][choice] = selected
                     elif choice == 'regex':
-                        regex = self.dialog_input_text('Regular expression to filter (case insensitive):', self.filters[0][0]['regex'])
+                        regex = self.dialog_input_text('Regular expression to filter (case insensitive):',
+                                    self.filters[0][0]['regex'] if 'regex' in self.filters[0][0] else '')
                         if regex == '':
-                            choice = ''
+                            return
                         else:
                             self.filters[0][0]['regex'] = regex
                     if choice == '':
@@ -2096,6 +2106,8 @@ class Interface(object):
             return filter['inverse'] != bool(re.search(filter['regex'], t['name'], flags=re.I))
         elif filter['name'] == 'location':
             return filter['inverse'] != ( t['downloadDir']==filter['location'] )
+        elif filter['name'] == 'label':
+            return filter['inverse'] != ( filter['label'] in t['labels'] )
 
         return True # Unknown filters does not filter anything
 
@@ -2534,6 +2546,10 @@ class Interface(object):
 
         if t['creator']:
             info.append(['Creator: ',"%s" % t['creator']])
+
+        if 'labels' in t and t['labels']:
+            info.append(['Labels: '])
+            info[-1].extend(t['labels'])
 
         info.append([''])
 
