@@ -748,6 +748,19 @@ class Transmission(object):
         response = request.get_response()
         return response['result']
 
+    def add_label(self, ids, label):
+        for i in ids:
+            t = self.get_torrent_by_id(i)
+            if not label in t['labels']:
+                data = {
+                    'ids': [i],
+                    'labels': t['labels'] + [label]
+                }
+                request = TransmissionRequest(self.host, self.port, self.path, 'torrent-set', 1, data)
+                request.send_request()
+                response = request.get_response()
+                return response['result'] if response['result'] != 'success' else ''
+
     def add_torrent_tracker(self, id, tracker):
         data = {
             'ids': [id],
@@ -1053,6 +1066,7 @@ class Interface(object):
             ord('M'):               self.copy_magnet_link,
             ord('n'):               self.reannounce_torrent,
             ord('/'):               self.search,
+            ord('b'):               self.add_label,
             ord('0'):               self.profile_selected,
             ord('1'):               self.profile_selected,
             ord('2'):               self.profile_selected,
@@ -2028,6 +2042,17 @@ class Interface(object):
         else:
             if c == ord('e') and len(self.profiles)>1:
                 self.choose_profile()
+
+    def add_label(self, c):
+        if server.get_rpc_label() < 16:
+            return
+        ids = self.selected_ids()
+        if ids:
+            focused, extraline = self.get_focused(ids)
+            msg = ('Label to add to "%s"' % focused['name']) + extraline
+            label = self.dialog_input_text(msg, '', tab_complete='dirs')
+            if label:
+                server.add_label(ids, label)
 
     def call_list_key_bindings(self, c):
         self.list_key_bindings()
@@ -3228,6 +3253,9 @@ class Interface(object):
 
         if features['clipboard']:
             message += "              M  Copy Magnet Link to the System Clipboard\n"
+
+        if server.get_rpc_version() >= 16:
+            message += "              b  Add label\n"
 
         # Queue was implemented in Transmission v2.4
         if server.get_rpc_version() >= 14 and self.details_category_focus != 1:
