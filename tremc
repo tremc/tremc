@@ -2056,44 +2056,44 @@ class Interface(object):
                 self.selected.symmetric_difference_update(set([self.torrents[self.focus]['id']]))
                 self.movement_keys(curses.KEY_DOWN)
 
+    def filter_torrent(self, t, filter):
+        if filter['name'] == 'downloading':
+            return filter['inverse'] != t['rateDownload'] > 0
+        elif filter['name'] == 'uploading':
+            return filter['inverse'] != t['rateUpload'] > 0
+        elif filter['name'] == 'paused':
+            return filter['inverse'] != t['status'] == Transmission.STATUS_STOPPED
+        elif filter['name'] == 'seeding':
+            return filter['inverse'] != ( t['status'] == Transmission.STATUS_SEED or t['status'] == Transmission.STATUS_SEED_WAIT )
+        elif filter['name'] == 'incomplete':
+            return filter['inverse'] != t['percentDone'] < 100
+        elif filter['name'] == 'private':
+            return filter['inverse'] != t['isPrivate']
+        elif filter['name'] == 'active':
+            return filter['inverse'] != ( t['peersGettingFromUs'] > 0 or t['peersSendingToUs'] > 0 or t['status'] == Transmission.STATUS_CHECK )
+        elif filter['name'] == 'verifying':
+            return filter['inverse'] != ( t['status'] == Transmission.STATUS_CHECK or t['status'] == Transmission.STATUS_CHECK_WAIT )
+        elif filter['name'] == 'isolated':
+            return filter['inverse'] != t['isIsolated']
+        elif filter['name'] == 'honors':
+            return filter['inverse'] != t['honorsSessionLimits']
+        elif filter['name'] == 'selected':
+            return filter['inverse'] != t['id'] in self.selected
+        elif filter['name'] == 'tracker':
+            return filter['inverse'] != t['mainTrackerDomain']==filter['tracker']
+        elif filter['name'] == 'regex':
+            return filter['inverse'] != bool(re.search(filter['regex'], t['name'], flags=re.I))
+        elif filter['name'] == 'location':
+            return filter['inverse'] != t['downloadDir']==filter['location']
+
+        return True # Unknown filters does not filter anything
+
     def filter_torrent_list(self):
         unfiltered = self.torrents
-        if self.filter_list == 'downloading':
-            self.torrents = [t for t in self.torrents if t['rateDownload'] > 0]
-        elif self.filter_list == 'uploading':
-            self.torrents = [t for t in self.torrents if t['rateUpload'] > 0]
-        elif self.filter_list == 'paused':
-            self.torrents = [t for t in self.torrents if t['status'] == Transmission.STATUS_STOPPED]
-        elif self.filter_list == 'seeding':
-            self.torrents = [t for t in self.torrents if t['status'] == Transmission.STATUS_SEED \
-                                 or t['status'] == Transmission.STATUS_SEED_WAIT]
-        elif self.filter_list == 'incomplete':
-            self.torrents = [t for t in self.torrents if t['percentDone'] < 100]
-        elif self.filter_list == 'private':
-            self.torrents = [t for t in self.torrents if t['isPrivate']]
-        elif self.filter_list == 'active':
-            self.torrents = [t for t in self.torrents if t['peersGettingFromUs'] > 0 \
-                                 or t['peersSendingToUs'] > 0 \
-                                 or t['status'] == Transmission.STATUS_CHECK]
-        elif self.filter_list == 'verifying':
-            self.torrents = [t for t in self.torrents if t['status'] == Transmission.STATUS_CHECK \
-                                 or t['status'] == Transmission.STATUS_CHECK_WAIT]
-        elif self.filter_list == 'isolated':
-            self.torrents = [t for t in self.torrents if t['isIsolated']]
-        elif self.filter_list == 'honors':
-            self.torrents = [t for t in self.torrents if t['honorsSessionLimits']]
-        elif self.filter_list == 'selected':
-            self.torrents = [t for t in self.torrents if t['id'] in self.selected]
-        elif self.filter_list == 'tracker':
-            self.torrents = [t for t in self.torrents if t['mainTrackerDomain']==self.filter_tracker]
-        elif self.filter_list == 'regex':
-            self.torrents = [t for t in self.torrents if re.search(self.filter_regex, t['name'], flags=re.I)]
-        elif self.filter_list == 'location':
-            self.torrents = [t for t in self.torrents if t['downloadDir']==self.filter_location]
-        # invert list?
-        if self.filter_inverse:
-            self.torrents = [t for t in unfiltered if t not in self.torrents]
 
+        filter = {'name': self.filter_list, 'inverse': self.filter_inverse,
+                  'tracker': self.filter_tracker, 'regex': self.filter_regex, 'location': self.filter_location}
+        self.torrents = [t for t in self.torrents if self.filter_torrent(t,filter) ]
         # Also filter selected:
         self.selected.intersection_update(set([t['id'] for t in self.torrents]))
 
