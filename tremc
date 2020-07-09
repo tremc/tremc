@@ -1470,7 +1470,7 @@ class Interface(object):
                        ('selected', 'S_elected'),
                        ('honors', '_Honors limits'),
                        ('invert','In_vert'), ('','_All')]
-            if server.rpc_version >= 16:
+            if server.get_rpc_version() >= 16:
                 options.insert(-2, ('label', 'La_bel'))
             try:
                 s=list(map(lambda x: x[0]==self.filters[0][0]['name'], options)).index(True)+1
