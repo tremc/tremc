@@ -937,14 +937,15 @@ class Interface(object):
             ('reverse', 'Re_verse')
             ]
 
-        self.filter_list    = config.get('Filtering', 'filter', fallback='')
-        self.filter_inverse = config.getboolean('Filtering', 'invert', fallback=False)
+        self.filters = [[{}]]
+        self.filters[0][0]['name']    = config.get('Filtering', 'filter', fallback='')
+        self.filters[0][0]['inverse'] = config.getboolean('Filtering', 'invert', fallback=False)
         self.sort_orders    = parse_sort_str(config.get('Sorting', 'order', fallback=''), [x[0] for x in self.sort_options])
         self.file_sort_key  = 'name'
         self.file_sort_reverse = False
-        self.filter_regex   = ''
-        self.filter_tracker   = ''
-        self.filter_location  = ''
+        self.filters[0][0]['regex']   = ''
+        self.filters[0][0]['tracker']   = ''
+        self.filters[0][0]['location']  = ''
         self.tlist_item_height = config.getint('Misc', 'lines_per_torrent')
         self.torrentname_is_progressbar = config.getboolean('Misc', 'torrentname_is_progressbar')
         self.file_viewer    = config.get('Misc', 'file_viewer')
@@ -1081,14 +1082,14 @@ class Interface(object):
 
     def apply_profile(self, profile):
         self.sort_orders  = profile['sort']
-        self.filter_list  = profile['filter']
-        if self.filter_list == 'tracker':
-            self.filter_tracker = profile['filter_param']
-        if self.filter_list == 'regex':
-            self.filter_regex = profile['filter_param']
-        if self.filter_list == 'location':
+        self.filters[0][0]['name']  = profile['filter']
+        if self.filters[0][0]['name'] == 'tracker':
+            self.filters[0][0]['tracker'] = profile['filter_param']
+        if self.filters[0][0]['name'] == 'regex':
+            self.filters[0][0]['regex'] = profile['filter_param']
+        if self.filters[0][0]['name'] == 'location':
             self.filter_locateion = profile['filter_param']
-        self.filter_inverse = profile['filter_inverse']
+        self.filters[0][0]['inverse'] = profile['filter_inverse']
 
     def profile_selected(self, p):
         if p in range(ord('0'),ord('9')+1):
@@ -1222,8 +1223,8 @@ class Interface(object):
             if self.focus > -1:
                 self.scrollpos = 0    # unfocus main list
                 self.focus     = -1
-            elif self.filter_list:
-                self.filter_list = '' # reset filter
+            elif self.filters[0][0]['name']:
+                self.filters[0][0]['name'] = '' # reset filter
 
     def leave_details(self, c):
         if self.selected_torrent > -1:
@@ -1456,21 +1457,21 @@ class Interface(object):
                        ('honors', '_Honors limits'),
                        ('invert','In_vert'), ('','_All')]
             try:
-                s=list(map(lambda x: x[0]==self.filter_list, options)).index(True)+1
+                s=list(map(lambda x: x[0]==self.filters[0][0]['name'], options)).index(True)+1
             except:
                 s=0
-            choice = self.dialog_menu(('Show only','Filter all')[self.filter_inverse], options, s)
+            choice = self.dialog_menu(('Show only','Filter all')[self.filters[0][0]['inverse']], options, s)
             if choice != -128:
                 if choice == 'invert':
-                    self.filter_inverse = not self.filter_inverse
+                    self.filters[0][0]['inverse'] = not self.filters[0][0]['inverse']
                 else:
                     if choice in ['tracker', 'location']:
                         if choice == 'tracker':
                             select = server.trackers
-                            current_choice = self.filter_tracker
+                            current_choice = self.filters[0][0]['tracker']
                         elif choice == 'location':
                             select = server.locations
-                            current_choice = self.filter_location
+                            current_choice = self.filters[0][0]['location']
                         if len(select) < 2:
                             choice = ''
                         else:
@@ -1489,20 +1490,20 @@ class Interface(object):
                                 choice=''
                                 selected=''
                             else:
-                                self.filter_tracker=selected
+                                self.filters[0][0]['tracker']=selected
                         if choice == 'tracker':
-                            self.filter_tracker = selected
+                            self.filters[0][0]['tracker'] = selected
                         elif choice == 'location':
-                            self.filter_location = selected
+                            self.filters[0][0]['location'] = selected
                     elif choice == 'regex':
-                        regex = self.dialog_input_text('Regular expression to filter (case insensitive):', self.filter_regex)
+                        regex = self.dialog_input_text('Regular expression to filter (case insensitive):', self.filters[0][0]['regex'])
                         if regex == '':
                             choice = ''
                         else:
-                            self.filter_regex = regex
+                            self.filters[0][0]['regex'] = regex
                     if choice == '':
-                        self.filter_inverse = False
-                    self.filter_list = choice
+                        self.filters[0][0]['inverse'] = False
+                    self.filters[0][0]['name'] = choice
 
     def global_upload(self, c):
        current_limit = (-1,self.stats['speed-limit-up'])[self.stats['speed-limit-up-enabled']]
@@ -2091,8 +2092,7 @@ class Interface(object):
     def filter_torrent_list(self):
         unfiltered = self.torrents
 
-        filter = {'name': self.filter_list, 'inverse': self.filter_inverse,
-                  'tracker': self.filter_tracker, 'regex': self.filter_regex, 'location': self.filter_location}
+        filter=self.filters[0][0]
         self.torrents = [t for t in self.torrents if self.filter_torrent(t,filter) ]
         # Also filter selected:
         self.selected.intersection_update(set([t['id'] for t in self.torrents]))
@@ -3073,9 +3073,9 @@ class Interface(object):
             self.screen.addstr(strings[3], curses.A_REVERSE)
             self.screen.addstr("%d) " % paused, curses.A_REVERSE)
 
-            if self.filter_list:
+            if self.filters[0][0]['name']:
                 self.screen.addstr(strings[4], curses.A_REVERSE)
-                self.screen.addstr("%s%s" % (('',strings[5])[self.filter_inverse], self.filter_list),
+                self.screen.addstr("%s%s" % (('',strings[5])[self.filters[0][0]['inverse']], self.filters[0][0]['name']),
                                    curses.color_pair(self.colors.id('filter_status'))
                                    + curses.A_REVERSE)
 
