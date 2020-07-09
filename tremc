@@ -3609,8 +3609,8 @@ class Interface(object):
             keymap = self.dialog_list_menu_options(win, width, options, focus)
             c = self.wingetch(win)
 
-            if c > 96 and c < 123 and chr(c) in keymap:
-                return options[keymap[chr(c)]][0]
+            if c > 47 and c < 123 and chr(c).lower() in keymap:
+                return options[keymap[chr(c).lower()]][0]
             elif c in [ord('q'), 27]:
                 return -128
             elif c == ord("\n"):
@@ -3634,11 +3634,12 @@ class Interface(object):
             if i == focus: tag = curses.color_pair(self.colors.id('dialog'))
             else:          tag = 0
             win.addstr(i,2, title[0], tag)
-            win.addstr(title[1][0], tag + curses.A_UNDERLINE)
-            win.addstr(title[1][1:], tag)
+            if len(title)>1:
+                win.addstr(title[1][0], tag + curses.A_UNDERLINE)
+                win.addstr(title[1][1:], tag)
+                keys[title[1][0].lower()] = i-1
             win.addstr(''.ljust(width - len(option[1]) - 3), tag)
 
-            keys[title[1][0].lower()] = i-1
             i+=1
         return keys
 
