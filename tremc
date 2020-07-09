@@ -4164,7 +4164,6 @@ def parse_config_profiles(config,orders):
                     ret[name] = {}
                     ret[name]['sort'] = parse_sort_str(s[1],orders)
                     ret[name]['filter'] = parse_filter_str(s[0])
-    pdebug(ret)
     return ret
 
 
