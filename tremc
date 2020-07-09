@@ -1082,14 +1082,7 @@ class Interface(object):
 
     def apply_profile(self, profile):
         self.sort_orders  = profile['sort']
-        self.filters[0][0]['name']  = profile['filter']
-        if self.filters[0][0]['name'] == 'tracker':
-            self.filters[0][0]['tracker'] = profile['filter_param']
-        if self.filters[0][0]['name'] == 'regex':
-            self.filters[0][0]['regex'] = profile['filter_param']
-        if self.filters[0][0]['name'] == 'location':
-            self.filter_locateion = profile['filter_param']
-        self.filters[0][0]['inverse'] = profile['filter_inverse']
+        self.filters[0][0]  = profile['filter']
 
     def profile_selected(self, p):
         if p in range(ord('0'),ord('9')+1):
@@ -4146,17 +4139,17 @@ def parse_config_profiles(config,orders):
             if name:
                 s = config['Profiles'][i].split('#=',3)
                 if s == ['']:
-                    ret[name]={ 'sort': [{ 'name':'name', 'reverse':False }], 'filter':'none', 'filter_inverse': False}
+                    ret[name]={ 'sort': [{ 'name':'name', 'reverse':False }], 'filter':{'name': 'none', 'inverse': False} }
                 elif len(s)==3:
-                    ret[name]={}
+                    ret[name]={'filter':{}}
                     if s[0].startswith(':'):
-                        ret[name]['filter_inverse']=True
+                        ret[name]['filter']['inverse']=True
                         s[0]=s[0][1:]
                     else:
-                        ret[name]['filter_inverse']=False
-                    ret[name]['filter']=s[0]
-                    if s[0] in ['tracker', 'regex']:
-                        ret[name]['filter_param']=s[1]
+                        ret[name]['filter']['inverse']=False
+                    ret[name]['filter']['name']=s[0]
+                    if s[0] in ['tracker', 'regex', 'location']:
+                        ret[name]['filter'][s[0]]=s[1]
                     ret[name]['sort'] = parse_sort_str(s[2],orders)
     return ret
 
