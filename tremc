@@ -4199,11 +4199,11 @@ def parse_sort_str(sort_str, orders):
 
 def parse_filter_str(s):
     if s=='':
-        return {'name': 'none', 'inverse': False}
+        return {'name': '', 'inverse': False}
     else:
         s=s.split('#=')
         if len(s) == 0 or len(s) % 2 == 1:
-            return [[{'name': 'none', 'inverse': False}]]
+            return [[{'name': '', 'inverse': False}]]
         ret=[]
         for i in range(0,len(s),2):
             f={}
@@ -4228,7 +4228,7 @@ def parse_config_profiles(config,orders):
             if name:
                 s = config['Profiles'][i].rsplit('#=',1)
                 if s == ['']:
-                    ret[name]={ 'sort': [{ 'name':'name', 'reverse':False }], 'filter':[[{'name': 'none', 'inverse': False}]] }
+                    ret[name]={ 'sort': [{ 'name':'name', 'reverse':False }], 'filter':[[{'name': '', 'inverse': False}]] }
                 elif len(s)==2:
                     ret[name] = {}
                     ret[name]['sort'] = parse_sort_str(s[1],orders)
