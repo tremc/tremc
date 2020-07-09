@@ -1493,8 +1493,10 @@ class Interface(object):
             choice = self.dialog_menu(('Show only','Filter all')[self.filters[0][0]['inverse']], options, s)
             if choice != -128:
                 if choice == 'invert':
+                    self.filters=[[ self.filters[0][0].copy() ]]
                     self.filters[0][0]['inverse'] = not self.filters[0][0]['inverse']
                 else:
+                    new_filter = self.filters[0][0].copy()
                     if choice in ['tracker', 'location', 'label']:
                         if choice == 'tracker':
                             select = server.trackers
@@ -1505,7 +1507,7 @@ class Interface(object):
                         elif choice == 'label':
                             select = server.labels
                             min_select = 1
-                        current_choice = self.filters[0][0][choice] if choice in self.filters[0][0] else ''
+                        current_choice = new_filter[choice] if choice in new_filter else ''
                         if len(select) < min_select:
                             # Nothing to select
                             return
@@ -1523,18 +1525,17 @@ class Interface(object):
                             selected = self.dialog_menu('Select '+choice, select_list, s)
                             if not selected in select:
                                 return
-                            self.filters[0][0][choice] = selected
+                            new_filter[choice] = selected
                     elif choice == 'regex':
                         regex = self.dialog_input_text('Regular expression to filter (case insensitive):',
-                                    self.filters[0][0]['regex'] if 'regex' in self.filters[0][0] else '')
+                                    new_filter['regex'] if 'regex' in new_filter else '')
                         if regex == '':
                             return
                         else:
-                            self.filters[0][0]['regex'] = regex
-                    if choice == '':
-                        self.filters[0][0]['inverse'] = False
-                    self.filters[0][0]['name'] = choice
-                    self.filters=[[self.filters[0][0]]]
+                            new_filter['regex'] = regex
+                    else:
+                        new_filter['name'] = choice
+                    self.filters=[[new_filter]]
 
     def global_upload(self, c):
        current_limit = (-1,self.stats['speed-limit-up'])[self.stats['speed-limit-up-enabled']]
