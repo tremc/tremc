@@ -1437,6 +1437,19 @@ class Interface(object):
             if c in [ 27, ord('q'), curses.ascii.ctrl(ord('w'))]:
                 return -1
 
+    def choose_profile(self):
+        profiles =  []
+        keys = set({})
+        for p in self.profiles:
+            if p[0] in keys:
+                profiles.append((p,p))
+            else:
+                keys.add(p[0])
+                profiles.append((p,'_'+p))
+        c = self.dialog_menu('Choose profile', profiles, 0)
+        if c in self.profiles:
+            self.apply_profile(self.profiles[c])
+
     def show_state_filter_menu(self, c):
         if self.selected_torrent == -1:
             options = [('uploading','_Uploading'), ('downloading','_Downloading'),
@@ -2001,6 +2014,9 @@ class Interface(object):
                 self.details_category_focus = 2
             elif c == ord('c'):
                 self.details_category_focus = 4
+        else:
+            if c == ord('e') and len(self.profiles)>1:
+                self.choose_profile()
 
     def call_list_key_bindings(self, c):
         self.list_key_bindings()
@@ -3206,7 +3222,8 @@ class Interface(object):
         # Torrent list
         if self.selected_torrent == -1:
             if self.profiles:
-                message += "           0..9  Select profile\n"
+                message += "           0..9  Select profile\n" + \
+                       "              e  Profile menu\n"
             message += "              /  Search in torrent list\n" + \
                        "              f  Filter torrent list\n" + \
                        "              s  Sort torrent list\n" \
