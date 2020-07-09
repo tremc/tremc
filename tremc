@@ -1082,7 +1082,7 @@ class Interface(object):
 
     def apply_profile(self, profile):
         self.sort_orders  = profile['sort']
-        self.filters[0][0]  = profile['filter']
+        self.filters  = profile['filter']
 
     def profile_selected(self, p):
         if p in range(ord('0'),ord('9')+1):
@@ -4128,6 +4128,27 @@ def parse_sort_str(sort_str, orders):
     return sort_orders
 
 
+def parse_filter_str(s):
+    if s=='':
+        return {'name': 'none', 'inverse': False}
+    else:
+        s=s.split('#=')
+        if len(s) == 0 or len(s) % 2 == 1:
+            return [[{'name': 'none', 'inverse': False}]]
+        ret=[]
+        for i in range(0,len(s),2):
+            f={}
+            if s[i].startswith(':'):
+                f['inverse']=True
+                s[i]=s[i][1:]
+            else:
+                f['inverse']=False
+            f['name']=s[i]
+            if s[i] in ['tracker', 'regex', 'location']:
+                f[s[i]]=s[i+1]
+            ret.append(f)
+        return [ret]
+
 def parse_config_profiles(config,orders):
     if not 'Profiles' in config:
         return {}
@@ -4136,20 +4157,14 @@ def parse_config_profiles(config,orders):
         if i.startswith('profile'):
             name=i[7:]
             if name:
-                s = config['Profiles'][i].split('#=',3)
+                s = config['Profiles'][i].rsplit('#=',1)
                 if s == ['']:
-                    ret[name]={ 'sort': [{ 'name':'name', 'reverse':False }], 'filter':{'name': 'none', 'inverse': False} }
-                elif len(s)==3:
-                    ret[name]={'filter':{}}
-                    if s[0].startswith(':'):
-                        ret[name]['filter']['inverse']=True
-                        s[0]=s[0][1:]
-                    else:
-                        ret[name]['filter']['inverse']=False
-                    ret[name]['filter']['name']=s[0]
-                    if s[0] in ['tracker', 'regex', 'location']:
-                        ret[name]['filter'][s[0]]=s[1]
-                    ret[name]['sort'] = parse_sort_str(s[2],orders)
+                    ret[name]={ 'sort': [{ 'name':'name', 'reverse':False }], 'filter':[[{'name': 'none', 'inverse': False}]] }
+                elif len(s)==2:
+                    ret[name] = {}
+                    ret[name]['sort'] = parse_sort_str(s[1],orders)
+                    ret[name]['filter'] = parse_filter_str(s[0])
+    pdebug(ret)
     return ret
 
 
