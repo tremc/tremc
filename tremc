@@ -1533,8 +1533,7 @@ class Interface(object):
                             return
                         else:
                             new_filter['regex'] = regex
-                    else:
-                        new_filter['name'] = choice
+                    new_filter['name'] = choice
                     self.filters=[[new_filter]]
 
     def global_upload(self, c):
