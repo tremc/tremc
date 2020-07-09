@@ -937,9 +937,9 @@ class Interface(object):
             ('reverse', 'Re_verse')
             ]
 
-        self.filter_list    = config.get('Filtering', 'filter')
-        self.filter_inverse = config.getboolean('Filtering', 'invert')
-        self.sort_orders    = parse_sort_str(config.get('Sorting', 'order'), [x[0] for x in self.sort_options])
+        self.filter_list    = config.get('Filtering', 'filter', fallback='')
+        self.filter_inverse = config.getboolean('Filtering', 'invert', fallback=False)
+        self.sort_orders    = parse_sort_str(config.get('Sorting', 'order', fallback=''), [x[0] for x in self.sort_options])
         self.file_sort_key  = 'name'
         self.file_sort_reverse = False
         self.filter_regex   = ''
