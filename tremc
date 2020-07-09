@@ -1510,6 +1510,7 @@ class Interface(object):
                     if choice == '':
                         self.filters[0][0]['inverse'] = False
                     self.filters[0][0]['name'] = choice
+                    self.filters=[[self.filters[0][0]]]
 
     def global_upload(self, c):
        current_limit = (-1,self.stats['speed-limit-up'])[self.stats['speed-limit-up-enabled']]
