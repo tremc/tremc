@@ -3125,7 +3125,13 @@ class Interface(object):
 
             if self.filters[0][0]['name']:
                 self.screen.addstr(strings[4], curses.A_REVERSE)
-                self.screen.addstr("%s%s" % (('',strings[5])[self.filters[0][0]['inverse']], self.filters[0][0]['name']),
+                if not self.narrow and self.filters[0][0]['name'] in ['tracker', 'location', 'regex', 'label']:
+                    filter_param = ('=', '!=')[self.filters[0][0]['inverse']] + self.filters[0][0][self.filters[0][0]['name']][-16:]
+                    not_str = ''
+                else:
+                    filter_param = ''
+                    not_str = ('',strings[5])[self.filters[0][0]['inverse']]
+                self.screen.addstr(not_str+ self.filters[0][0]['name'] + filter_param,
                                    curses.color_pair(self.colors.id('filter_status'))
                                    + curses.A_REVERSE)
 
