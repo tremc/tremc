@@ -2085,8 +2085,7 @@ class Interface(object):
     def filter_torrent_list(self):
         unfiltered = self.torrents
 
-        filter=self.filters[0][0]
-        self.torrents = [t for t in self.torrents if self.filter_torrent(t,filter) ]
+        self.torrents = [t for t in self.torrents if any ( all( self.filter_torrent(t,f) for f in fs ) for fs in self.filters ) ]
         # Also filter selected:
         self.selected.intersection_update(set([t['id'] for t in self.torrents]))
 
