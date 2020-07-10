@@ -4196,8 +4196,14 @@ def parse_sort_str(sort_str, orders):
         sort_orders= [{ 'name':'name', 'reverse':False }]
     return sort_orders
 
-
 def parse_filter_str(s):
+    s=s.split(" #& ")
+    ret=[]
+    for t in s:
+        ret.append(parse_single_filter_str(t))
+    return ret
+
+def parse_single_filter_str(s):
     if s=='':
         return {'name': '', 'inverse': False}
     else:
@@ -4216,7 +4222,7 @@ def parse_filter_str(s):
             if s[i] in ['tracker', 'regex', 'location']:
                 f[s[i]]=s[i+1]
             ret.append(f)
-        return [ret]
+        return ret
 
 def parse_config_profiles(config,orders):
     if not 'Profiles' in config:
