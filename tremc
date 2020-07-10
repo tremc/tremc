@@ -46,7 +46,6 @@ from textwrap import wrap
 from subprocess import call, Popen
 import netrc
 import operator
-from distutils.spawn import find_executable
 
 import urllib.request
 import urllib.error
@@ -4310,8 +4309,6 @@ if __name__ == '__main__':
     if transmissionremote_args:
         cmd = ['transmission-remote', '%s:%s' %
                (config.get('Connection', 'host'), config.get('Connection', 'port'))]
-        if find_executable(cmd[0]) is None:
-            quit("Command not found: %s\n" % cmd[0], 128)
 
         # transmission-remote requires --auth or --authenv before any other
         # parameters which require authentication. Otherwise, auth fails.
