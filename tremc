@@ -3607,6 +3607,7 @@ class Interface(object):
             if on_change: 
                 if oldinput != input:
                     on_change(input)
+                    oldinput = input
                 win.redrawwin()
 
     def search(self, c):
