@@ -976,7 +976,7 @@ class Interface(object):
         self.filters[0][0]['regex']   = ''
         self.filters[0][0]['tracker']   = ''
         self.filters[0][0]['location']  = ''
-        self.histories = { 'label': [], 'location': [], 'tracker': [] }
+        self.histories = self.load_history(history_file)
         self.tlist_item_height = config.getint('Misc', 'lines_per_torrent')
         self.torrentname_is_progressbar = config.getboolean('Misc', 'torrentname_is_progressbar')
         self.file_viewer    = config.get('Misc', 'file_viewer')
@@ -1114,6 +1114,33 @@ class Interface(object):
         else:
             self.restore_screen()
 
+    def load_history(self, filename):
+        if filename:
+            try:
+                history = json.load(open(filename,"r"))
+                assert isinstance(history, dict)
+            except:
+                history = {}
+        else:
+            history = {}
+        for i in ['label', 'location', 'tracker']:
+            if not i in history:
+                history[i] = []
+        return history
+
+
+    def save_history(self, filename, history):
+        if filename:
+            try:
+                oldhistory = json.load(open(history_file,"r"))
+            except:
+                oldhistory = {}
+            if oldhistory != history:
+                try:
+                    json.dump(history, open(history_file,"w"))
+                except:
+                    pass
+
     def apply_profile(self, profile):
         self.sort_orders  = profile['sort']
         self.filters  = profile['filter']
@@ -1235,6 +1262,7 @@ class Interface(object):
                     server.set_torrent_details_id(self.torrents[self.focus]['id'])
                     server.wait_for_details_update()
             if self.exit_now:
+                self.save_history(history_file, self.histories)
                 return
 
     def go_back_or_unfocus(self, c):
@@ -4426,6 +4454,13 @@ if __name__ == '__main__':
                           config.get('Connection', 'path'),
                           config.get('Connection', 'username'),
                           config.get('Connection', 'password'))
+
+    history_file = ''
+    if 'tremc' in os.path.dirname(cmd_args.configfile):
+        history_file = os.path.join(os.path.dirname(cmd_args.configfile), 'history.json')
+    elif 'tremc' in os.path.basename(cmd_args.configfile):
+        history_file = cmd_args.configfile.rsplit('tremc',1)[0]+'tremc-history.json'
+
     try:
         Interface()
     except Exception as e:
