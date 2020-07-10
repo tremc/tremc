@@ -2573,7 +2573,8 @@ class Interface(object):
 
         if 'labels' in t and t['labels']:
             info.append(['Labels: '])
-            info[-1].extend(t['labels'])
+            info[-1].extend([ s+'; ' for s in t['labels'][:-1]])
+            info[-1].append(t['labels'][-1])
 
         info.append([''])
 
