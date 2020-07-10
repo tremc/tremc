@@ -976,7 +976,7 @@ class Interface(object):
         self.filters[0][0]['regex']   = ''
         self.filters[0][0]['tracker']   = ''
         self.filters[0][0]['location']  = ''
-        self.histories = { 'label': [], 'location': [] }
+        self.histories = { 'label': [], 'location': [], 'tracker': [] }
         self.tlist_item_height = config.getint('Misc', 'lines_per_torrent')
         self.torrentname_is_progressbar = config.getboolean('Misc', 'torrentname_is_progressbar')
         self.file_viewer    = config.get('Misc', 'file_viewer')
@@ -1741,7 +1741,7 @@ class Interface(object):
             self.dialog_ok("You need Transmission v2.10 or higher to add trackers.")
             return
 
-        tracker = self.dialog_input_text('Add tracker URL:')
+        tracker = self.dialog_input_text('Add tracker URL:', history = self.histories['tracker'], history_max = 10)
         if tracker:
             t = self.torrent_details
             response = server.add_torrent_tracker(t['id'], tracker)
