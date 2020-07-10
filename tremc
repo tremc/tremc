@@ -976,7 +976,7 @@ class Interface(object):
         self.filters[0][0]['regex']   = ''
         self.filters[0][0]['tracker']   = ''
         self.filters[0][0]['location']  = ''
-        self.histories = { 'label': [] }
+        self.histories = { 'label': [], 'location': [] }
         self.tlist_item_height = config.getint('Misc', 'lines_per_torrent')
         self.torrentname_is_progressbar = config.getboolean('Misc', 'torrentname_is_progressbar')
         self.file_viewer    = config.get('Misc', 'file_viewer')
@@ -2102,7 +2102,8 @@ class Interface(object):
             focused, extraline = self.get_focused(ids)
             location = homedir2tilde(self.torrents[self.focus]['downloadDir'])
             msg = ('Move "%s"' % focused['name']) + extraline +  '\nfrom %s to' % location
-            path = self.dialog_input_text(msg, location, tab_complete='dirs')
+            path = self.dialog_input_text(msg, location, tab_complete='dirs',
+                        history=self.histories['location'], history_max=10 )
             if path:
                 server.move_torrent(ids, tilde2homedir(path))
 
