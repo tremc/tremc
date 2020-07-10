@@ -976,6 +976,7 @@ class Interface(object):
         self.filters[0][0]['regex']   = ''
         self.filters[0][0]['tracker']   = ''
         self.filters[0][0]['location']  = ''
+        self.histories = { 'label': [] }
         self.tlist_item_height = config.getint('Misc', 'lines_per_torrent')
         self.torrentname_is_progressbar = config.getboolean('Misc', 'torrentname_is_progressbar')
         self.file_viewer    = config.get('Misc', 'file_viewer')
@@ -2083,7 +2084,7 @@ class Interface(object):
         if ids:
             focused, extraline = self.get_focused(ids)
             msg = ('Label to add to "%s"' % focused['name']) + extraline
-            label = self.dialog_input_text(msg, '')
+            label = self.dialog_input_text(msg, '', history = self.histories['label'], history_max = 10)
             if label:
                 server.add_label(ids, label)
 
