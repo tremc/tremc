@@ -3494,13 +3494,15 @@ class Interface(object):
                 elif c == 27 or c == curses.KEY_BREAK:
                     return 0
 
-    def dialog_input_text(self, message, input='', on_change=None, on_enter=None, tab_complete=None, maxwidth=9999, align='center'):
+    def dialog_input_text(self, message, input='', on_change=None, on_enter=None, tab_complete=None, maxwidth=9999, 
+                          align='center', history=None, history_max=0):
         """tab_complete values:
                 'files': complete with any files/directories
                 'dirs': complete only with directories
                 'torrent_list': complete with names from the torrent list
                 any false value: do not complete
         """
+        history_pos = 0
         width  = min(maxwidth, self.width - 4)
         textwidth = width - 4
         height = message.count("\n") + 4
@@ -3514,6 +3516,7 @@ class Interface(object):
         if not isinstance(input, str):
             input = str(input, ENCODING)
         index = len(input)
+        oldinput = input
         while True:
             # Cut the text into pages, each as long as the text field
             # The current page is determined by index position
@@ -3526,6 +3529,13 @@ class Interface(object):
             win.addstr(height - 2, 2, displaytext.ljust(textwidth), color)
             win.move(height - 2, displayindex + 2)
             c = self.wingetch(win)
+            if history:
+                if  c == curses.KEY_UP or c == curses.ascii.ctrl(ord('p')):
+                    history_pos = (history_pos - 1) % len(history)
+                    input = history[history_pos]
+                if  c == curses.KEY_DOWN or c == curses.ascii.ctrl(ord('n')):
+                    history_pos = (history_pos + 1) % len(history)
+                    input = history[history_pos]
             if c in [ 27, curses.KEY_BREAK, curses.ascii.ctrl(ord('w'))]:
                 hide_cursor()
                 return ''
@@ -3536,23 +3546,28 @@ class Interface(object):
             elif (c == curses.KEY_BACKSPACE or c == 127) and index > 0:
                 input = input[:index - 1] + (index < len(input) and input[index:] or '')
                 index -= 1
-                if on_change: on_change(input)
             elif index < len(input) and ( c == curses.KEY_DC or c == curses.ascii.ctrl(ord('d')) ):
                 input = input[:index] + input[index + 1:]
-                if on_change: on_change(input)
             elif index < len(input) and c == curses.ascii.ctrl(ord('k')):
                 input = input[:index]
-                if on_change: on_change(input)
             elif c == curses.ascii.ctrl(ord('u')):
                 # Delete from cursor until beginning of line
                 input = input[index:]
                 index = 0
-                if on_change: on_change(input)
             elif c == curses.KEY_HOME or c == curses.ascii.ctrl(ord('a')):
                 index = 0
             elif c == curses.KEY_END or c == curses.ascii.ctrl(ord('e')):
                 index = len(input)
             elif c == ord('\n'):
+                if history != None and input != '':
+                    try:
+                        p = history.index(input)
+                        history.pop(p)
+                    except:
+                        p = -1
+                    if len(history) >= history_max:
+                        history.pop(0)
+                    history.append(input)
                 if on_enter:
                     on_enter(input)
                 else:
@@ -3561,7 +3576,6 @@ class Interface(object):
             elif c >= 32 and c < 127:
                 input = input[:index] + chr(c) + (index < len(input) and input[index:] or '')
                 index += 1
-                if on_change: on_change(input)
             elif c == ord('\t') and tab_complete:
                 possible_choices = []
                 if tab_complete in ('files', 'dirs'):
@@ -3589,8 +3603,10 @@ class Interface(object):
                             input += os.sep
                         input = homedir2tilde(input)
                     index = len(input)
-                    if on_change: on_change(input)
-            if on_change: win.redrawwin()
+            if on_change: 
+                if oldinput != input:
+                    on_change(input)
+                win.redrawwin()
 
     def search(self, c):
         if self.selected_torrent == -1:
