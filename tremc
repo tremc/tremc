@@ -747,6 +747,16 @@ class Transmission(object):
         response = request.get_response()
         return response['result']
 
+    def set_labels(self, ids, labels):
+        data = {
+            'ids': ids,
+            'labels': labels
+        }
+        request = TransmissionRequest(self.host, self.port, self.path, 'torrent-set', 1, data)
+        request.send_request()
+        response = request.get_response()
+        return response['result'] if response['result'] != 'success' else ''
+
     def add_label(self, ids, label):
         for i in ids:
             t = self.get_torrent_by_id(i)
@@ -1066,6 +1076,8 @@ class Interface(object):
             ord('n'):               self.reannounce_torrent,
             ord('/'):               self.search,
             ord('b'):               self.add_label,
+            ord('B'):               self.set_labels,
+            curses.ascii.ctrl(ord('l')): self.remove_labels,
             ord('0'):               self.profile_selected,
             ord('1'):               self.profile_selected,
             ord('2'):               self.profile_selected,
@@ -2042,14 +2054,36 @@ class Interface(object):
             if c == ord('e') and len(self.profiles)>1:
                 self.choose_profile()
 
+    def remove_labels(self, c):
+        if server.get_rpc_version() < 16:
+            return
+        ids = self.selected_ids()
+        if ids:
+            focused, extraline = self.get_focused(ids)
+            name = focused['name'][:self.width - 15]
+            if self.dialog_yesno("Remove labels from %s?" % name + extraline):
+                server.set_labels(ids, [])
+
+    def set_labels(self, c):
+        if server.get_rpc_version() < 16:
+            return
+        ids = self.selected_ids()
+        if ids:
+            focused, extraline = self.get_focused(ids)
+            msg = ('Set labels of "%s"' % focused['name']) + extraline + '\nto:'
+            labels_str = self.dialog_input_text(msg, '')
+            labels = [ s.strip() for s in labels_str.split(',')]
+            if labels:
+                server.set_labels(ids, labels)
+
     def add_label(self, c):
-        if server.get_rpc_label() < 16:
+        if server.get_rpc_version() < 16:
             return
         ids = self.selected_ids()
         if ids:
             focused, extraline = self.get_focused(ids)
             msg = ('Label to add to "%s"' % focused['name']) + extraline
-            label = self.dialog_input_text(msg, '', tab_complete='dirs')
+            label = self.dialog_input_text(msg, '')
             if label:
                 server.add_label(ids, label)
 
@@ -3261,7 +3295,9 @@ class Interface(object):
             message += "              M  Copy Magnet Link to the System Clipboard\n"
 
         if server.get_rpc_version() >= 16:
-            message += "              b  Add label\n"
+            message += "              b  Add label\n" + \
+                       "              B  Set labels\n" + \
+                       "             ^l  Remove labels\n"
 
         # Queue was implemented in Transmission v2.4
         if server.get_rpc_version() >= 14 and self.details_category_focus != 1:
