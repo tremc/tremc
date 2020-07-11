@@ -1143,7 +1143,8 @@ class Interface(object):
 
     def apply_profile(self, profile):
         self.sort_orders  = profile['sort']
-        self.filters  = profile['filter']
+        # copy filter array from profile
+        self.filters  = [[f.copy() for f in l] for l in profile['filter']]
 
     def profile_selected(self, p):
         if p in range(ord('0'),ord('9')+1):
@@ -1370,7 +1371,7 @@ class Interface(object):
 
     def f_key(self, c):
         if self.selected_torrent == -1:
-            self.show_state_filter_menu(c)
+            self.set_filter(c)
         elif self.selected_torrent > -1:
             self.filelist_needs_refresh = True
             self.details_category_focus = 1
@@ -1512,7 +1513,8 @@ class Interface(object):
         if c in self.profiles:
             self.apply_profile(self.profiles[c])
 
-    def show_state_filter_menu(self, c):
+    def filter_menu(self, oldfilter={'name':'','inverse':False}, prompt=""):
+        new_filter = oldfilter.copy() 
         if self.selected_torrent == -1:
             options = [('uploading','_Uploading'), ('downloading','_Downloading'),
                        ('active','Ac_tive'), ('paused','_Paused'), ('seeding','_Seeding'),
@@ -1527,16 +1529,14 @@ class Interface(object):
             if server.get_rpc_version() >= 16:
                 options.insert(-2, ('label', 'La_bel'))
             try:
-                s=list(map(lambda x: x[0]==self.filters[0][0]['name'], options)).index(True)+1
+                s=list(map(lambda x: x[0]==oldfilter['name'], options)).index(True)+1
             except:
                 s=0
-            choice = self.dialog_menu(('Show only','Filter all')[self.filters[0][0]['inverse']], options, s)
+            choice = self.dialog_menu(prompt, options, s)
             if choice != -128:
                 if choice == 'invert':
-                    self.filters=[[ self.filters[0][0].copy() ]]
-                    self.filters[0][0]['inverse'] = not self.filters[0][0]['inverse']
+                    new_filter['inverse'] = not newfilter['inverse']
                 else:
-                    new_filter = self.filters[0][0].copy()
                     if choice in ['tracker', 'location', 'label']:
                         if choice == 'tracker':
                             select = server.trackers
@@ -1574,7 +1574,14 @@ class Interface(object):
                         else:
                             new_filter['regex'] = regex
                     new_filter['name'] = choice
-                    self.filters=[[new_filter]]
+                    return new_filter
+                return None
+
+    def set_filter(self, c):
+        prompt = ('Show only','Filter all')[self.filters[0][0]['inverse']]
+        new_filter = self.filter_menu( self.filters[0][0], prompt=prompt)
+        if new_filter:
+            self.filters = [[ new_filter ]]
 
     def global_upload(self, c):
        current_limit = (-1,self.stats['speed-limit-up'])[self.stats['speed-limit-up-enabled']]
