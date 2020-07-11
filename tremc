@@ -1031,6 +1031,7 @@ class Interface(object):
             ord('D'):               self.torrent_download,
             ord('L'):               self.seed_ratio,
             ord('t'):               self.t_key,
+            ord('T'):               self.add_filter,
             ord('*'):               self.honors_limits,
             ord('+'):               self.bandwidth_priority,
             ord('-'):               self.bandwidth_priority,
@@ -1582,6 +1583,11 @@ class Interface(object):
         new_filter = self.filter_menu( self.filters[0][0], prompt=prompt)
         if new_filter:
             self.filters = [[ new_filter ]]
+
+    def add_filter(self, c):
+        new_filter = self.filter_menu( prompt="Add filter:")
+        if new_filter:
+            self.filters[0].append(new_filter)
 
     def global_upload(self, c):
        current_limit = (-1,self.stats['speed-limit-up'])[self.stats['speed-limit-up-enabled']]
