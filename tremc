@@ -2763,7 +2763,7 @@ class Interface(object):
                 self.sorted_files = sorted(self.torrent_details['files'], key=lambda x: x['bytesCompleted']/x['length'], reverse=self.file_sort_reverse)
             else:
                 if self.file_sort_reverse:
-                    self.sorted_files = self.torrent_details['files'].reverse()
+                    self.sorted_files = list(reversed(self.torrent_details['files']))
                 else:
                     self.sorted_files = self.torrent_details['files'][:]
             for index, file in enumerate(self.sorted_files):
