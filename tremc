@@ -132,6 +132,7 @@ config.set('Colors', 'download_rate',    'bg:black,fg:blue')
 config.set('Colors', 'upload_rate',      'bg:black,fg:red')
 config.set('Colors', 'eta+ratio',        'bg:black,fg:white')
 config.set('Colors', 'filter_status',    'bg:red,fg:black')
+config.set('Colors', 'filter_status2',   'bg:blue,fg:black')
 config.set('Colors', 'dialog',           'bg:black,fg:white')
 config.set('Colors', 'dialog_important', 'bg:red,fg:black')
 config.set('Colors', 'button',           'bg:white,fg:black')
@@ -3210,7 +3211,7 @@ class Interface(object):
                         filter_param = ''
                         not_str = ('',strings[5])[self.filters[0][0]['inverse']]
                     self.screen.addstr(not_str+ self.filters[0][0]['name'] + filter_param,
-                                       curses.color_pair(self.colors.id('filter_status'))
+                                       curses.color_pair(self.colors.id('filter_status'+('2' if len(self.filters[0])>1 else '')))
                                        + curses.A_REVERSE)
 
                 # show last sort order (if terminal size permits it)
