@@ -1534,10 +1534,10 @@ class Interface(object):
                 s=list(map(lambda x: x[0]==oldfilter['name'], options)).index(True)+1
             except:
                 s=0
-            choice = self.dialog_menu(prompt, options, s)
+            choice, inverse = self.dialog_menu(prompt, options, s, extended=True)
             if choice != -128:
                 if choice == 'invert':
-                    new_filter['inverse'] = not newfilter['inverse']
+                    new_filter['inverse'] = not new_filter['inverse']
                 else:
                     if choice in ['tracker', 'location', 'label']:
                         if choice == 'tracker':
@@ -1576,8 +1576,9 @@ class Interface(object):
                         else:
                             new_filter['regex'] = regex
                     new_filter['name'] = choice
-                    return new_filter
-                return None
+                    new_filter['inverse'] = inverse
+                return new_filter
+            return None
 
     def set_filter(self, c):
         prompt = ('Show only','Filter all')[self.filters[0][0]['inverse']]
@@ -3773,7 +3774,7 @@ class Interface(object):
                 except ValueError:
                     pass
 
-    def dialog_menu(self, title, options, focus=1):
+    def dialog_menu(self, title, options, focus=1, extended=False):
         height = len(options) + 2
         width  = max(max([len(x[1])+3 for x in options]), len(title)+3)
         win = self.window(height, width)
@@ -3786,11 +3787,13 @@ class Interface(object):
             c = self.wingetch(win)
 
             if c > 47 and c < 123 and chr(c).lower() in keymap:
-                return options[keymap[chr(c).lower()]][0]
+                return ( options[keymap[chr(c).lower()]][0], chr(c).isupper()) if extended else options[keymap[chr(c).lower()]][0]
             elif c in [ord('q'), 27]:
-                return -128
+                return (-128,False) if extended else -128
             elif c == ord("\n"):
-                return options[focus-1][0]
+                return options[focus-1][0] if extended else options[focus-1][0]
+            elif c == curses.KEY_BACKSPACE and extended:
+                return (options[focus-1][0],True)
             elif c == curses.KEY_DOWN or c == ord('j') or c == curses.ascii.ctrl(ord('n')):
                 focus += 1
                 if focus > len(options): focus = 1
