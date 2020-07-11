@@ -283,6 +283,7 @@ class Transmission(object):
     TAG_TORRENT_DETAILS = 77
     TAG_SESSION_STATS   = 21
     TAG_SESSION_GET     = 22
+    TAG_SESSION_CLOSE   = 23
 
     LIST_FIELDS = ['id', 'name', 'downloadDir', 'status', 'trackerStats', 'desiredAvailable',
                    'rateDownload', 'rateUpload', 'eta', 'uploadRatio',
@@ -705,6 +706,11 @@ class Transmission(object):
         else:
             return ''
 
+    def daemon_quit(self):
+        request = TransmissionRequest(self.host, self.port, self.path, 'session-close', self.TAG_SESSION_CLOSE)
+        request.send_request()
+        self.wait_for_update(self.TAG_SESSION_CLOSE)
+
     def stop_torrents(self, ids):
         request = TransmissionRequest(self.host, self.port, self.path, 'torrent-stop', 1, {'ids': ids})
         request.send_request()
@@ -1091,6 +1097,7 @@ class Interface(object):
             ord('7'):               self.profile_selected,
             ord('8'):               self.profile_selected,
             ord('9'):               self.profile_selected,
+            ord('X'):               self.daemon_quit,
             curses.KEY_SEND:        lambda c: self.move_queue('bottom'),
             curses.KEY_SHOME:       lambda c: self.move_queue('top'),
             curses.KEY_SLEFT:       lambda c: self.move_queue('ppage'),
@@ -1267,6 +1274,10 @@ class Interface(object):
             if self.exit_now:
                 self.save_history(history_file, self.histories)
                 return
+
+    def daemon_quit(self, c):
+        if self.dialog_yesno("Ask daemon to shut down?"):
+            server.daemon_quit()
 
     def go_back_or_unfocus(self, c):
         if self.focus_detaillist > -1:   # unfocus and deselect file
@@ -3330,6 +3341,7 @@ class Interface(object):
     def list_key_bindings(self):
         title = 'Help Menu'
         message = "           F1/?  Show this help\n" + \
+                  "              X  Ask daemon to quit\n" + \
                   "            u/d  Adjust maximum global up-/download rate\n" + \
                   "            U/D  Adjust maximum up-/download rate for focused torrent\n" + \
                   "              L  Set seed ratio limit for focused torrent\n" + \
