@@ -3167,10 +3167,10 @@ class Interface(object):
             self.screen.addstr((self.height-1), 0, "-- VISUAL --", curses.A_REVERSE)
         else:
             if self.narrow:
-                strings = [ 'T', 'D', 'S', 'P', 'F:', '!', ' S:' ]
+                strings = [ 'T', 'D', 'S', 'P', '', '!', ' ', ' S:%d', ' F:%d']
             else:
                strings = [ "Torrent%s:" % ('s','')[len(self.torrents) == 1], "Downloading:", "Seeding:", "Paused:",
-                           "Filter:", "not ", " Sort by:"]
+                           "Filter:", "not ", " Sort by:", " Selected:%d", " Files:%d"]
             self.screen.addstr((self.height-1), 0, strings[0],
                                    curses.A_REVERSE)
             self.screen.addstr("%d (" % len(self.torrents), curses.A_REVERSE)
@@ -3187,42 +3187,53 @@ class Interface(object):
             self.screen.addstr(strings[3], curses.A_REVERSE)
             self.screen.addstr("%d) " % paused, curses.A_REVERSE)
 
-            if self.filters[0][0]['name']:
-                self.screen.addstr(strings[4], curses.A_REVERSE)
-                if not self.narrow and self.filters[0][0]['name'] in ['tracker', 'location', 'regex', 'label']:
-                    filter_param = ('=', '!=')[self.filters[0][0]['inverse']] + self.filters[0][0][self.filters[0][0]['name']][-16:]
-                    not_str = ''
-                else:
-                    filter_param = ''
-                    not_str = ('',strings[5])[self.filters[0][0]['inverse']]
-                self.screen.addstr(not_str+ self.filters[0][0]['name'] + filter_param,
-                                   curses.color_pair(self.colors.id('filter_status'))
-                                   + curses.A_REVERSE)
+            if self.selected_torrent == -1:
+                if self.filters[0][0]['name']:
+                    self.screen.addstr(strings[4], curses.A_REVERSE)
+                    if not self.narrow and self.filters[0][0]['name'] in ['tracker', 'location', 'regex', 'label']:
+                        filter_param = ('=', '!=')[self.filters[0][0]['inverse']] + self.filters[0][0][self.filters[0][0]['name']][-16:]
+                        not_str = ''
+                    else:
+                        filter_param = ''
+                        not_str = ('',strings[5])[self.filters[0][0]['inverse']]
+                    self.screen.addstr(not_str+ self.filters[0][0]['name'] + filter_param,
+                                       curses.color_pair(self.colors.id('filter_status'))
+                                       + curses.A_REVERSE)
 
-            # show last sort order (if terminal size permits it)
-            curpos_y, curpos_x = self.screen.getyx()
-            if self.sort_orders and self.width - curpos_x > 20:
-                self.screen.addstr(strings[6], curses.A_REVERSE)
-                name = [name[1] for name in self.sort_options if name[0] == self.sort_orders[-1]['name']][0]
-                name = name.replace('_', '').lower()
-                curses_tags = curses.color_pair(self.colors.id('filter_status')) + curses.A_REVERSE
-                if self.sort_orders[-1]['reverse']:
-                    self.screen.addch(curses.ACS_DARROW, curses_tags)
-                else:
-                    self.screen.addch(curses.ACS_UARROW, curses_tags)
-                try:  # 'name' may be too long
-                    self.screen.addstr(name, curses_tags)
-                except curses.error:
-                    pass
+                # show last sort order (if terminal size permits it)
+                if self.sort_orders and self.width - self.screen.getyx()[1] > 20:
+                    self.screen.addstr(strings[6], curses.A_REVERSE)
+                    name = [name[1] for name in self.sort_options if name[0] == self.sort_orders[-1]['name']][0]
+                    name = name.replace('_', '').lower()
+                    curses_tags = curses.color_pair(self.colors.id('filter_status')) + curses.A_REVERSE
+                    if self.sort_orders[-1]['reverse']:
+                        self.screen.addch(curses.ACS_DARROW, curses_tags)
+                    else:
+                        self.screen.addch(curses.ACS_UARROW, curses_tags)
+                    try:  # 'name' may be too long
+                        self.screen.addstr(name, curses_tags)
+                    except curses.error:
+                        pass
 
-            if self.selected_torrent == -1 and self.selected and self.width - curpos_x > 20:
-                self.screen.addstr(" Selected:%d" % len(self.selected), curses.A_REVERSE)
+                if self.selected and self.width - self.screen.getyx()[1] > 20:
+                    self.screen.addstr(strings[7] % len(self.selected), curses.A_REVERSE)
 
-            if ( self.selected_torrent > -1 and self.details_category_focus == 1
-                    and self.width - curpos_x > 20 and len(self.torrent_details['files'])>1 ):
-                self.screen.addstr(" Files:%d" % len(self.torrent_details['files']), curses.A_REVERSE)
-            if self.selected_torrent > -1 and self.details_category_focus == 1 and self.width - curpos_x > 20 and self.selected_files:
-                self.screen.addstr(" Selected:%d" % len(self.selected_files), curses.A_REVERSE)
+            else:
+                if self.details_category_focus == 1:
+                    if self.file_sort_key and self.width - self.screen.getyx()[1] > 20:
+                        self.screen.addstr(strings[6], curses.A_REVERSE)
+                        name = [name[1] for name in self.file_sort_options if name[0] == self.file_sort_key][0]
+                        name = name.replace('_', '').lower()
+                        curses_tags = curses.color_pair(self.colors.id('filter_status')) + curses.A_REVERSE
+                        if self.file_sort_reverse:
+                            self.screen.addch(curses.ACS_DARROW, curses_tags)
+                        else:
+                            self.screen.addch(curses.ACS_UARROW, curses_tags)
+                        self.screen.addstr(name[:10], curses_tags)
+                    if self.width - self.screen.getyx()[1] > 20 and len(self.torrent_details['files'])>1:
+                        self.screen.addstr(strings[8] % len(self.torrent_details['files']), curses.A_REVERSE)
+                    if self.width - self.screen.getyx()[1] > 20 and self.selected_files:
+                        self.screen.addstr(strings[7] % len(self.selected_files), curses.A_REVERSE)
 
     def draw_global_rates(self):
         # ↑1.2K ↓3.4M
