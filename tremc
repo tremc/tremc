@@ -3563,14 +3563,18 @@ class Interface(object):
                     return 0
 
     def dialog_input_text(self, message, input='', on_change=None, on_enter=None, tab_complete=None, maxwidth=9999, 
-                          align='center', history=None, history_max=0):
+                          align='center', history=None, history_max=0, fixed_history=[]):
         """tab_complete values:
                 'files': complete with any files/directories
                 'dirs': complete only with directories
                 'torrent_list': complete with names from the torrent list
                 any false value: do not complete
         """
-        history_pos = 0
+        if history != None:
+            localhistory = fixed_history+history+[input]
+        else:
+            localhistory = [input]
+        history_pos = len(localhistory)-1
         width  = min(maxwidth, self.width - 4)
         textwidth = width - 4
         height = message.count("\n") + 4
@@ -3584,7 +3588,6 @@ class Interface(object):
         if not isinstance(input, str):
             input = str(input, ENCODING)
         index = len(input)
-        oldinput = input
         while True:
             # Cut the text into pages, each as long as the text field
             # The current page is determined by index position
@@ -3597,13 +3600,15 @@ class Interface(object):
             win.addstr(height - 2, 2, displaytext.ljust(textwidth), color)
             win.move(height - 2, displayindex + 2)
             c = self.wingetch(win)
-            if history:
+            if history != None:
                 if  c == curses.KEY_UP or c == curses.ascii.ctrl(ord('p')):
-                    history_pos = (history_pos - 1) % len(history)
-                    input = history[history_pos]
+                    history_pos = (history_pos - 1) % len(localhistory)
+                    input = localhistory[history_pos]
+                    index = len(input)
                 if  c == curses.KEY_DOWN or c == curses.ascii.ctrl(ord('n')):
-                    history_pos = (history_pos + 1) % len(history)
-                    input = history[history_pos]
+                    history_pos = (history_pos + 1) % len(localhistory)
+                    input = localhistory[history_pos]
+                    index = len(input)
             if c in [ 27, curses.KEY_BREAK, curses.ascii.ctrl(ord('w'))]:
                 hide_cursor()
                 return ''
@@ -3672,10 +3677,11 @@ class Interface(object):
                         input = homedir2tilde(input)
                     index = len(input)
             if on_change: 
-                if oldinput != input:
+                if localhistory[-1] != input:
                     on_change(input)
-                    oldinput = input
                 win.redrawwin()
+            if localhistory[-1] != input and not input in localhistory:
+                localhistory[-1] = input
 
     def search(self, c):
         if self.selected_torrent == -1:
