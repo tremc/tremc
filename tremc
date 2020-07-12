@@ -459,7 +459,7 @@ class Transmission(object):
                 t['mainTrackerDomain'] = get_main_tracker_domain(t)
                 if t['mainTrackerDomain']:
                     self.trackers.add(t['mainTrackerDomain'])
-                self.locations.add(t['downloadDir'])
+                self.locations.add(homedir2tilde(t['downloadDir']))
                 if self.rpc_version >= 16:
                     for l in t['labels']:
                         self.labels.add(l)
