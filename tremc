@@ -2220,7 +2220,7 @@ class Interface(object):
         elif filter['name'] == 'regex':
             return filter['inverse'] != bool(re.search(filter['regex'], t['name'], flags=re.I))
         elif filter['name'] == 'location':
-            return filter['inverse'] != ( t['downloadDir']==filter['location'] )
+            return filter['inverse'] != ( homedir2tilde(t['downloadDir'])==filter['location'] )
         elif filter['name'] == 'label':
             return filter['inverse'] != ( filter['label'] in t['labels'] )
 
