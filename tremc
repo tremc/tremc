@@ -1795,7 +1795,8 @@ class Interface(object):
             self.dialog_ok("You need Transmission v2.10 or higher to add trackers.")
             return
 
-        tracker = self.dialog_input_text('Add tracker URL:', history = self.histories['tracker'], history_max = 10)
+        tracker = self.dialog_input_text('Add tracker URL:', history = self.histories['tracker'], history_max = 10,
+                                         fixed_history=list(server.trackers))
         if tracker:
             t = self.torrent_details
             response = server.add_torrent_tracker(t['id'], tracker)
@@ -2138,7 +2139,7 @@ class Interface(object):
         if ids:
             focused, extraline = self.get_focused(ids)
             msg = ('Label to add to "%s"' % focused['name']) + extraline
-            label = self.dialog_input_text(msg, '', history = self.histories['label'], history_max = 10)
+            label = self.dialog_input_text(msg, '', history = self.histories['label'], history_max = 10, fixed_history=list(server.labels))
             if label:
                 server.add_label(ids, label)
 
@@ -2157,7 +2158,7 @@ class Interface(object):
             location = homedir2tilde(self.torrents[self.focus]['downloadDir'])
             msg = ('Move "%s"' % focused['name']) + extraline +  '\nfrom %s to' % location
             path = self.dialog_input_text(msg, location, tab_complete='dirs',
-                        history=self.histories['location'], history_max=10 )
+                        history=self.histories['location'], history_max=10, fixed_history=list(server.locations) )
             if path:
                 server.move_torrent(ids, tilde2homedir(path))
 
