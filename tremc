@@ -3571,6 +3571,7 @@ class Interface(object):
                 'torrent_list': complete with names from the torrent list
                 any false value: do not complete
         """
+        self.highlight_dialog = False
         if history != None:
             localhistory = fixed_history+history+[input]
         else:
