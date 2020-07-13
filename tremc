@@ -3508,11 +3508,11 @@ class Interface(object):
 
 
     def dialog_yesno(self, message, important=False, hard=None):
-        height = 5 + message.count("\n")
-        width  = max(len_columns(message), 8) + 4
         if hard:
             important = True
             message = message + "\n" + hard + "\n" + "Press ctrl-y to accept.\n"
+        height = 5 + message.count("\n")
+        width  = max(len_columns(message), 8) + 4
         win = self.window(height, width, message=message)
 
         if important:
