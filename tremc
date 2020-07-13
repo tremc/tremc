@@ -1151,7 +1151,7 @@ class Interface(object):
                     pass
 
     def apply_profile(self, profile):
-        self.sort_orders  = profile['sort']
+        self.sort_orders  =  [s.copy() for s in profile['sort']]
         # copy filter array from profile
         self.filters  = [[f.copy() for f in l] for l in profile['filter']]
 
