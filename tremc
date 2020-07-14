@@ -1527,7 +1527,7 @@ class Interface(object):
             self.apply_profile(self.profiles[c])
 
     def filter_menu(self, oldfilter={'name':'','inverse':False}, prompt=""):
-        new_filter = oldfilter.copy() 
+        new_filter = oldfilter.copy()
         if self.selected_torrent == -1:
             options = [('uploading','_Uploading'), ('downloading','_Downloading'),
                        ('active','Ac_tive'), ('paused','_Paused'), ('seeding','_Seeding'),
@@ -3563,7 +3563,7 @@ class Interface(object):
                 elif c in [ 27, curses.KEY_BREAK, curses.ascii.ctrl(ord('w'))]:
                     return 0
 
-    def dialog_input_text(self, message, input='', on_change=None, on_enter=None, tab_complete=None, maxwidth=9999, 
+    def dialog_input_text(self, message, input='', on_change=None, on_enter=None, tab_complete=None, maxwidth=9999,
                           align='center', history=None, history_max=0, fixed_history=[]):
         """tab_complete values:
                 'files': complete with any files/directories
@@ -3678,7 +3678,7 @@ class Interface(object):
                             input += os.sep
                         input = homedir2tilde(input)
                     index = len(input)
-            if on_change: 
+            if on_change:
                 if localhistory[-1] != input:
                     on_change(input)
                 win.redrawwin()
