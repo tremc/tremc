@@ -3388,6 +3388,8 @@ class Interface(object):
                        "              e  Profile menu\n"
             message += "              /  Search in torrent list\n" + \
                        "              f  Filter torrent list\n" + \
+                       "              T  Add filter\n" + \
+                       "              I  Edit list of filters\n" + \
                        "              s  Sort torrent list\n" \
                        "          Space  Select/Deselect focused torrent\n" + \
                        "              A  Select/Deselect all torrents\n" + \
