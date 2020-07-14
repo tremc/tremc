@@ -3545,7 +3545,7 @@ class Interface(object):
                     return True
                 if c in [ord('n'), ord("\n"), ord(' ')]:
                     return False
-                if c in [27, curses.KEY_BREAK]:
+                if c in [27, curses.KEY_BREAK, curses.ascii.ctrl(ord('w'))]:
                     return 0
             else:
                 if c == ord('y'):
@@ -3560,7 +3560,7 @@ class Interface(object):
                     input = False
                 elif c == ord("\n") or c == ord(' '):
                     return input
-                elif c == 27 or c == curses.KEY_BREAK:
+                elif c in [ 27, curses.KEY_BREAK, curses.ascii.ctrl(ord('w'))]:
                     return 0
 
     def dialog_input_text(self, message, input='', on_change=None, on_enter=None, tab_complete=None, maxwidth=9999, 
@@ -3744,7 +3744,7 @@ class Interface(object):
             win.addstr(height-2, 2, input.ljust(width-4), curses.color_pair(self.colors.id('dialog')))
             win.move(height - 2, len(input) + 2)
             c = self.wingetch(win)
-            if c == 27 or c == ord('q') or c == curses.KEY_BREAK:
+            if c in [ 27, ord('q'), curses.KEY_BREAK, curses.ascii.ctrl(ord('w'))]:
                 hide_cursor()
                 return -128
             elif c == ord("\n"):
@@ -3808,7 +3808,7 @@ class Interface(object):
 
             if c > 47 and c < 123 and chr(c).lower() in keymap:
                 return ( options[keymap[chr(c).lower()]][0], chr(c).isupper()) if extended else options[keymap[chr(c).lower()]][0]
-            elif c in [ord('q'), 27]:
+            elif c in [ord('q'), 27, curses.ascii.ctrl(ord('w'))]:
                 return (-128,False) if extended else -128
             elif c == ord("\n"):
                 return options[focus-1][0] if extended else options[focus-1][0]
@@ -3884,7 +3884,7 @@ class Interface(object):
                 line_num += 1
 
             c = self.wingetch(win)
-            if c in [ 27, ord('q'), ord("\n")]:
+            if c in [ 27, ord('q'), ord("\n"), curses.ascii.ctrl(ord('w'))]:
                 return
             elif c == ord('p'):
                 port = self.dialog_input_number("Port for incoming connections",
