@@ -55,6 +55,7 @@ import configparser
 locale.setlocale(locale.LC_ALL, '')
 ENCODING = locale.getpreferredencoding() or 'UTF-8'
 
+FILTERS_WITH_PARAM = ['tracker', 'regex', 'location', 'label']
 # optional features provided by non-standard modules
 features = {'ipy': False, 'clipboard': False}
 
@@ -1039,6 +1040,7 @@ class Interface(object):
             ord('L'):               self.seed_ratio,
             ord('t'):               self.t_key,
             ord('T'):               self.add_filter,
+            ord('I'):               self.edit_filters,
             ord('*'):               self.honors_limits,
             ord('+'):               self.bandwidth_priority,
             ord('-'):               self.bandwidth_priority,
@@ -1601,6 +1603,10 @@ class Interface(object):
         new_filter = self.filter_menu( prompt="Add filter:")
         if new_filter:
             self.filters[0].append(new_filter)
+
+    def edit_filters(self, c):
+        if self.selected_torrent == -1:
+            self.filters = self.dialog_filters()
 
     def global_upload(self, c):
        current_limit = (-1,self.stats['speed-limit-up'])[self.stats['speed-limit-up-enabled']]
@@ -3217,7 +3223,7 @@ class Interface(object):
             if self.selected_torrent == -1:
                 if self.filters[0][0]['name']:
                     self.screen.addstr(strings[4], curses.A_REVERSE)
-                    if not self.narrow and self.filters[0][0]['name'] in ['tracker', 'location', 'regex', 'label']:
+                    if not self.narrow and self.filters[0][0]['name'] in FILTERS_WITH_PARAM:
                         filter_param = ('=', '!=')[self.filters[0][0]['inverse']] + self.filters[0][0][self.filters[0][0]['name']][-16:]
                         not_str = ''
                     else:
@@ -3811,7 +3817,7 @@ class Interface(object):
             elif c in [ord('q'), 27, curses.ascii.ctrl(ord('w'))]:
                 return (-128,False) if extended else -128
             elif c == ord("\n"):
-                return options[focus-1][0] if extended else options[focus-1][0]
+                return (options[focus-1][0],False) if extended else options[focus-1][0]
             elif c == curses.KEY_BACKSPACE and extended:
                 return (options[focus-1][0],True)
             elif c == curses.KEY_DOWN or c == ord('j') or c == curses.ascii.ctrl(ord('n')):
@@ -3978,6 +3984,82 @@ class Interface(object):
                     self.file_viewer=viewer
 
             self.draw_torrent_list()
+
+    def dialog_filters(self):
+        filters  = [[f.copy() for f in l] for l in self.filters]
+        filters.append([])
+        win = None
+        changed = True
+        current = [0,0]
+        oldheight, oldwidth = -1, -1
+        while True:
+            if changed:
+                changed = False
+                lines = []
+                i = 0
+                for fl in filters:
+                    lines.append(', '.join([filter2string(f) for f in fl])+', ')
+                    if lines[-1] == ', ':
+                        lines[-1] = ''
+                    if i == current[0]:
+                        commas = [i for i,v in enumerate(lines[-1]) if v == ',']
+                        commas.append(len(lines[-1])+1)
+                        commas.insert(0, -2)
+                    i += 1
+
+                height = len(lines)+3
+                width = min(max(len(s) for s in lines)+6,self.width-2)
+                if height > oldheight or width > oldwidth or win == None:
+                    win=self.window(height, width, title='Filters')
+                    oldheight, oldwidth = height, width
+                y=1
+                for s in lines:
+                    win.addnstr(y, 2, s, width-4, curses.A_REVERSE)
+                    win.addstr(" "*(oldwidth-3-win.getyx()[1]), curses.A_REVERSE)
+                    y += 1
+                win.chgat(1+current[0],commas[current[1]]+4, commas[current[1]+1]-commas[current[1]]-2, curses.A_UNDERLINE+curses.A_REVERSE)
+            c = self.wingetch(win)
+            if c in [27, ord('q'), curses.ascii.ctrl(ord('w'))]:
+                return self.filters
+            if c == ord("\n"):
+                filters = [ f for f in filters if f != [] ]
+                if filters == []:
+                    return [[{'name': '', 'inverse': False}]]
+                else:
+                    return filters
+            if c == curses.KEY_UP and current[0]>0:
+                current[0] -= 1
+                changed = True
+            if c == curses.KEY_DOWN and current[0] < len(filters)-1:
+                current[0] += 1
+                changed = True
+            if c == curses.KEY_RIGHT and current[1] < len(filters[current[0]]):
+                current[1] += 1
+                changed = True
+            if c == curses.KEY_LEFT and current[1] > 0:
+                current[1] -= 1
+                changed = True
+            if c == ord('d') and current[1] < len(filters[current[0]]):
+                filters[current[0]].pop(current[1])
+                changed = True
+            if c == ord('f'):
+                f = filters[current[0]][current[1]] if current[1] < len(filters[current[0]]) else {'name':'', 'inverse': False}
+                f = self.filter_menu(oldfilter=f)
+                if current[1] < len(filters[current[0]]):
+                    filters[current[0]][current[1]] = f
+                else:
+                    filters[current[0]].append(f)
+                if current[0] == len(filters)-1:
+                    filters.append([])
+                changed = True
+
+            if current[1] > len(filters[current[0]]):
+                current[1] = len(filters[current[0]])
+
+            server.update(1)
+            self.draw_stats()
+            self.draw_torrent_list()
+            win.redrawwin()
 
 # End of class Interface
 
@@ -4314,6 +4396,12 @@ def save_config(filepath, force=False):
             return 0
     return -1
 
+def filter2string(f):
+    s='~' if f['inverse'] else ''
+    s+=f['name']
+    if f['name'] in FILTERS_WITH_PARAM:
+        s+='='+f[f['name']]
+    return s
 
 def parse_sort_str(sort_str, orders):
     sort_orders = []
@@ -4350,7 +4438,7 @@ def parse_single_filter_str(s):
             else:
                 f['inverse']=False
             f['name']=s[i]
-            if s[i] in ['tracker', 'regex', 'location']:
+            if s[i] in FILTERS_WITH_PARAM:
                 f[s[i]]=s[i+1]
             ret.append(f)
         return ret
