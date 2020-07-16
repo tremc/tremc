@@ -3455,6 +3455,7 @@ class Interface(object):
                     win, last = self.help_window(height, width, message=message, title=title, first=last, win=win)
                 elif c>=0:
                     return
+                self.update_torrent_list([win])
 
     def wingetch(self, win):
         c = win.getch()
@@ -3514,6 +3515,7 @@ class Interface(object):
             c = self.wingetch(win)
             if c in [ 27, ord('q'), curses.ascii.ctrl(ord('w'))]:
                 return -1
+            self.update_torrent_list([win])
 
 
     def dialog_yesno(self, message, important=False, hard=None):
@@ -3571,6 +3573,7 @@ class Interface(object):
                     return input
                 elif c in [ 27, curses.KEY_BREAK, curses.ascii.ctrl(ord('w'))]:
                     return 0
+            self.update_torrent_list([win])
 
     def dialog_input_text(self, message, input='', on_change=None, on_enter=None, tab_complete=None, maxwidth=9999,
                           align='center', history=None, history_max=0, fixed_history=[]):
@@ -3802,6 +3805,7 @@ class Interface(object):
                     input = str(number)
                 except ValueError:
                     pass
+            self.update_torrent_list([win])
 
     def dialog_menu(self, title, options, focus=1, extended=False, winstack=[]):
         height = len(options) + 2
@@ -3988,7 +3992,7 @@ class Interface(object):
                     config.set('Misc', 'file_viewer', viewer.replace('%s','%%s'))
                     self.file_viewer=viewer
 
-            self.draw_torrent_list()
+            self.update_torrent_list([win])
 
     def dialog_filters(self):
         filters  = [[f.copy() for f in l] for l in self.filters]
