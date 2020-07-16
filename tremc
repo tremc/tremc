@@ -3471,7 +3471,7 @@ class Interface(object):
         height = min(self.height, height)
         width  = min(self.width, width)
         ypos = int( (self.height - height) / 2 )
-        if not xpos:
+        if xpos == None:
             xpos = int( (self.width  - width) / 2 )
         if not win:
             win = curses.newwin(height, width, ypos, xpos)
