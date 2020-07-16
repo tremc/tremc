@@ -1528,7 +1528,7 @@ class Interface(object):
         if c in self.profiles:
             self.apply_profile(self.profiles[c])
 
-    def filter_menu(self, oldfilter={'name':'','inverse':False}, prompt=""):
+    def filter_menu(self, oldfilter={'name':'','inverse':False}, prompt="", winstack=[]):
         new_filter = oldfilter.copy()
         if self.selected_torrent == -1:
             options = [('uploading','_Uploading'), ('downloading','_Downloading'),
@@ -1547,7 +1547,7 @@ class Interface(object):
                 s=list(map(lambda x: x[0]==oldfilter['name'], options)).index(True)+1
             except:
                 s=0
-            choice, inverse = self.dialog_menu(prompt, options, s, extended=True)
+            choice, inverse = self.dialog_menu(prompt, options, s, extended=True, winstack=winstack)
             if choice != -128:
                 if choice == 'invert':
                     new_filter['inverse'] = not new_filter['inverse']
@@ -3802,7 +3802,7 @@ class Interface(object):
                 except ValueError:
                     pass
 
-    def dialog_menu(self, title, options, focus=1, extended=False):
+    def dialog_menu(self, title, options, focus=1, extended=False, winstack=[]):
         height = len(options) + 2
         width  = max(max([len(x[1])+3 for x in options]), len(title)+3)
         win = self.window(height, width)
@@ -3832,6 +3832,9 @@ class Interface(object):
                 focus = 1
             elif c == curses.KEY_END or c == ord('G'):
                 focus = len(options)
+            elif c == -1:
+                if self.selected_torrent == -1:
+                    self.update_torrent_list(winstack+[win])
 
     def dialog_list_menu_options(self, win, width, options, focus):
         keys = dict()
@@ -3994,6 +3997,7 @@ class Interface(object):
         changed = True
         current = [0,0]
         oldheight, oldwidth = -1, -1
+        needupdate = False
         while True:
             if changed:
                 changed = False
@@ -4045,23 +4049,33 @@ class Interface(object):
                 filters[current[0]].pop(current[1])
                 changed = True
             if c == ord('f'):
-                f = filters[current[0]][current[1]] if current[1] < len(filters[current[0]]) else {'name':'', 'inverse': False}
-                f = self.filter_menu(oldfilter=f)
-                if current[1] < len(filters[current[0]]):
-                    filters[current[0]][current[1]] = f
-                else:
-                    filters[current[0]].append(f)
-                if current[0] == len(filters)-1:
-                    filters.append([])
-                changed = True
+                f = filters[current[0]][current[1]].copy() if current[1] < len(filters[current[0]]) else {'name':'', 'inverse': False}
+                f = self.filter_menu(oldfilter=f, winstack=[win])
+                if f:
+                    if current[1] < len(filters[current[0]]):
+                        filters[current[0]][current[1]] = f
+                    else:
+                        filters[current[0]].append(f)
+                    if current[0] == len(filters)-1:
+                        filters.append([])
+                    changed = True
+                needupdate = True
 
             if current[1] > len(filters[current[0]]):
                 current[1] = len(filters[current[0]])
 
-            server.update(1)
-            self.draw_stats()
-            self.draw_torrent_list()
-            win.redrawwin()
+            if c == -1 or needupdate:
+                needupdate = False
+                self.update_torrent_list([win])
+
+    def update_torrent_list(self, winstack=[]):
+                server.update(1)
+                self.draw_stats()
+                self.draw_torrent_list()
+                for win in winstack[:-1]:
+                    win.redrawwin()
+                    win.refresh()
+                winstack[-1].redrawwin()
 
 # End of class Interface
 
