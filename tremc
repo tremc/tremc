@@ -1514,6 +1514,8 @@ class Interface(object):
             c = self.wingetch(win)
             if c in [ 27, ord('q'), curses.ascii.ctrl(ord('w'))]:
                 return -1
+            if self.selected_torrent == -1:
+                self.update_torrent_list([win])
 
     def choose_profile(self):
         profiles =  []
@@ -4071,7 +4073,10 @@ class Interface(object):
     def update_torrent_list(self, winstack=[]):
                 server.update(1)
                 self.draw_stats()
-                self.draw_torrent_list()
+                if self.selected_torrent == -1:
+                    self.draw_torrent_list()
+                else:
+                    self.draw_details()
                 for win in winstack[:-1]:
                     win.redrawwin()
                     win.refresh()
