@@ -1514,8 +1514,7 @@ class Interface(object):
             c = self.wingetch(win)
             if c in [ 27, ord('q'), curses.ascii.ctrl(ord('w'))]:
                 return -1
-            if self.selected_torrent == -1:
-                self.update_torrent_list([win])
+            self.update_torrent_list([win])
 
     def choose_profile(self):
         profiles =  []
@@ -3835,8 +3834,7 @@ class Interface(object):
             elif c == curses.KEY_END or c == ord('G'):
                 focus = len(options)
             elif c == -1:
-                if self.selected_torrent == -1:
-                    self.update_torrent_list(winstack+[win])
+                self.update_torrent_list(winstack+[win])
 
     def dialog_list_menu_options(self, win, width, options, focus):
         keys = dict()
