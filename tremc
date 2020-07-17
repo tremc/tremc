@@ -1605,7 +1605,8 @@ class Interface(object):
             self.invert_filters = False
 
     def invert_filters_action(self, c):
-        self.invert_filters = not self.invert_filters
+        if self.selected_torrent == -1:
+            self.invert_filters = not self.invert_filters
 
     def add_filter(self, c):
         new_filter = self.filter_menu( prompt="Add filter:")
