@@ -984,6 +984,7 @@ class Interface(object):
         self.filters[0][0]['regex']   = ''
         self.filters[0][0]['tracker']   = ''
         self.filters[0][0]['location']  = ''
+        self.invert_filters = False
         self.histories = self.load_history(history_file)
         self.tlist_item_height = config.getint('Misc', 'lines_per_torrent')
         self.torrentname_is_progressbar = config.getboolean('Misc', 'torrentname_is_progressbar')
@@ -1041,6 +1042,7 @@ class Interface(object):
             ord('t'):               self.t_key,
             ord('T'):               self.add_filter,
             ord('I'):               self.edit_filters,
+            ord('~'):               self.invert_filters_action,
             ord('*'):               self.honors_limits,
             ord('+'):               self.bandwidth_priority,
             ord('-'):               self.bandwidth_priority,
@@ -1599,6 +1601,10 @@ class Interface(object):
         new_filter = self.filter_menu( self.filters[0][0], prompt=prompt)
         if new_filter:
             self.filters = [[ new_filter ]]
+            self.invert_filters = False
+
+    def invert_filters_action(self, c):
+        self.invert_filters = not self.invert_filters
 
     def add_filter(self, c):
         new_filter = self.filter_menu( prompt="Add filter:")
@@ -2236,7 +2242,7 @@ class Interface(object):
     def filter_torrent_list(self):
         unfiltered = self.torrents
 
-        self.torrents = [t for t in self.torrents if any ( all( self.filter_torrent(t,f) for f in fs ) for fs in self.filters ) ]
+        self.torrents = [t for t in self.torrents if any ( all( self.filter_torrent(t,f) for f in fs ) for fs in self.filters ) != self.invert_filters ]
         # Also filter selected:
         self.selected.intersection_update(set([t['id'] for t in self.torrents]))
 
@@ -3234,8 +3240,8 @@ class Interface(object):
                         filter_param = ''
                         not_str = ('',strings[5])[self.filters[0][0]['inverse']]
                     self.screen.addstr(not_str+ self.filters[0][0]['name'] + filter_param,
-                                       curses.color_pair(self.colors.id('filter_status'+('2' if len(self.filters[0])>1 else '')))
-                                       + curses.A_REVERSE)
+                                       curses.color_pair(self.colors.id('filter_status'+('2' if len(self.filters[0])>1 else ''))) +
+                                       + (curses.A_REVERSE if not self.invert_filters else 0))
 
                 # show last sort order (if terminal size permits it)
                 if self.sort_orders and self.width - self.screen.getyx()[1] > 20:
