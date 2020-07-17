@@ -3401,6 +3401,7 @@ class Interface(object):
                        "              f  Filter torrent list\n" + \
                        "              T  Add filter\n" + \
                        "              I  Edit list of filters\n" + \
+                       "              ~  Invert filters\n" + \
                        "              s  Sort torrent list\n" \
                        "          Space  Select/Deselect focused torrent\n" + \
                        "              A  Select/Deselect all torrents\n" + \
