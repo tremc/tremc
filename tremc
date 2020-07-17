@@ -1158,6 +1158,7 @@ class Interface(object):
         self.sort_orders  =  [s.copy() for s in profile['sort']]
         # copy filter array from profile
         self.filters  = [[f.copy() for f in l] for l in profile['filter']]
+        self.invert_filters = False
 
     def profile_selected(self, p):
         if p in range(ord('0'),ord('9')+1):
