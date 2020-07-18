@@ -2286,6 +2286,8 @@ class Interface(object):
                 self.focus = 0
                 if self.search_focus >= len(matched_torrents):
                     self.search_focus = 0
+                if self.search_focus < 0:
+                    self.search_focus = len(matched_torrents) - 1
                 self.focused_id = matched_torrents[self.search_focus]['id']
                 self.highlight_dialog = False
             else:
@@ -2740,6 +2742,8 @@ class Interface(object):
             if matched_files:
                 if self.search_focus >= len(matched_files):
                     self.search_focus = 0
+                if self.search_focus < 0:
+                    self.search_focus = len(matched_files)-1
                 self.focus_detaillist = self.sorted_files.index(matched_files[self.search_focus])
                 self.highlight_dialog = False
             else:
@@ -3657,7 +3661,7 @@ class Interface(object):
                 index = 0
             elif c == curses.KEY_END or c == curses.ascii.ctrl(ord('e')):
                 index = len(input)
-            elif c == ord('\n'):
+            elif c == ord('\n') or c == curses.ascii.ctrl(ord('r')):
                 if history != None and input != '':
                     try:
                         p = history.index(input)
@@ -3668,7 +3672,7 @@ class Interface(object):
                         history.pop(0)
                     history.append(input)
                 if on_enter:
-                    on_enter(input)
+                    on_enter(input, inc=1 if c == ord('\n') else -1)
                 else:
                     hide_cursor()
                     return input
@@ -3727,12 +3731,12 @@ class Interface(object):
                                tab_complete = 'file_list',
                                maxwidth=60, align='right')
 
-    def increment_file_search(self, input):
-        self.search_focus += 1
+    def increment_file_search(self, input, inc=1):
+        self.search_focus += inc
         self.draw_filelist_search(input)
 
-    def increment_search(self, input):
-        self.search_focus += 1
+    def increment_search(self, input, inc=1):
+        self.search_focus += inc
 
     def dialog_input_number(self, message, current_value,
                             cursorkeys=True, floating_point=False, allow_empty=False,
