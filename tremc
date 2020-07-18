@@ -3733,7 +3733,6 @@ class Interface(object):
 
     def increment_file_search(self, input, inc=1):
         self.search_focus += inc
-        self.draw_filelist_search(input)
 
     def increment_search(self, input, inc=1):
         self.search_focus += inc
