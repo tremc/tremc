@@ -1088,6 +1088,7 @@ class Interface(object):
             ord('M'):               self.copy_magnet_link,
             ord('n'):               self.reannounce_torrent,
             ord('/'):               self.search,
+            ord('.'):               self.search,
             ord('b'):               self.add_label,
             ord('B'):               self.set_labels,
             curses.ascii.ctrl(ord('l')): self.remove_labels,
@@ -2276,12 +2277,19 @@ class Interface(object):
         self.scrollpos = min(self.scrollpos, (len(self.torrents) - self.torrents_per_page) * self.tlist_item_height)
         self.scrollpos = max(0, self.scrollpos)
 
-    def draw_torrent_list(self, search_keyword=''):
+    def draw_torrent_list(self, search_keyword='', search='pattern'):
         self.torrents = server.get_torrent_list(self.sort_orders)
         self.filter_torrent_list()
 
         if search_keyword:
-            matched_torrents = [t for t in self.torrents if search_keyword.lower() in t['name'].lower()]
+            if search == 'pattern':
+                matched_torrents = [t for t in self.torrents if search_keyword.lower() in t['name'].lower()]
+            elif search == 'regex':
+                try:
+                    regex = re.compile(search_keyword, re.I)
+                    matched_torrents = [t for t in self.torrents if regex.search(t['name'])]
+                except:
+                    matched_torrents = self.torrents
             if matched_torrents:
                 self.focus = 0
                 if self.search_focus >= len(matched_torrents):
@@ -2501,7 +2509,7 @@ class Interface(object):
         line += ' ' * int(self.torrent_title_width - len(line) - len(peers)) + peers
         self.pad.addstr(ypos+1, 0, line, tags)
 
-    def draw_details(self, search_keyword=None):
+    def draw_details(self, search_keyword=None, search='pattern'):
         self.torrent_details = server.get_torrent_details()
         self.manage_layout()
 
@@ -2531,7 +2539,7 @@ class Interface(object):
             self.draw_details_overview(5)
         elif self.details_category_focus == 1:
             if search_keyword:
-                self.draw_filelist_search(search_keyword)
+                self.draw_filelist_search(search_keyword, search=search)
             else:
                 self.draw_filelist(5)
         elif self.details_category_focus == 2:
@@ -2736,9 +2744,16 @@ class Interface(object):
                 n += 1
         return n
 
-    def draw_filelist_search(self, search_keyword=None):
+    def draw_filelist_search(self, search_keyword=None, search='pattern'):
         if search_keyword:
-            matched_files = [f for f in self.sorted_files if search_keyword.lower() in os.path.basename(f['name'].lower())]
+            if search == 'pattern':
+                matched_files = [f for f in self.sorted_files if search_keyword.lower() in os.path.basename(f['name'].lower())]
+            elif search == 'regex':
+                try:
+                    regex = re.compile(search_keyword, re.I)
+                    matched_files = [f for f in self.sorted_files if regex.search(os.path.basename(f['name']))]
+                except:
+                    matched_files = self.sorted_files
             if matched_files:
                 if self.search_focus >= len(matched_files):
                     self.search_focus = 0
@@ -3403,6 +3418,7 @@ class Interface(object):
                 message += "           0..9  Select profile\n" + \
                        "              e  Profile menu\n"
             message += "              /  Search in torrent list\n" + \
+                       "              .  Search regular expression in torrent list\n" + \
                        "              f  Filter torrent list\n" + \
                        "              T  Add filter\n" + \
                        "              I  Edit list of filters\n" + \
@@ -3447,6 +3463,7 @@ class Interface(object):
                         message += "              s  Sort torrent list\n" + \
                         "     Left/Right  Decrease/Increase file priority\n"
                     message += "              /  Search in file list\n" + \
+                               "              .  Search regular expression in file list\n" + \
                                "        Up/Down  Select file\n" + \
                                "          Space  Select/Deselect focused file\n" + \
                                "              a  Select/Deselect all files\n" + \
@@ -3592,7 +3609,7 @@ class Interface(object):
             self.update_torrent_list([win])
 
     def dialog_input_text(self, message, input='', on_change=None, on_enter=None, tab_complete=None, maxwidth=9999,
-                          align='center', history=None, history_max=0, fixed_history=[]):
+                          align='center', history=None, history_max=0, fixed_history=[], search='pattern'):
         """tab_complete values:
                 'files': complete with any files/directories
                 'dirs': complete only with directories
@@ -3711,7 +3728,7 @@ class Interface(object):
                     on_change(input)
             if localhistory[-1] != input and not input in localhistory:
                 localhistory[-1] = input
-            self.update_torrent_list([win], input=input)
+            self.update_torrent_list([win], input=input, search=search)
 
     def search(self, c):
         if self.selected_torrent == -1:
@@ -3720,16 +3737,24 @@ class Interface(object):
             self.dialog_search_filelist(c)
 
     def dialog_search_torrentlist(self, c):
+        if c == ord('/'):
+            search = 'pattern'
+        elif c == ord('.'):
+            search = 'regex'
         self.dialog_input_text('Search torrent by title:',
                                on_enter=self.increment_search,
                                tab_complete = 'torrent_list',
-                               maxwidth=60, align='right')
+                               maxwidth=60, align='right', search=search)
 
     def dialog_search_filelist(self, c):
+        if c == ord('/'):
+            search = 'pattern'
+        elif c == ord('.'):
+            search = 'regex'
         self.dialog_input_text('Search file by title:',
                                on_enter=self.increment_file_search,
                                tab_complete = 'file_list',
-                               maxwidth=60, align='right')
+                               maxwidth=60, align='right', search=search)
 
     def increment_file_search(self, input, inc=1):
         self.search_focus += inc
@@ -4084,13 +4109,13 @@ class Interface(object):
                 needupdate = False
                 self.update_torrent_list([win])
 
-    def update_torrent_list(self, winstack=[], input=''):
+    def update_torrent_list(self, winstack=[], input='', search='pattern'):
                 server.update(1)
                 self.draw_stats()
                 if self.selected_torrent == -1:
-                    self.draw_torrent_list(search_keyword=input)
+                    self.draw_torrent_list(search_keyword=input, search=search)
                 else:
-                    self.draw_details(search_keyword=input)
+                    self.draw_details(search_keyword=input, search=search)
                 for win in winstack[:-1]:
                     win.redrawwin()
                     win.refresh()
