@@ -2277,11 +2277,11 @@ class Interface(object):
         self.scrollpos = min(self.scrollpos, (len(self.torrents) - self.torrents_per_page) * self.tlist_item_height)
         self.scrollpos = max(0, self.scrollpos)
 
-    def draw_torrent_list(self, search_keyword='', search='pattern'):
+    def draw_torrent_list(self, search_keyword='', search=''):
         self.torrents = server.get_torrent_list(self.sort_orders)
         self.filter_torrent_list()
 
-        if search_keyword:
+        if search_keyword and search:
             if search == 'pattern':
                 matched_torrents = [t for t in self.torrents if search_keyword.lower() in t['name'].lower()]
             elif search == 'regex':
@@ -2509,7 +2509,7 @@ class Interface(object):
         line += ' ' * int(self.torrent_title_width - len(line) - len(peers)) + peers
         self.pad.addstr(ypos+1, 0, line, tags)
 
-    def draw_details(self, search_keyword=None, search='pattern'):
+    def draw_details(self, search_keyword=None, search=''):
         self.torrent_details = server.get_torrent_details()
         self.manage_layout()
 
@@ -2744,8 +2744,8 @@ class Interface(object):
                 n += 1
         return n
 
-    def draw_filelist_search(self, search_keyword=None, search='pattern'):
-        if search_keyword:
+    def draw_filelist_search(self, search_keyword=None, search=''):
+        if search_keyword and search:
             if search == 'pattern':
                 matched_files = [f for f in self.sorted_files if search_keyword.lower() in os.path.basename(f['name'].lower())]
             elif search == 'regex':
@@ -3609,7 +3609,7 @@ class Interface(object):
             self.update_torrent_list([win])
 
     def dialog_input_text(self, message, input='', on_change=None, on_enter=None, tab_complete=None, maxwidth=9999,
-                          align='center', history=None, history_max=0, fixed_history=[], search='pattern'):
+                          align='center', history=None, history_max=0, fixed_history=[], search=''):
         """tab_complete values:
                 'files': complete with any files/directories
                 'dirs': complete only with directories
@@ -4109,7 +4109,7 @@ class Interface(object):
                 needupdate = False
                 self.update_torrent_list([win])
 
-    def update_torrent_list(self, winstack=[], input='', search='pattern'):
+    def update_torrent_list(self, winstack=[], input='', search=''):
                 server.update(1)
                 self.draw_stats()
                 if self.selected_torrent == -1:
