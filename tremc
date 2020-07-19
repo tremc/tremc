@@ -3869,6 +3869,8 @@ class Interface(object):
         old_page = 0
         while True:
             page = (focus-1) // pagelines
+            if page<0:
+                page=0
             if page != old_page:
                 for i in range(1,height-1):
                     win.addstr(i,2,' '*(width-4),0)
