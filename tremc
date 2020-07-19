@@ -3859,6 +3859,11 @@ class Interface(object):
         win = self.window(height, width)
 
         win.addstr(0,1, title)
+        if paging:
+            if width > 45:
+                win.addstr(height-1,1, "More...")
+            else:
+                win.addstr(height-1,1, "+")
 
         old_focus = focus
         old_page = 0
