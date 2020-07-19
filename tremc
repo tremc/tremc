@@ -3609,7 +3609,7 @@ class Interface(object):
             self.update_torrent_list([win])
 
     def dialog_input_text(self, message, input='', on_change=None, on_enter=None, tab_complete=None, maxwidth=9999,
-                          align='center', history=None, history_max=0, fixed_history=[], search=''):
+                          align='center', history=None, history_max=0, fixed_history=[], search='', winstack=[]):
         """tab_complete values:
                 'files': complete with any files/directories
                 'dirs': complete only with directories
@@ -3728,7 +3728,7 @@ class Interface(object):
                     on_change(input)
             if localhistory[-1] != input and not input in localhistory:
                 localhistory[-1] = input
-            self.update_torrent_list([win], input=input, search=search)
+            self.update_torrent_list(winstack+[win], input=input, search=search)
 
     def search(self, c):
         if self.selected_torrent == -1:
@@ -3768,7 +3768,7 @@ class Interface(object):
 
     def dialog_input_number(self, message, current_value,
                             cursorkeys=True, floating_point=False, allow_empty=False,
-                            allow_zero=True, allow_negative_one=True):
+                            allow_zero=True, allow_negative_one=True, winstack=[]):
         if not allow_zero:
             allow_negative_one = False
 
@@ -3846,7 +3846,7 @@ class Interface(object):
                     input = str(number)
                 except ValueError:
                     pass
-            self.update_torrent_list([win])
+            self.update_torrent_list(winstack+[win])
 
     def dialog_menu(self, title, options, focus=1, extended=False, winstack=[]):
         height = len(options) + 2
@@ -3945,7 +3945,7 @@ class Interface(object):
             elif c == ord('p'):
                 port = self.dialog_input_number("Port for incoming connections",
                                                 self.stats['peer-port'],
-                                                cursorkeys=False)
+                                                cursorkeys=False, winstack=[win])
                 if port >= 0 and port <= 65535:
                     server.set_option('peer-port', port)
                 elif port != -128:  # user hit ESC
@@ -3965,19 +3965,19 @@ class Interface(object):
             elif c == ord('g'):
                 limit = self.dialog_input_number("Maximum number of connected peers",
                                                  self.stats['peer-limit-global'],
-                                                 allow_negative_one=False)
+                                                 allow_negative_one=False, winstack=[win])
                 if limit >= 0:
                     server.set_option('peer-limit-global', limit)
             elif c == ord('t'):
                 limit = self.dialog_input_number("Maximum number of connected peers per torrent",
                                                  self.stats['peer-limit-per-torrent'],
-                                                 allow_negative_one=False)
+                                                 allow_negative_one=False, winstack=[win])
                 if limit >= 0:
                     server.set_option('peer-limit-per-torrent', limit)
             elif c == ord('s'):
                 limit = self.dialog_input_number('Stop seeding with upload/download ratio',
                                                  (-1,self.stats['seedRatioLimit'])[self.stats['seedRatioLimited']],
-                                                 floating_point=True)
+                                                 floating_point=True, winstack=[win])
                 if limit >= 0:
                     server.set_option('seedRatioLimit', limit)
                     server.set_option('seedRatioLimited', True)
@@ -3991,13 +3991,13 @@ class Interface(object):
             elif c == ord('u'):
                 limit = self.dialog_input_number('Upload limit for Turtle Mode in kilobytes per second',
                                                  self.stats['alt-speed-up'],
-                                                 allow_negative_one=False)
+                                                 allow_negative_one=False, winstack=[win])
                 if limit != -128:
                     server.set_option('alt-speed-up', limit)
             elif c == ord('r'):
                 limit = self.dialog_input_number('Download limit for Turtle Mode in kilobytes per second',
                                                  self.stats['alt-speed-down'],
-                                                 allow_negative_one=False)
+                                                 allow_negative_one=False, winstack=[win])
                 if limit != -128:
                     server.set_option('alt-speed-down', limit)
             elif c == ord('b'):
@@ -4006,7 +4006,7 @@ class Interface(object):
             elif c == ord('w') and server.get_rpc_version() >= 14:
                 queue_size = self.dialog_input_number('Download Queue size',
                                                       (0, self.stats['download-queue-size'])[self.stats['download-queue-enabled']],
-                                                      allow_negative_one = False)
+                                                      allow_negative_one = False, winstack=[win])
                 if queue_size != -128:
                     if queue_size == 0:
                         server.set_option('download-queue-enabled', False)
@@ -4018,7 +4018,7 @@ class Interface(object):
             elif c == ord('e') and server.get_rpc_version() >= 14:
                 queue_size = self.dialog_input_number('Seed Queue size',
                                                       (0, self.stats['seed-queue-size'])[self.stats['seed-queue-enabled']],
-                                                      allow_negative_one = False)
+                                                      allow_negative_one = False, winstack=[win])
                 if queue_size != -128:
                     if queue_size == 0:
                         server.set_option('seed-queue-enabled', False)
@@ -4028,7 +4028,7 @@ class Interface(object):
                         server.set_option('seed-queue-size', queue_size)
 
             elif c == ord('v'):
-                viewer = self.dialog_input_text('File Viewer\nExample: xdg-viewer %s', self.file_viewer)
+                viewer = self.dialog_input_text('File Viewer\nExample: xdg-viewer %s', self.file_viewer, winstack=[win])
                 if viewer:
                     config.set('Misc', 'file_viewer', viewer.replace('%s','%%s'))
                     self.file_viewer=viewer
