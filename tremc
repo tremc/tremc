@@ -1552,7 +1552,7 @@ class Interface(object):
                 s=list(map(lambda x: x[0]==oldfilter['name'], options)).index(True)+1
             except:
                 s=0
-            choice, inverse = self.dialog_menu(prompt, options, s, extended=True, winstack=winstack)
+            choice, inverse, win = self.dialog_menu(prompt, options, s, extended=True, winstack=winstack)
             if choice != -128:
                 if choice == 'invert':
                     new_filter['inverse'] = not new_filter['inverse']
@@ -1582,13 +1582,13 @@ class Interface(object):
                                 s=list(map(lambda x: x[0]==current_choice, select_list)).index(True)+1
                             except:
                                 s=0
-                            selected = self.dialog_menu('Select '+choice, select_list, s)
+                            selected = self.dialog_menu('Select '+choice, select_list, s, winstack=winstack+[win])
                             if not selected in select:
                                 return
                             new_filter[choice] = selected
                     elif choice == 'regex':
                         regex = self.dialog_input_text('Regular expression to filter (case insensitive):',
-                                    new_filter['regex'] if 'regex' in new_filter else '')
+                                    new_filter['regex'] if 'regex' in new_filter else '', winstack=winstack+[win])
                         if regex == '':
                             return
                         else:
@@ -3878,13 +3878,13 @@ class Interface(object):
             c = self.wingetch(win)
 
             if c > 47 and c < 123 and chr(c).lower() in keymap:
-                return ( options[keymap[chr(c).lower()]][0], chr(c).isupper()) if extended else options[keymap[chr(c).lower()]][0]
+                return ( options[keymap[chr(c).lower()]][0], chr(c).isupper(), win) if extended else options[keymap[chr(c).lower()]][0]
             elif c in [ord('q'), 27, curses.ascii.ctrl(ord('w'))]:
-                return (-128,False) if extended else -128
+                return (-128,False, win) if extended else -128
             elif c == ord("\n"):
-                return (options[focus-1][0],False) if extended else options[focus-1][0]
+                return (options[focus-1][0],False, win) if extended else options[focus-1][0]
             elif c == curses.KEY_BACKSPACE and extended:
-                return (options[focus-1][0],True)
+                return (options[focus-1][0],True, win)
             elif c == curses.KEY_DOWN or c == ord('j') or c == curses.ascii.ctrl(ord('n')):
                 focus += 1
                 if focus > len(options): focus = 1
@@ -4021,7 +4021,7 @@ class Interface(object):
                     server.set_option('seedRatioLimited', False)
             elif c == ord('c'):
                 choice = self.dialog_menu('Encryption', enc_options,
-                         list(map(lambda x: x[0]==self.stats['encryption'], enc_options)).index(True)+1)
+                         list(map(lambda x: x[0]==self.stats['encryption'], enc_options)).index(True)+1, winstack=[win])
                 if choice != -128:
                     server.set_option('encryption', choice)
             elif c == ord('u'):
