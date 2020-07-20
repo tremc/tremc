@@ -3496,6 +3496,20 @@ class Interface(object):
             self.exit_now = True
         return c
 
+    def win_message(self, win, height, width, message, first=0):
+        ypos = 1
+        for line in message.split("\n")[first:]:
+            if len_columns(line) > width-3:
+                line = ljust_columns(line, width-6) + '...'
+
+            if ypos < height - 1:  # ypos == height-1 is frame border
+                win.addstr(ypos, 2, line)
+                ypos += 1
+            else:
+                # Do not write outside of frame border
+                win.addstr(ypos, 2, " More... ")
+                return
+
     def window(self, height, width, message='', title='', xpos=None):
         return self.real_window(height, width, message=message, title=title, xpos=xpos)[0]
 
@@ -3526,18 +3540,7 @@ class Interface(object):
             win.addstr(0, 2, " " + title + " ")
             win.addch(0, len(title) + 4 , curses.ACS_LTEE)
 
-        ypos = 1
-        for line in message.split("\n")[first:]:
-            if len_columns(line) > width-3:
-                line = ljust_columns(line, width-6) + '...'
-
-            if ypos < height - 1:  # ypos == height-1 is frame border
-                win.addstr(ypos, 2, line)
-                ypos += 1
-            else:
-                # Do not write outside of frame border
-                win.addstr(ypos, 2, " More... ")
-                return win,ypos+first-1
+        self.win_message(win, height, width, message, first)
         return win,0
 
     def dialog_ok(self, message):
