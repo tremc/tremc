@@ -3512,7 +3512,8 @@ class Interface(object):
             else:
                 # Do not write outside of frame border
                 win.addstr(ypos, 2, " More... ")
-                return
+                return win,ypos+first-1
+        return win,0
 
     def window(self, height, width, message='', title='', xpos=None):
         return self.real_window(height, width, message=message, title=title, xpos=xpos)[0]
@@ -3544,8 +3545,7 @@ class Interface(object):
             win.addstr(0, 2, " " + title + " ")
             win.addch(0, len(title) + 4 , curses.ACS_LTEE)
 
-        self.win_message(win, height, width, message, first)
-        return win,0
+        return self.win_message(win, height, width, message, first)
 
     def dialog_ok(self, message):
         height = 3 + message.count("\n")
