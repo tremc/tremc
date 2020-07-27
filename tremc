@@ -294,7 +294,7 @@ class Transmission(object):
                    'uploadLimited', 'downloadLimited', 'bandwidthPriority',
                    'peersSendingToUs', 'peersGettingFromUs',
                    'seedRatioLimit', 'seedRatioMode', 'isPrivate', 'magnetLink',
-                   'honorsSessionLimits',
+                   'honorsSessionLimits', 'metadataPercentComplete',
                   ]
 
     DETAIL_FIELDS = ['files', 'priorities', 'wanted', 'peers', 'trackers',
@@ -876,6 +876,8 @@ class Transmission(object):
                 status = 'X'
             elif torrent['status'] == Transmission.STATUS_DOWNLOAD:
                 status = ('I', 'D')[torrent['rateDownload'] > 0]
+                if torrent['metadataPercentComplete'] < 1:
+                    status += 'M'
             elif torrent['status'] == Transmission.STATUS_DOWNLOAD_WAIT:
                 status = 'wD%d' % torrent['queuePosition']
             elif torrent['status'] == Transmission.STATUS_SEED:
@@ -895,6 +897,8 @@ class Transmission(object):
                 status = 'isolated'
             elif torrent['status'] == Transmission.STATUS_DOWNLOAD:
                 status = ('idle', 'downloading')[torrent['rateDownload'] > 0]
+                if torrent['metadataPercentComplete'] < 1:
+                    status += ' metadata'
             elif torrent['status'] == Transmission.STATUS_DOWNLOAD_WAIT:
                 status = 'will download (%d)' % torrent['queuePosition']
             elif torrent['status'] == Transmission.STATUS_SEED:
@@ -2472,7 +2476,10 @@ class Interface(object):
             if torrent['status'] == Transmission.STATUS_CHECK:
                 parts[0] += pct_f % (torrent['recheckProgress'] * 100)
             elif torrent['status'] == Transmission.STATUS_DOWNLOAD:
-                parts[0] += pct_f % torrent['percentDone']
+                if torrent['metadataPercentComplete'] < 1:
+                    parts[0] += pct_f % (torrent['metadataPercentComplete']*100)
+                else:
+                    parts[0] += pct_f % torrent['percentDone']
             if not self.narrow:
                 parts[0] = parts[0].ljust(20)
 
@@ -3974,7 +3981,6 @@ class Interface(object):
                 parts = re.split('_', option[0])
                 parts_len = sum([len(x) for x in parts])
 
-                pdebug(line_num, linestart, lineend)
                 if line_num > linestart and line_num <= lineend:
                     win.addstr(line_num-linestart, max_len-parts_len+2, parts.pop(0))
                     for part in parts:
