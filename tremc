@@ -1093,6 +1093,8 @@ class Interface(object):
             ord('n'):               self.reannounce_torrent,
             ord('/'):               self.search,
             ord('.'):               self.search,
+            ord(','):               self.select_search,
+            ord('<'):               self.select_search,
             ord('b'):               self.add_label,
             ord('B'):               self.set_labels,
             curses.ascii.ctrl(ord('l')): self.remove_labels,
@@ -3438,6 +3440,8 @@ class Interface(object):
                        "          Space  Select/Deselect focused torrent\n" + \
                        "              A  Select/Deselect all torrents\n" + \
                        "              i  Invert selection\n" + \
+                       "              ,  Select torrents matching pattern\n" + \
+                       "              <  Select torrents matching regex\n" + \
                        "    Enter/Right  View torrent's details\n" + \
                        "              o  Configuration options\n" + \
                        "              t  Toggle turtle mode\n" + \
@@ -3481,6 +3485,8 @@ class Interface(object):
                                "              A  Select/Deselect directory\n" + \
                                "              i  Invert selection\n" + \
                                "              V  Visually select files\n" + \
+                               "              ,  Select files matching pattern\n" + \
+                               "              <  Select files matching regex\n" + \
                                "            Esc  Unfocus+Unselect or Back to torrent list\n" + \
                                "    q/Backspace  Back to torrent list"
                 elif self.details_category_focus == 3:  # trackers
@@ -3703,7 +3709,8 @@ class Interface(object):
                         history.pop(0)
                     history.append(input)
                 if on_enter:
-                    on_enter(input, inc=1 if c == ord('\n') else -1)
+                    if on_enter(input, inc=1 if c == ord('\n') else -1, search=search):
+                        return
                 else:
                     hide_cursor()
                     return input
@@ -3774,11 +3781,71 @@ class Interface(object):
                                tab_complete = 'file_list',
                                maxwidth=60, align='right', search=search)
 
-    def increment_file_search(self, input, inc=1):
+    def increment_file_search(self, input, inc=1, search=None):
         self.search_focus += inc
 
-    def increment_search(self, input, inc=1):
+    def increment_search(self, input, inc=1, search=None):
         self.search_focus += inc
+
+    def select_search(self, c):
+        if self.selected_torrent == -1:
+            self.dialog_select_search_torrentlist(c)
+        elif self.details_category_focus == 1:
+            self.dialog_select_search_filelist(c)
+
+    def dialog_select_search_torrentlist(self, c):
+        if c == ord(','):
+            search = 'pattern'
+        elif c == ord('<'):
+            search = 'regex'
+        self.dialog_input_text('Select torrents matching '+search,
+                               on_enter=self.select_pattern_torrents,
+                               tab_complete = 'torrent_list',
+                               maxwidth=60, align='right', search=search)
+
+    def dialog_select_search_filelist(self, c):
+        if c == ord(','):
+            search = 'pattern'
+        elif c == ord('<'):
+            search = 'regex'
+        self.dialog_input_text('Select files matching '+search,
+                               on_enter=self.select_pattern_files,
+                               tab_complete = 'file_list',
+                               maxwidth=60, align='right', search=search)
+
+    def select_pattern_torrents(self, pattern, inc=1, search=None):
+        if search=='pattern':
+            matched_torrents = set([t['id'] for t in self.torrents if pattern.lower() in t['name'].lower()])
+        elif search=='regex':
+            try:
+                regex = re.compile(pattern, re.I)
+                matched_torrents = set([t['id'] for t in self.torrents if regex.search(t['name'])])
+            except:
+                return True
+        else:
+            return True
+        if inc==1:
+            self.selected=matched_torrents
+        elif inc==-1:
+            self.selected.update(matched_torrents)
+        return True
+
+    def select_pattern_files(self, pattern, inc=1, search=None):
+        if search == 'pattern':
+            matched_files = [i for i in range(len(self.sorted_files)) if pattern.lower() in os.path.basename(self.sorted_files[i]['name'].lower())]
+        elif search == 'regex':
+            try:
+                regex = re.compile(pattern, re.I)
+                matched_files = [i for i in range(len(self.sorted_files)) if regex.search(os.path.basename(self.sorted_files[i]['name']))]
+            except:
+                return True
+        else:
+            return True
+        if inc==1:
+            self.selected_files=matched_files
+        elif inc==-1:
+            self.selected_files=list(set(self.selected_files).union(set(matched_files)))
+        return True
 
     def dialog_input_number(self, message, current_value,
                             cursorkeys=True, floating_point=False, allow_empty=False,
