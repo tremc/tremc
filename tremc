@@ -1017,7 +1017,7 @@ class Interface(object):
         self.selected_files         = [] # marked files in details
         self.file_index_map         = {} # Maps local torrent's file indices to server file indices
         self.scrollpos_detaillist   = [0]*5  # same as scrollpos but for details
-        self.max_overview_scroll    = 1
+        self.max_overview_scroll    = 0
         self.exit_now               = False
 
         self.keybindings = {
@@ -1868,7 +1868,7 @@ class Interface(object):
             self.focused_id = self.torrents[self.focus]['id']
         elif self.selected_torrent > -1:
             # overview
-            if self.details_category_focus == 0 and self.narrow:
+            if self.details_category_focus == 0:
                 if (c == curses.KEY_UP or c == ord('k') or c == curses.ascii.ctrl(ord('p'))) and self.scrollpos_detaillist[0]>0:
                     self.scrollpos_detaillist[0] -= 1
                 elif (c == curses.KEY_DOWN or c == ord('j') or c == curses.ascii.ctrl(ord('n'))) and self.scrollpos_detaillist[0]<self.max_overview_scroll:
@@ -2723,9 +2723,13 @@ class Interface(object):
         else:
             info.append(['Finished: ', "%s" % timestamp(t['doneDate'], narrow=self.narrow, format=format)])
 
+        if t['comment']:
+            info.append([''])
+            info.append(['Comment: ', t['comment']])
+
         ypos = self.draw_details_list(ypos, info)
 
-        self.max_overview_scroll = max(self.max_overview_scroll, ypos + self.draw_comment(ypos+1) + self.scrollpos_detaillist[0] - self.height + 3 )
+        self.max_overview_scroll = max(self.max_overview_scroll, ypos + self.scrollpos_detaillist[0] - self.height + 3 )
 
         return ypos+1
 
@@ -2744,18 +2748,6 @@ class Interface(object):
             else:
                 step_size = 1.0
             return int(round((t['uploadRatio'] + step_size/2) / step_size) * step_size)
-
-    def draw_comment(self, ypos):
-        t = self.torrent_details
-        n = 0
-
-        if t['comment']:
-            width = self.width - 2
-            comment = wrap_multiline(t['comment'], width, initial_indent='   Comment: ')
-            for i, line in enumerate(comment):
-                self.pad.addstr(ypos+i, 2, line)
-                n += 1
-        return n
 
     def draw_filelist_search(self, search_keyword=None, search=''):
         if search_keyword and search:
@@ -3125,23 +3117,34 @@ class Interface(object):
             self.pad.addstr(int(self.height-3), int(xpos), line, curses.A_REVERSE)
 
     def draw_details_list(self, ypos, info):
+        yp=ypos-self.scrollpos_detaillist[0]
         if self.narrow:
-            yp=ypos-self.scrollpos_detaillist[0]
             key_width=1
+        else:
+            key_width = max([len(x[0]) for x in info])
+        if True:
             self.pad.move(ypos,0)
             for i in info:
                 xp=0
-                if i[0]=='Hash: ' and self.width<46:
+                if self.narrow and i[0]=='Hash: ' and self.width<46:
                     value_x = 0
                     pass
                 else:
+                    if i[0]=='Comment: ':
+                        i = [i[0]] + list(wrap_multiline(i[1], self.width-1, initial_indent=i[0].rjust(key_width+1)))
+                        # Ugly but does the work - wrapping takes key into
+                        # account, but the actual text must not include it:
+                        i[1] = i[1][len(i[0].rjust(key_width+1)):]
                     if yp>=ypos:
-                        self.pad.addstr(yp, 0, i[0].rjust(key_width), curses.color_pair(self.colors.id('button'))+curses.A_DIM) # key
+                        if self.narrow:
+                            self.pad.addstr(yp, 0, i[0].rjust(key_width), curses.color_pair(self.colors.id('button'))+curses.A_DIM) # key
+                        else:
+                            self.pad.addstr(yp, 1, i[0].rjust(key_width)) # key
                         xp = key_width
                     value_x = key_width
                 # value part may be wrapped if it gets too long
                 for v in i[1:]:
-                    if xp + len(v) > self.width:
+                    if xp + len(v) >= self.width-1:
                         yp += 1
                         if yp>=ypos:
                             self.pad.move(yp, value_x)
@@ -3151,20 +3154,6 @@ class Interface(object):
                     xp += len(v)
                 yp += 1
             return yp
-
-        # Not narrow
-        key_width = max([len(x[0]) for x in info])
-        for i in info:
-            self.pad.addstr(ypos, 1, i[0].rjust(key_width)) # key
-            # value part may be wrapped if it gets too long
-            for v in i[1:]:
-                y, x = self.pad.getyx()
-                if x + len(v) >= self.width:
-                    ypos += 1
-                    self.pad.move(ypos, key_width+1)
-                self.pad.addstr(v)
-            ypos += 1
-        return ypos
 
     def next_details(self):
         if self.details_category_focus >= 4:
@@ -4401,7 +4390,7 @@ def show_cursor():
     except curses.error: pass
 
 
-def wrap_multiline(text, width, initial_indent='', subsequent_indent=None):
+def wrap_multiline(text, width, initial_indent='', subsequent_indent=' '):
     if subsequent_indent is None:
         subsequent_indent = ' ' * len(initial_indent)
     for line in text.splitlines():
