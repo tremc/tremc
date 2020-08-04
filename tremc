@@ -4670,6 +4670,11 @@ if __name__ == '__main__':
     (cmd_args, transmissionremote_args) = parser.parse_args()
 
     # read config from config file
+    if not os.path.isfile(cmd_args.configfile) and not '/' in cmd_args.configfile:
+        if os.path.isfile(xdg_config_home('tremc/'+cmd_args.configfile)):
+            cmd_args.configfile = xdg_config_home('tremc/'+cmd_args.configfile)
+        elif os.path.isfile(xdg_config_home('tremc/'+cmd_args.configfile+'.cfg')):
+            cmd_args.configfile = xdg_config_home('tremc/'+cmd_args.configfile+'.cfg')
     config.read(cmd_args.configfile)
 
     un_pw = os.environ.get("TR_AUTH")
