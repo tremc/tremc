@@ -3575,11 +3575,11 @@ class Interface(object):
         focus_tags   = curses.color_pair(self.colors.id('button_focused'))
         unfocus_tags = 0
 
-        input = False
+        choice = False
         while True:
             win.move(int(height-2), int(width/2)-4)
             if not hard:
-                if input:
+                if choice:
                     win.addstr('Y',  focus_tags + curses.A_UNDERLINE)
                     win.addstr('es', focus_tags)
                     win.addstr('   ')
@@ -3606,18 +3606,18 @@ class Interface(object):
                 elif c == ord('n'):
                     return False
                 elif c == ord("\t"):
-                    input = not input
+                    choice = not choice
                 elif c == curses.KEY_LEFT or c == ord('h'):
-                    input = True
+                    choice = True
                 elif c == curses.KEY_RIGHT or c == ord('l'):
-                    input = False
+                    choice = False
                 elif c == ord("\n") or c == ord(' '):
-                    return input
+                    return choice
                 elif c in [ 27, curses.KEY_BREAK, curses.ascii.ctrl(ord('w'))]:
                     return 0
             self.update_torrent_list([win])
 
-    def dialog_input_text(self, message, input='', on_change=None, on_enter=None, tab_complete=None, maxwidth=9999,
+    def dialog_input_text(self, message, text='', on_change=None, on_enter=None, tab_complete=None, maxwidth=9999,
                           align='center', history=None, history_max=0, fixed_history=[], search='', winstack=[]):
         """tab_complete values:
                 'files': complete with any files/directories
@@ -3627,9 +3627,9 @@ class Interface(object):
         """
         self.highlight_dialog = False
         if history != None:
-            localhistory = fixed_history+history+[input]
+            localhistory = fixed_history+history+[text]
         else:
-            localhistory = [input]
+            localhistory = [text]
         history_pos = len(localhistory)-1
         width  = min(maxwidth, self.width - 4)
         textwidth = width - 4
@@ -3641,14 +3641,14 @@ class Interface(object):
 
         win = self.window(height, width, message=message, xpos=xpos)
         show_cursor()
-        if not isinstance(input, str):
-            input = str(input, ENCODING)
-        index = len(input)
+        if not isinstance(text, str):
+            text = str(text, ENCODING)
+        index = len(text)
         while True:
             # Cut the text into pages, each as long as the text field
             # The current page is determined by index position
             page = index // textwidth
-            displaytext = input[textwidth*page:textwidth*(page + 1)]
+            displaytext = text[textwidth*page:textwidth*(page + 1)]
             displayindex = index - textwidth*page
 
             color = (curses.color_pair(self.colors.id('dialog_important')) if self.highlight_dialog
@@ -3659,57 +3659,57 @@ class Interface(object):
             if history != None:
                 if  c == curses.KEY_UP or c == curses.ascii.ctrl(ord('p')):
                     history_pos = (history_pos - 1) % len(localhistory)
-                    input = localhistory[history_pos]
-                    index = len(input)
+                    text = localhistory[history_pos]
+                    index = len(text)
                 if  c == curses.KEY_DOWN or c == curses.ascii.ctrl(ord('n')):
                     history_pos = (history_pos + 1) % len(localhistory)
-                    input = localhistory[history_pos]
-                    index = len(input)
+                    text = localhistory[history_pos]
+                    index = len(text)
             if c in [ 27, curses.KEY_BREAK, curses.ascii.ctrl(ord('w'))]:
                 hide_cursor()
                 return ''
-            elif index < len(input) and ( c == curses.KEY_RIGHT or c == curses.ascii.ctrl(ord('f')) ):
+            elif index < len(text) and ( c == curses.KEY_RIGHT or c == curses.ascii.ctrl(ord('f')) ):
                 index += 1
             elif index > 0 and ( c == curses.KEY_LEFT or c == curses.ascii.ctrl(ord('b')) ):
                 index -= 1
             elif (c == curses.KEY_BACKSPACE or c == 127) and index > 0:
-                input = input[:index - 1] + (index < len(input) and input[index:] or '')
+                text = text[:index - 1] + (index < len(text) and text[index:] or '')
                 index -= 1
-            elif index < len(input) and ( c == curses.KEY_DC or c == curses.ascii.ctrl(ord('d')) ):
-                input = input[:index] + input[index + 1:]
-            elif index < len(input) and c == curses.ascii.ctrl(ord('k')):
-                input = input[:index]
+            elif index < len(text) and ( c == curses.KEY_DC or c == curses.ascii.ctrl(ord('d')) ):
+                text = text[:index] + text[index + 1:]
+            elif index < len(text) and c == curses.ascii.ctrl(ord('k')):
+                text = text[:index]
             elif c == curses.ascii.ctrl(ord('u')):
                 # Delete from cursor until beginning of line
-                input = input[index:]
+                text = text[index:]
                 index = 0
             elif c == curses.KEY_HOME or c == curses.ascii.ctrl(ord('a')):
                 index = 0
             elif c == curses.KEY_END or c == curses.ascii.ctrl(ord('e')):
-                index = len(input)
+                index = len(text)
             elif c == ord('\n') or c == curses.ascii.ctrl(ord('r')):
-                if history != None and input != '':
+                if history != None and text != '':
                     try:
-                        p = history.index(input)
+                        p = history.index(text)
                         history.pop(p)
                     except:
                         p = -1
                     if len(history) >= history_max:
                         history.pop(0)
-                    history.append(input)
+                    history.append(text)
                 if on_enter:
-                    if on_enter(input, inc=1 if c == ord('\n') else -1, search=search):
+                    if on_enter(text, inc=1 if c == ord('\n') else -1, search=search):
                         return
                 else:
                     hide_cursor()
-                    return input
+                    return text
             elif c >= 32 and c < 127:
-                input = input[:index] + chr(c) + (index < len(input) and input[index:] or '')
+                text = text[:index] + chr(c) + (index < len(text) and text[index:] or '')
                 index += 1
             elif c == ord('\t') and tab_complete:
                 possible_choices = []
                 if tab_complete in ('files', 'dirs'):
-                    (dirname, filename) = os.path.split(tilde2homedir(input))
+                    (dirname, filename) = os.path.split(tilde2homedir(text))
                     if not dirname:
                         dirname = str(os.getcwd())
                     try:
@@ -3722,23 +3722,23 @@ class Interface(object):
                                              if os.path.isdir(d) ]
                 elif tab_complete == 'torrent_list':
                     possible_choices = [ t['name'] for t in self.torrents
-                                         if t['name'].startswith(input) ]
+                                         if t['name'].startswith(text) ]
                 elif tab_complete == 'file_list':
                     possible_choices = [ f for f in [ os.path.basename(g['name']) for g in self.sorted_files ]
-                                         if f.startswith(input) ]
+                                         if f.startswith(text) ]
                 if(possible_choices):
-                    input = os.path.commonprefix(possible_choices)
+                    text = os.path.commonprefix(possible_choices)
                     if tab_complete in ('files', 'dirs'):
-                        if len(possible_choices) == 1 and os.path.isdir(input) and input.endswith(os.sep) == False:
-                            input += os.sep
-                        input = homedir2tilde(input)
-                    index = len(input)
+                        if len(possible_choices) == 1 and os.path.isdir(text) and text.endswith(os.sep) == False:
+                            text += os.sep
+                        text = homedir2tilde(text)
+                    index = len(text)
             if on_change:
-                if localhistory[-1] != input:
-                    on_change(input)
-            if localhistory[-1] != input and not input in localhistory:
-                localhistory[-1] = input
-            self.update_torrent_list(winstack+[win], input=input, search=search)
+                if localhistory[-1] != text:
+                    on_change(text)
+            if localhistory[-1] != text and not text in localhistory:
+                localhistory[-1] = text
+            self.update_torrent_list(winstack+[win], pattern=text, search=search)
 
     def search(self, c):
         if self.selected_torrent == -1:
@@ -3770,10 +3770,10 @@ class Interface(object):
                                tab_complete = 'file_list',
                                maxwidth=60, align='right', search=search)
 
-    def increment_file_search(self, input, inc=1, search=None):
+    def increment_file_search(self, pattern, inc=1, search=None):
         self.search_focus += inc
 
-    def increment_search(self, input, inc=1, search=None):
+    def increment_search(self, pattern, inc=1, search=None):
         self.search_focus += inc
 
     def select_search(self, c):
@@ -3848,7 +3848,7 @@ class Interface(object):
 
         show_cursor()
         win = self.window(height, width, message=message)
-        input = str(current_value)
+        value = str(current_value)
         if cursorkeys:
             if floating_point:
                 bigstep   = 1
@@ -3864,45 +3864,45 @@ class Interface(object):
                 win.addstr(height-4, 2, "leave empty for default")
 
         while True:
-            win.addstr(height-2, 2, input.ljust(width-4), curses.color_pair(self.colors.id('dialog')))
-            win.move(height - 2, len(input) + 2)
+            win.addstr(height-2, 2, value.ljust(width-4), curses.color_pair(self.colors.id('dialog')))
+            win.move(height - 2, len(value) + 2)
             c = self.wingetch(win)
             if c in [ 27, ord('q'), curses.KEY_BREAK, curses.ascii.ctrl(ord('w'))]:
                 hide_cursor()
                 return -128
             elif c == ord("\n"):
                 try:
-                    if allow_empty and len(input) <= 0:
+                    if allow_empty and len(value) <= 0:
                         hide_cursor()
                         return -2
                     elif floating_point:
                         hide_cursor()
-                        return float(input)
+                        return float(value)
                     else:
                         hide_cursor()
-                        return int(input)
+                        return int(value)
                 except ValueError:
                     hide_cursor()
                     return -1
 
             elif c == curses.KEY_BACKSPACE or c == curses.KEY_DC or c == 127 or c == 8:
-                input = input[:-1]
-            elif len(input) >= width-5:
+                value = value[:-1]
+            elif len(value) >= width-5:
                 curses.beep()
             elif c >= ord('1') and c <= ord('9'):
-                input += chr(c)
-            elif allow_zero and c == ord('0') and input != '-' and not input.startswith('0'):
-                input += chr(c)
-            elif allow_negative_one and c == ord('-') and len(input) == 0:
-                input += chr(c)
-            elif floating_point and c == ord('.') and not '.' in input:
-                input += chr(c)
+                value += chr(c)
+            elif allow_zero and c == ord('0') and value != '-' and not value.startswith('0'):
+                value += chr(c)
+            elif allow_negative_one and c == ord('-') and len(value) == 0:
+                value += chr(c)
+            elif floating_point and c == ord('.') and not '.' in value:
+                value += chr(c)
 
             elif cursorkeys and c != -1:
                 try:
-                    if input == '': input = 0
-                    if floating_point: number = float(input)
-                    else:              number = int(input)
+                    if value == '': value = 0
+                    if floating_point: number = float(value)
+                    else:              number = int(value)
                     if c == curses.KEY_LEFT or c == ord('h'):    number -= smallstep
                     elif c == curses.KEY_RIGHT or c == ord('l'): number += smallstep
                     elif c == curses.KEY_DOWN or c == ord('j'):  number -= bigstep
@@ -3911,9 +3911,9 @@ class Interface(object):
                         number = 1
                     elif not allow_negative_one and number < 0:
                         number = 0
-                    elif number < 0:  # input like -0.6 isn't useful
+                    elif number < 0:  # value like -0.6 isn't useful
                         number = -1
-                    input = str(number)
+                    value = str(number)
                 except ValueError:
                     pass
             self.update_torrent_list(winstack+[win])
@@ -4222,13 +4222,13 @@ class Interface(object):
                 needupdate = False
                 self.update_torrent_list([win])
 
-    def update_torrent_list(self, winstack=[], input='', search=''):
+    def update_torrent_list(self, winstack=[], pattern='', search=''):
                 server.update(1)
                 self.draw_stats()
                 if self.selected_torrent == -1:
-                    self.draw_torrent_list(search_keyword=input, search=search)
+                    self.draw_torrent_list(search_keyword=pattern, search=search)
                 else:
-                    self.draw_details(search_keyword=input, search=search)
+                    self.draw_details(search_keyword=pattern, search=search)
                 for win in winstack[:-1]:
                     win.redrawwin()
                     win.refresh()
