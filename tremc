@@ -4462,11 +4462,9 @@ def quit(msg='', exitcode=0):
         curses.endwin()
     except curses.error:
         pass
-
     if msg or exitcode:
         print(msg, file=sys.stderr)
-
-    os._exit(exitcode)
+    sys.exit(exitcode)
 
 
 def explode_connection_string(connection):
@@ -4518,7 +4516,7 @@ def read_netrc(file=os.environ['HOME'] + '/.netrc', hostname=None):
                 if login and password:
                     print("Using default login: %s" % login)
                 else:
-                    exit(CONFIGFILE_ERROR)
+                    sys.exit(CONFIGFILE_ERROR)
     except netrc.NetrcParseError as e:
         quit("Error in %s at line %s: %s\n" % (e.filename, e.lineno, e.msg))
     except IOError as msg:
@@ -4545,13 +4543,13 @@ def create_config(option, opt_str, value, parser):
             os.makedirs(dir)
         except OSError as msg:
             print(msg)
-            exit(CONFIGFILE_ERROR)
+            sys.exit(CONFIGFILE_ERROR)
 
     # write file
     if not save_config(configfile, force=True):
-        exit(CONFIGFILE_ERROR)
+        sys.exit(CONFIGFILE_ERROR)
     print("Wrote config file: %s" % configfile)
-    exit(0)
+    sys.exit(0)
 
 
 def save_config(filepath, force=False):
