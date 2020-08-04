@@ -3900,8 +3900,7 @@ class Interface(object):
             elif cursorkeys and c != -1:
                 try:
                     if value == '': value = 0
-                    if floating_point: number = float(value)
-                    else:              number = int(value)
+                    number = float(value) if floating_point else int(value)
                     if c == curses.KEY_LEFT or c == ord('h'):    number -= smallstep
                     elif c == curses.KEY_RIGHT or c == ord('l'): number += smallstep
                     elif c == curses.KEY_DOWN or c == ord('j'):  number -= bigstep
@@ -3972,8 +3971,7 @@ class Interface(object):
         i = 1
         for option in options:
             title = option[1].split('_')
-            if i == focus: tag = curses.color_pair(self.colors.id('dialog'))
-            else:          tag = 0
+            tag = curses.color_pair(self.colors.id('dialog')) if i == focus else 0
             if i > startline and i <= endline:
                 win.addstr(i-startline,2, title[0], tag)
                 if len(title)>1:
