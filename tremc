@@ -3083,6 +3083,7 @@ class Interface(object):
         pieces = self.torrent_details['pieces']
         piece_count = self.torrent_details['pieceCount']
         margin = len(str(piece_count)) + 2
+        piece_attrs = {0: ('_',0), 0x80: (' ',curses.A_REVERSE)}
 
         map_width = int(str(self.width-margin-1)[0:-1] + '0')
         for x in range(10, map_width, 10):
@@ -3105,9 +3106,7 @@ class Interface(object):
 
             if counter & 7 == 0:
                 block = (pieces[counter >> 3])
-            piece = block & 0x80
-            if piece: self.pad.addch(ypos, xpos, ' ', curses.A_REVERSE)
-            else:     self.pad.addch(ypos, xpos, '_')
+            self.pad.addch(ypos, xpos, *piece_attrs[block & 0x80])
             block <<= 1
 
         missing_pieces = piece_count - counter - 1
