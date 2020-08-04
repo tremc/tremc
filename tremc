@@ -2710,18 +2710,18 @@ class Interface(object):
 
         info.append([''])
 
-        format = "%X" if self.narrow else "%x %X"
-        info.append(['Created: ',  "%s" % timestamp(t['dateCreated'], narrow=self.narrow, format=format)])
-        info.append(['Added: ',    "%s" % timestamp(t['addedDate'], narrow=self.narrow, format=format)])
-        info.append(['Started: ',  "%s" % timestamp(t['startDate'], narrow=self.narrow, format=format)])
-        info.append(['Activity: ', "%s" % timestamp(t['activityDate'], narrow=self.narrow, format=format)])
+        format_str = "%X" if self.narrow else "%x %X"
+        info.append(['Created: ',  "%s" % timestamp(t['dateCreated'], narrow=self.narrow, time_format=format_str)])
+        info.append(['Added: ',    "%s" % timestamp(t['addedDate'], narrow=self.narrow, time_format=format_str)])
+        info.append(['Started: ',  "%s" % timestamp(t['startDate'], narrow=self.narrow, time_format=format_str)])
+        info.append(['Activity: ', "%s" % timestamp(t['activityDate'], narrow=self.narrow, time_format=format_str)])
 
         if t['percentDone'] < 100 and t['eta'] > 0:
-            info.append(['Finishing: ', "%s" % timestamp(time.time() + t['eta'], narrow=self.narrow, format=format)])
+            info.append(['Finishing: ', "%s" % timestamp(time.time() + t['eta'], narrow=self.narrow, time_format=format_str)])
         elif t['doneDate'] <= 0:
             info.append(['Finishing: ', 'sometime'])
         else:
-            info.append(['Finished: ', "%s" % timestamp(t['doneDate'], narrow=self.narrow, format=format)])
+            info.append(['Finished: ', "%s" % timestamp(t['doneDate'], narrow=self.narrow, time_format=format_str)])
 
         if t['comment']:
             info.append([''])
@@ -3042,11 +3042,11 @@ class Interface(object):
                 for i in range(self.TRACKER_ITEM_HEIGHT):
                     addstr(ypos+i, 0, ' ', curses.A_BOLD + curses.A_REVERSE)
 
-            format = "%X" if self.narrow else "%x %X"
-            addstr(ypos+1, 4, "Last announce: %s" % timestamp(t['lastAnnounceTime'], narrow=self.narrow, format=format))
-            addstr(ypos+2, 4, "Next announce: %s" % timestamp(t['nextAnnounceTime'], narrow=self.narrow, format=format))
-            addstr(ypos+3, 4, "  Last scrape: %s" % timestamp(t['lastScrapeTime'], narrow=self.narrow, format=format))
-            addstr(ypos+4, 4, "  Next scrape: %s" % timestamp(t['nextScrapeTime'], narrow=self.narrow, format=format))
+            format_str = "%X" if self.narrow else "%x %X"
+            addstr(ypos+1, 4, "Last announce: %s" % timestamp(t['lastAnnounceTime'], narrow=self.narrow, time_format=format_str))
+            addstr(ypos+2, 4, "Next announce: %s" % timestamp(t['nextAnnounceTime'], narrow=self.narrow, time_format=format_str))
+            addstr(ypos+3, 4, "  Last scrape: %s" % timestamp(t['lastScrapeTime'], narrow=self.narrow, time_format=format_str))
+            addstr(ypos+4, 4, "  Next scrape: %s" % timestamp(t['nextScrapeTime'], narrow=self.narrow, time_format=format_str))
 
             if t['lastScrapeSucceeded']:
                 if self.narrow:
@@ -3094,12 +3094,12 @@ class Interface(object):
             return
         block = (pieces[start >> 3]) << (start & 7)
 
-        format = "%%%dd" % (margin - 2)
+        format_str = "%%%dd" % (margin - 2)
         for counter in range(start, end):
             if counter % map_width == 0:
                 ypos += 1
                 xpos = margin
-                self.pad.addstr(ypos, 1, format % counter, curses.A_BOLD)
+                self.pad.addstr(ypos, 1, format_str % counter, curses.A_BOLD)
             else:
                 xpos += 1
 
@@ -4303,7 +4303,7 @@ def scale_time(seconds, type='short'):
             return "%dy" % years
 
 
-def timestamp(timestamp, format="%x %X", narrow=False):
+def timestamp(timestamp, time_format="%x %X", narrow=False):
     if timestamp < 1:
         return 'never'
 
@@ -4322,9 +4322,9 @@ def timestamp(timestamp, format="%x %X", narrow=False):
         timeobj = time.localtime(timestamp)
 
     time_f = '' if narrow else 'long'
-    if format=="%X" and (timestamp - time.time() < -86400 or timestamp - time.time()>86400):
-        format="%x"
-    absolute = time.strftime(format, timeobj)
+    if time_format=="%X" and (timestamp - time.time() < -86400 or timestamp - time.time()>86400):
+        time_format="%x"
+    absolute = time.strftime(time_format, timeobj)
     if narrow:
         if timestamp > time.time():
             relative = '+' + scale_time(int(timestamp - time.time()), time_f)
@@ -4436,7 +4436,7 @@ def len_columns(text):
     return columns
 
 
-def num2str(num, format='%s'):
+def num2str(num, num_format='%s'):
     if int(num) == -1:
         return '?'
     elif int(num) == -2:
@@ -4445,7 +4445,7 @@ def num2str(num, format='%s'):
         if num > 999:
             return (re.sub(r'(\d{3})', '\g<1>,', str(num)[::-1])[::-1]).lstrip(',')
         else:
-            return format % num
+            return num_format % num
 
 
 def debug(data):
