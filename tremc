@@ -242,10 +242,10 @@ class TransmissionRequest(object):
                 session_id = m.group(1)
                 self.send_request()
             except AttributeError:
-                quit(str(msg) + "\n", CONNECTION_ERROR)
+                exit_prog(str(msg) + "\n", CONNECTION_ERROR)
 
         except urllib.error.URLError as msg:
-            quit("Cannot connect to %s: %s" % (self.http_request.host, msg.reason), CONNECTION_ERROR)
+            exit_prog("Cannot connect to %s: %s" % (self.http_request.host, msg.reason), CONNECTION_ERROR)
 
     def get_response(self):
         """Get response to previously sent request."""
@@ -262,7 +262,7 @@ class TransmissionRequest(object):
         try:
             data = json.loads(response.decode("utf-8"))
         except ValueError:
-            quit("Cannot parse response: %s\n" % response, JSON_ERROR)
+            exit_prog("Cannot parse response: %s\n" % response, JSON_ERROR)
         self.open_request = None
         return data
 
@@ -334,16 +334,16 @@ class Transmission(object):
                 if cmd_args.SKIPVERSIONCHECK:
                     print(version_error + skip_msg, file=sys.stderr)
                 else:
-                    quit(version_error + min_msg)
+                    exit_prog(version_error + min_msg)
         except KeyError:
-            quit(version_error + min_msg)
+            exit_prog(version_error + min_msg)
 
         # rpc version too new?
         if response['arguments']['rpc-version'] > RPC_VERSION_MAX:
             if cmd_args.SKIPVERSIONCHECK:
                 print(version_error + skip_msg, file=sys.stderr)
             else:
-                quit(version_error + "Please install Transmission version " + TRNSM_VERSION_MAX + " or lower.\n")
+                exit_prog(version_error + "Please install Transmission version " + TRNSM_VERSION_MAX + " or lower.\n")
 
         # setup compatibility to Transmission <2.40
         if self.rpc_version < 14:
@@ -1208,7 +1208,7 @@ class Interface(object):
                 self.screen.addstr(2,0, "Press 'q' to  quit")
                 c = self.screen.getch()
                 if c in [ 27, ord('q'), curses.ascii.ctrl(ord('w'))]:
-                    quit()
+                    exit_prog()
             else:
                 break
         self.manage_layout()
@@ -4457,7 +4457,7 @@ def debug(data):
         file.close
 
 
-def quit(msg='', exitcode=0):
+def exit_prog(msg='', exitcode=0):
     try:
         curses.endwin()
     except curses.error:
@@ -4488,7 +4488,7 @@ def explode_connection_string(connection):
         else:
             host = connection
     except ValueError:
-        quit("Wrong connection pattern: %s\n" % connection)
+        exit_prog("Wrong connection pattern: %s\n" % connection)
     return host, port, path, username, password
 
 
@@ -4518,9 +4518,9 @@ def read_netrc(file=os.environ['HOME'] + '/.netrc', hostname=None):
                 else:
                     sys.exit(CONFIGFILE_ERROR)
     except netrc.NetrcParseError as e:
-        quit("Error in %s at line %s: %s\n" % (e.filename, e.lineno, e.msg))
+        exit_prog("Error in %s at line %s: %s\n" % (e.filename, e.lineno, e.msg))
     except IOError as msg:
-        quit("Cannot read %s: %s\n" % (file, msg))
+        exit_prog("Cannot read %s: %s\n" % (file, msg))
     return login, password
 
 
@@ -4630,7 +4630,7 @@ def parse_config_profiles(config,orders):
 
 
 def show_version(option, opt_str, value, parser):
-    quit("tremc %s  (supports Transmission %s-%s)\n" % \
+    exit_prog("tremc %s  (supports Transmission %s-%s)\n" % \
          (VERSION, TRNSM_VERSION_MIN, TRNSM_VERSION_MAX))
 
 
@@ -4718,8 +4718,8 @@ if __name__ == '__main__':
         try:
             retcode = call(cmd)
         except OSError as msg:
-            quit("Could not execute the above command: %s\n" % msg.strerror, 128)
-        quit('', retcode)
+            exit_prog("Could not execute the above command: %s\n" % msg.strerror, 128)
+        exit_prog('', retcode)
 
     have_geoip1 = False
     have_geoip2 = False
@@ -4772,4 +4772,4 @@ if __name__ == '__main__':
         traceback.print_exc(file=sys.stderr)
         sys.stderr.flush()
     finally:
-        quit()
+        exit_prog()
