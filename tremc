@@ -14,19 +14,6 @@
 # http://www.gnu.org/licenses/gpl-3.0.txt                              #
 ########################################################################
 
-
-VERSION = '0.9.2'
-
-TRNSM_VERSION_MIN = '1.90'
-TRNSM_VERSION_MAX = '3.0.0'
-RPC_VERSION_MIN = 8
-RPC_VERSION_MAX = 16
-
-# error codes
-CONNECTION_ERROR = 1
-JSON_ERROR       = 2
-CONFIGFILE_ERROR = 3
-
 import json
 import time
 import datetime
@@ -45,12 +32,22 @@ from textwrap import wrap
 from subprocess import call, Popen
 import netrc
 import operator
-
 import urllib.request
 import urllib.error
 import urllib.parse
 import configparser
 
+VERSION = '0.9.2'
+
+TRNSM_VERSION_MIN = '1.90'
+TRNSM_VERSION_MAX = '3.0.0'
+RPC_VERSION_MIN = 8
+RPC_VERSION_MAX = 16
+
+# error codes
+CONNECTION_ERROR = 1
+JSON_ERROR       = 2
+CONFIGFILE_ERROR = 3
 locale.setlocale(locale.LC_ALL, '')
 ENCODING = locale.getpreferredencoding() or 'UTF-8'
 
