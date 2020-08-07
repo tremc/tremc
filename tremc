@@ -177,7 +177,7 @@ class ColorManager:
         fg_name = pair.split(',')[0].split(':')[1].upper()
         color_pair = {'id': len(list(self.config.keys())) + 1}
         try:
-            color_pair['bg'] = getattr(curses,'COLOR_' + bg_name)
+            color_pair['bg'] = getattr(curses, 'COLOR_' + bg_name)
         except AttributeError:
             color_pair['bg'] = -1
         try:
@@ -3007,7 +3007,7 @@ class Interface:
         top = ypos - 1
 
         def addstr(ypos, xpos, *args):
-            if ypos > top and ypos < self.height - 2:
+            if top < ypos < self.height - 2:
                 self.pad.addstr(ypos, xpos, *args)
 
         tracker_per_page = max(1, self.detaillines_per_page // (self.TRACKER_ITEM_HEIGHT + 2))
@@ -3701,7 +3701,7 @@ class Interface:
                 else:
                     hide_cursor()
                     return text
-            elif c >= 32 and c < 127:
+            elif 32 <= c < 127:
                 text = text[:index] + chr(c) + (index < len(text) and text[index:] or '')
                 index += 1
             elif c == ord('\t') and tab_complete:
@@ -3883,7 +3883,7 @@ class Interface:
                 value = value[:-1]
             elif len(value) >= width - 5:
                 curses.beep()
-            elif c >= ord('1') and c <= ord('9'):
+            elif ord('1') <= c <= ord('9'):
                 value += chr(c)
             elif allow_zero and c == ord('0') and value != '-' and not value.startswith('0'):
                 value += chr(c)
@@ -3944,7 +3944,7 @@ class Interface:
             keymap = self.dialog_list_menu_options(win, width, options, focus, page * pagelines, (page + 1) * pagelines)
             c = self.wingetch(win)
 
-            if c > 47 and c < 123 and chr(c).lower() in keymap:
+            if 47 < c < 123 and chr(c).lower() in keymap:
                 return (options[keymap[chr(c).lower()]][0], chr(c).isupper(), win) if extended else options[keymap[chr(c).lower()]][0]
             if c in [ord('q'), 27, curses.ascii.ctrl(ord('w'))]:
                 return (-128, False, win) if extended else -128
@@ -3973,7 +3973,7 @@ class Interface:
         for option in options:
             title = option[1].split('_')
             tag = curses.color_pair(self.colors.id('dialog')) if i == focus else 0
-            if i > startline and i <= endline:
+            if startline < i <= endline:
                 win.addstr(i - startline, 2, title[0], tag)
                 if len(title) > 1:
                     win.addstr(title[1][0], tag + curses.A_UNDERLINE)
@@ -4034,7 +4034,7 @@ class Interface:
                 parts = re.split('_', option[0])
                 parts_len = sum([len(x) for x in parts])
 
-                if line_num > linestart and line_num <= lineend:
+                if linestart < line_num <= lineend:
                     win.addstr(line_num - linestart, max_len - parts_len + 2, parts.pop(0))
                     for part in parts:
                         win.addstr(part[0], curses.A_UNDERLINE)
@@ -4048,7 +4048,7 @@ class Interface:
                 port = self.dialog_input_number("Port for incoming connections",
                                                 self.stats['peer-port'],
                                                 cursorkeys=False, winstack=[win])
-                if port >= 0 and port <= 65535:
+                if 0 <= port <= 65535:
                     server.set_option('peer-port', port)
                 elif port != -128:  # user hit ESC
                     self.dialog_ok('Port must be in the range of 0 - 65535')
