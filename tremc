@@ -73,6 +73,8 @@ class Keys:
             setattr(self, chr(64 + i), 64 + i)
             setattr(self, chr(96 + i) + '_', i)
             setattr(self, chr(96 + i), 96 + i)
+        for i in range(0, 10):
+            setattr(self, 'n' + str(i), K.n0 + i)
 
 K = Keys()
 
@@ -1107,16 +1109,16 @@ class Interface:
             K.b: self.add_label,
             K.B: self.set_labels,
             K.l_: self.remove_labels,
-            ord('0'): self.profile_selected,
-            ord('1'): self.profile_selected,
-            ord('2'): self.profile_selected,
-            ord('3'): self.profile_selected,
-            ord('4'): self.profile_selected,
-            ord('5'): self.profile_selected,
-            ord('6'): self.profile_selected,
-            ord('7'): self.profile_selected,
-            ord('8'): self.profile_selected,
-            ord('9'): self.profile_selected,
+            K.n0: self.profile_selected,
+            K.n1: self.profile_selected,
+            K.n2: self.profile_selected,
+            K.n3: self.profile_selected,
+            K.n4: self.profile_selected,
+            K.n5: self.profile_selected,
+            K.n6: self.profile_selected,
+            K.n7: self.profile_selected,
+            K.n8: self.profile_selected,
+            K.n9: self.profile_selected,
             K.X: self.daemon_quit,
             curses.KEY_SEND: lambda c: self.move_queue('bottom'),
             curses.KEY_SHOME: lambda c: self.move_queue('top'),
@@ -1175,7 +1177,7 @@ class Interface:
         self.invert_filters = False
 
     def profile_selected(self, p):
-        if p in range(ord('0'), ord('9') + 1):
+        if p in range(K.n0, K.n9 + 1):
             p = chr(p)
         if p in self.profiles:
             self.apply_profile(self.profiles[p])
@@ -3889,9 +3891,9 @@ class Interface:
                 value = value[:-1]
             elif len(value) >= width - 5:
                 curses.beep()
-            elif ord('1') <= c <= ord('9'):
+            elif K.n1 <= c <= K.n9:
                 value += chr(c)
-            elif allow_zero and c == ord('0') and value != '-' and not value.startswith('0'):
+            elif allow_zero and c == K.n0 and value != '-' and not value.startswith('0'):
                 value += chr(c)
             elif allow_negative_one and c == ord('-') and len(value) == 0:
                 value += chr(c)
