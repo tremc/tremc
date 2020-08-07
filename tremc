@@ -3119,38 +3119,38 @@ class Interface:
             key_width = 1
         else:
             key_width = max([len(x[0]) for x in info])
-        if True:
-            self.pad.move(ypos, 0)
-            for i in info:
-                xp = 0
-                if self.narrow and i[0] == 'Hash: ' and self.width < 46:
-                    value_x = 0
-                    pass
-                else:
-                    if i[0] == 'Comment: ':
-                        i = [i[0]] + list(wrap_multiline(i[1], self.width - 1, initial_indent=i[0].rjust(key_width + 1)))
-                        # Ugly but does the work - wrapping takes key into
-                        # account, but the actual text must not include it:
-                        i[1] = i[1][len(i[0].rjust(key_width + 1)):]
+
+        self.pad.move(ypos, 0)
+        for i in info:
+            xp = 0
+            if self.narrow and i[0] == 'Hash: ' and self.width < 46:
+                value_x = 0
+                pass
+            else:
+                if i[0] == 'Comment: ':
+                    i = [i[0]] + list(wrap_multiline(i[1], self.width - 1, initial_indent=i[0].rjust(key_width + 1)))
+                    # Ugly but does the work - wrapping takes key into
+                    # account, but the actual text must not include it:
+                    i[1] = i[1][len(i[0].rjust(key_width + 1)):]
+                if yp >= ypos:
+                    if self.narrow:
+                        self.pad.addstr(yp, 0, i[0].rjust(key_width), curses.color_pair(self.colors.id('button')) + curses.A_DIM)  # key
+                    else:
+                        self.pad.addstr(yp, 1, i[0].rjust(key_width))  # key
+                    xp = key_width
+                value_x = key_width
+            # value part may be wrapped if it gets too long
+            for v in i[1:]:
+                if xp + len(v) >= self.width - 1:
+                    yp += 1
                     if yp >= ypos:
-                        if self.narrow:
-                            self.pad.addstr(yp, 0, i[0].rjust(key_width), curses.color_pair(self.colors.id('button')) + curses.A_DIM)  # key
-                        else:
-                            self.pad.addstr(yp, 1, i[0].rjust(key_width))  # key
-                        xp = key_width
-                    value_x = key_width
-                # value part may be wrapped if it gets too long
-                for v in i[1:]:
-                    if xp + len(v) >= self.width - 1:
-                        yp += 1
-                        if yp >= ypos:
-                            self.pad.move(yp, value_x)
-                        xp = value_x
-                    if yp >= ypos:
-                        self.pad.addnstr(v, self.width - value_x)
-                    xp += len(v)
-                yp += 1
-            return yp
+                        self.pad.move(yp, value_x)
+                    xp = value_x
+                if yp >= ypos:
+                    self.pad.addnstr(v, self.width - value_x)
+                xp += len(v)
+            yp += 1
+        return yp
 
     def next_details(self):
         if self.details_category_focus >= 4:
