@@ -2007,7 +2007,6 @@ class Interface(object):
                     if result == 'success':
                         return os.path.join(os.path.dirname(oldname), newname)
                     else:
-                        dir = self.torrents[self.focus]['downloadDir']
                         self.dialog_ok('Couldn\'t rename\n"%s"\nto\n"%s":\n%s' %
                                        (oldname, newname, result))
                         return False
@@ -2268,8 +2267,6 @@ class Interface(object):
         return True  # Unknown filters does not filter anything
 
     def filter_torrent_list(self):
-        unfiltered = self.torrents
-
         self.torrents = [t for t in self.torrents if any(all(self.filter_torrent(t, f) for f in fs) for fs in self.filters) != self.invert_filters]
         # Also filter selected:
         self.selected.intersection_update(set([t['id'] for t in self.torrents]))
@@ -2347,7 +2344,6 @@ class Interface(object):
         selected = torrent['id'] in self.selected
         self.draw_torrentlist_title(torrent, focused, self.torrent_title_width, y)
 
-        rates = ''
         if torrent['status'] == Transmission.STATUS_DOWNLOAD:
             self.draw_downloadrate(torrent, y, selected)
         if torrent['status'] == Transmission.STATUS_DOWNLOAD or torrent['status'] == Transmission.STATUS_SEED or selected:
@@ -2878,7 +2874,6 @@ class Interface(object):
         pos_before_focus = self.filelist_cache_pos[self.focus_detaillist]
         line_to_show = self.focus_detaillist + pos_before_focus
         lines_before = self.detaillines_per_page // 2
-        lines_after = self.detaillines_per_page - 1 - lines_before
         if line_to_show >= lines_before:
             start = line_to_show - lines_before
         else:
@@ -2981,7 +2976,7 @@ class Interface(object):
                 else:
                     host_name = "<resolving>"
 
-            upload_tag = download_tag = line_tag = 0
+            upload_tag = download_tag = 0
             if peer['rateToPeer']:
                 upload_tag = curses.A_BOLD
             if peer['rateToClient']:
@@ -3598,7 +3593,6 @@ class Interface(object):
                      + curses.A_REVERSE)
 
         focus_tags = curses.color_pair(self.colors.id('button_focused'))
-        unfocus_tags = 0
 
         choice = False
         while True:
@@ -3964,7 +3958,6 @@ class Interface(object):
             else:
                 win.addstr(height - 1, 1, "+")
 
-        old_focus = focus
         old_page = 0
         while True:
             page = (focus - 1) // pagelines
@@ -4017,7 +4010,6 @@ class Interface(object):
 
     def draw_options_dialog(self):
         enc_options = [('required', '_required'), ('preferred', '_preferred'), ('tolerated', '_tolerated')]
-        seed_ratio = self.stats['seedRatioLimit']
         options = []
         options.append(('Peer _Port', "%d" % self.stats['peer-port']))
         options.append(('UP_nP/NAT-PMP', ('disabled', 'enabled ')[self.stats['port-forwarding-enabled']]))
@@ -4811,7 +4803,7 @@ if __name__ == '__main__':
 
     try:
         Interface()
-    except Exception as e:
+    except Exception:
         import traceback
         traceback.print_exc(file=sys.stderr)
         sys.stderr.flush()
