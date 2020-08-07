@@ -1580,7 +1580,7 @@ class Interface:
                         current_choice = new_filter[choice] if choice in new_filter else ''
                         if len(select) < min_select:
                             # Nothing to select
-                            return
+                            return None
                         indexes = 'abcdefghijklmnopqrstuvwxyz'
                         select_list = []
                         i = 0
@@ -1593,18 +1593,18 @@ class Interface:
                             s = 0
                         selected = self.dialog_menu('Select ' + choice, select_list, s, winstack=winstack + [win])
                         if selected not in select:
-                            return
+                            return None
                         new_filter[choice] = selected
                     elif choice == 'regex':
                         regex = self.dialog_input_text('Regular expression to filter (case insensitive):',
                                                        new_filter['regex'] if 'regex' in new_filter else '', winstack=winstack + [win])
                         if regex == '':
-                            return
+                            return None
                         new_filter['regex'] = regex
                     new_filter['name'] = choice
                     new_filter['inverse'] = inverse
                 return new_filter
-            return None
+        return None
 
     def set_filter(self, c):
         prompt = ('Show only', 'Filter all')[self.filters[0][0]['inverse']]
@@ -1989,7 +1989,8 @@ class Interface:
                         return os.path.join(os.path.dirname(oldname), newname)
                     self.dialog_ok('Couldn\'t rename\n"%s"\nto\n"%s":\n%s' %
                                    (oldname, newname, result))
-                    return False
+                    return None
+            return None
 
         if self.selected_torrent > -1 and self.details_category_focus == 1 and self.focus_detaillist >= 0:
             # rename files in torrent
