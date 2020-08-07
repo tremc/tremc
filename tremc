@@ -82,7 +82,7 @@ if gconfig.ipy:
     IPV4_ONES = 0xffffffff
 
 def country_code_by_addr_vany(geo_ip, geo_ip6, addr):
-    if have_geoip2:
+    if gconfig.geoip2:
         try:
             return geo_ip.country(addr).country.iso_code
         except:
@@ -398,18 +398,18 @@ class Transmission(object):
                 self.rdns = False
 
         self.geo_ips_cache = dict()
-        if have_geoip1:
+        if gconfig.geoip1:
             self.geo_ip = GeoIP.new(GeoIP.GEOIP_MEMORY_CACHE)
             try:
                 self.geo_ip6 = GeoIP.open_type(GeoIP.GEOIP_COUNTRY_EDITION_V6, GeoIP.GEOIP_MEMORY_CACHE)
             except AttributeError: self.geo_ip6 = None
             except GeoIP.error: self.geo_ip6 = None
-        elif have_geoip2:
+        elif gconfig.geoip2:
             self.geo_ip6 = None
             try:
-                self.geo_ip = geoip2.database.Reader(geoip2_database)
+                self.geo_ip = geoip2.database.Reader(gconfig.geoip2_database)
             except:
-                have_geoip = False
+                gconfig.geoip = False
 
         # make sure there are no undefined values
         self.wait_for_torrentlist_update()
@@ -538,7 +538,7 @@ class Transmission(object):
             # resolve and locate peer's ip
             if self.rdns and ip not in self.hosts_cache:
                 self.threading.Thread(target=reverse_dns, args=(self.hosts_cache,ip)).start()
-            if have_geoip and ip not in self.geo_ips_cache:
+            if gconfig.geoip and ip not in self.geo_ips_cache:
                 self.geo_ips_cache[ip] = country_code_by_addr_vany(self.geo_ip, self.geo_ip6, ip)
                 if self.geo_ips_cache[ip] is None:
                     self.geo_ips_cache[ip] = '?'
@@ -2951,7 +2951,7 @@ class Interface(object):
             (self.torrent_details['peersSendingToUs'], self.torrent_details['peersGettingFromUs'])
         column_names += 'Client'.ljust(clientname_width + 1) \
             + 'Address'.ljust(address_width+port_width+1)
-        if have_geoip:
+        if gconfig.geoip:
             column_names += 'Country'
         if self.rdns: column_names += ' Host'
 
@@ -3004,7 +3004,7 @@ class Interface(object):
                                 ':' + str(peer['port']).ljust(port_width) + ' ')
             # Country
             if self.width>=55+clientname_width + address_width + port_width + 3 + 7:
-                if have_geoip:
+                if gconfig.geoip:
                     self.pad.addstr("  %2s   " % geo_ips[peer['address']])
             # Host
             if self.width>=55+clientname_width + address_width + port_width + 3 + 10:
@@ -4720,14 +4720,14 @@ if __name__ == '__main__':
             exit_prog("Could not execute the above command: %s\n" % msg.strerror, 128)
         exit_prog('', retcode)
 
-    have_geoip1 = False
-    have_geoip2 = False
+    gconfig.geoip1 = False
+    gconfig.geoip2 = False
     try:
         import geoip2.database
-        have_geoip2 = True
+        gconfig.geoip2 = True
     except ImportError:
         pass
-    if have_geoip2:
+    if gconfig.geoip2:
         geoip2_database = config.get('Misc', 'geoip2_database', fallback='')
         if not os.path.isfile(geoip2_database):
             try:
@@ -4742,14 +4742,16 @@ if __name__ == '__main__':
         if not os.path.isfile(geoip2_database):
             geoip2_database = "/var/lib/GeoIP/GeoLite2-Country.mmdb"
         if not os.path.isfile(geoip2_database):
-            have_geoip2 = False
-    if not have_geoip2:
+            gconfig.geoip2 = False
+    if gconfig.geoip2:
+        gconfig.geoip2_database = geoip2_database
+    else:
         try:
             import GeoIP
-            have_geoip1 = True
+            gconfig.geoip1 = True
         except ImportError:
             pass
-    have_geoip = have_geoip1 or have_geoip2
+    gconfig.geoip = gconfig.geoip1 or gconfig.geoip2
 
     norm = Normalizer()
     server = Transmission(config.get('Connection', 'host'),
