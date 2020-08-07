@@ -781,7 +781,7 @@ class Transmission(object):
     def add_label(self, ids, label):
         for i in ids:
             t = self.get_torrent_by_id(i)
-            if not label in t['labels']:
+            if label not in t['labels']:
                 data = {
                     'ids': [i],
                     'labels': t['labels'] + [label]
@@ -1158,7 +1158,7 @@ class Interface(object):
         else:
             history = {}
         for i in ['label', 'location', 'tracker']:
-            if not i in history:
+            if i not in history:
                 history[i] = []
         return history
 
@@ -1608,7 +1608,7 @@ class Interface(object):
                             except:
                                 s = 0
                             selected = self.dialog_menu('Select ' + choice, select_list, s, winstack=winstack + [win])
-                            if not selected in select:
+                            if selected not in select:
                                 return
                             new_filter[choice] = selected
                     elif choice == 'regex':
@@ -1776,7 +1776,7 @@ class Interface(object):
 
     def verify_torrent(self, c):
         ids = self.selected_ids()
-        ids = [i for i in ids if not server.get_torrent_by_id(i)['status'] in
+        ids = [i for i in ids if server.get_torrent_by_id(i)['status'] not in
                [Transmission.STATUS_CHECK, Transmission.STATUS_CHECK_WAIT]]
         if ids:
             server.verify_torrent(ids)
@@ -2058,7 +2058,7 @@ class Interface(object):
                 else:
                     self.selected_files = list(range(0, len(self.torrent_details['files'])))
             elif c == ord('i'):
-                self.selected_files = [f for f in range(0, len(self.torrent_details['files'])) if not f in self.selected_files]
+                self.selected_files = [f for f in range(0, len(self.torrent_details['files'])) if f not in self.selected_files]
             elif c == ord('V'):
                 global vmode_id
                 if self.selected_files:
@@ -3761,7 +3761,7 @@ class Interface(object):
             if on_change:
                 if localhistory[-1] != text:
                     on_change(text)
-            if localhistory[-1] != text and not text in localhistory:
+            if localhistory[-1] != text and text not in localhistory:
                 localhistory[-1] = text
             self.update_torrent_list(winstack + [win], pattern=text, search=search)
 
@@ -3920,7 +3920,7 @@ class Interface(object):
                 value += chr(c)
             elif allow_negative_one and c == ord('-') and len(value) == 0:
                 value += chr(c)
-            elif floating_point and c == ord('.') and not '.' in value:
+            elif floating_point and c == ord('.') and '.' not in value:
                 value += chr(c)
 
             elif cursorkeys and c != -1:
@@ -4646,7 +4646,7 @@ def parse_single_filter_str(s):
 
 
 def parse_config_profiles(config, orders):
-    if not 'Profiles' in config:
+    if 'Profiles' not in config:
         return {}
     ret = {}
     for i in config['Profiles']:
@@ -4707,7 +4707,7 @@ if __name__ == '__main__':
     gconfig.DEBUG = cmd_args.DEBUG
 
     # read config from config file
-    if not os.path.isfile(cmd_args.configfile) and not '/' in cmd_args.configfile:
+    if not os.path.isfile(cmd_args.configfile) and '/' not in cmd_args.configfile:
         if os.path.isfile(xdg_config_home('tremc/' + cmd_args.configfile)):
             cmd_args.configfile = xdg_config_home('tremc/' + cmd_args.configfile)
         elif os.path.isfile(xdg_config_home('tremc/' + cmd_args.configfile + '.cfg')):
