@@ -2264,7 +2264,7 @@ class Interface:
         elif filter['name'] == 'label':
             return filter['inverse'] != (filter['label'] in t['labels'])
 
-        return True  # Unknown filters does not filter anything
+        return True  # Unknown filter does not filter anything
 
     def filter_torrent_list(self):
         self.torrents = [t for t in self.torrents if any(all(self.filter_torrent(t, f) for f in fs) for fs in self.filters) != self.invert_filters]
