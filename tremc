@@ -768,6 +768,7 @@ class Transmission:
         return response['result'] if response['result'] != 'success' else ''
 
     def add_label(self, ids, label):
+        ret = ''
         for i in ids:
             t = self.get_torrent_by_id(i)
             if label not in t['labels']:
@@ -778,7 +779,9 @@ class Transmission:
                 request = TransmissionRequest(self.host, self.port, self.path, 'torrent-set', 1, data)
                 request.send_request()
                 response = request.get_response()
-                return response['result'] if response['result'] != 'success' else ''
+                if ret == '':
+                    ret = response['result'] if response['result'] != 'success' else ''
+        return ret
 
     def add_torrent_tracker(self, id, tracker):
         data = {
