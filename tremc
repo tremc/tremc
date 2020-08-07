@@ -2589,7 +2589,7 @@ class Interface:
         info.append(['ID: ', "%s" % t['id']])
 
         wanted = 0
-        for i, file_info in enumerate(t['files']):
+        for i, _ in enumerate(t['files']):
             if t['wanted'][i] is True:
                 wanted += t['files'][i]['length']
 
@@ -2890,7 +2890,7 @@ class Interface:
                f[same] == current_folder[same]):
             same += 1
 
-        for i in range(current_folder_len - same):
+        for _ in range(current_folder_len - same):
             current_depth -= 1
 
         # Stepping out of a directory, but not into a new directory
@@ -2948,7 +2948,7 @@ class Interface:
         # Peers
         hosts = server.get_hosts()
         geo_ips = server.get_geo_ips()
-        for index, peer in enumerate(peers):
+        for _, peer in enumerate(peers):
             if self.rdns:
                 if peer['address'] in hosts:
                     host_name = hosts[peer['address']]
@@ -3024,7 +3024,7 @@ class Interface:
             self.scrollpos_detaillist[3] = max(0, self.scrollpos_detaillist[3])
 
         current_tier = -1
-        for index, t in enumerate(tlist):
+        for _, t in enumerate(tlist):
             announce_msg_size = scrape_msg_size = 0
             selected = t == self.torrent_details['trackerStats'][self.scrollpos_detaillist[3]]
 
@@ -3191,7 +3191,7 @@ class Interface:
         return focus, scrollpos
 
     def move_page_up(self, focus, scrollpos, step_size, elements_per_page):
-        for x in range(elements_per_page - 1):
+        for _ in range(elements_per_page - 1):
             focus, scrollpos = self.move_up(focus, scrollpos, step_size)
         if focus < 0:
             focus = 0
@@ -3200,7 +3200,7 @@ class Interface:
     def move_page_down(self, focus, scrollpos, step_size, elements_per_page, list_height):
         if focus < 0:
             focus = 0
-        for x in range(elements_per_page - 1):
+        for _ in range(elements_per_page - 1):
             focus, scrollpos = self.move_down(focus, scrollpos, step_size, elements_per_page, list_height)
         return focus, scrollpos
 
@@ -4478,7 +4478,7 @@ def read_netrc(file=os.environ['HOME'] + '/.netrc', hostname=None):
     try:
         login = password = ''
         try:
-            login, account, password = netrc.netrc(file).authenticators(hostname)
+            login, _, password = netrc.netrc(file).authenticators(hostname)
         except TypeError:
             pass
         try:
