@@ -74,7 +74,7 @@ class Keys:
             setattr(self, chr(96 + i) + '_', i)
             setattr(self, chr(96 + i), 96 + i)
         for i in range(0, 10):
-            setattr(self, 'n' + str(i), K.n0 + i)
+            setattr(self, 'n' + str(i), ord('0') + i)
 
 K = Keys()
 
