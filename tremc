@@ -100,7 +100,7 @@ def country_code_by_addr_vany(geo_ip, geo_ip6, addr):
         if ip in IPV6_RANGE_6TO4:
             addr = str(IPy.IP(ip.int() >> 80 & IPV4_ONES))
             return geo_ip.country_code_by_addr(addr)
-        elif ip in IPV6_RANGE_TEREDO:
+        if ip in IPV6_RANGE_TEREDO:
             addr = str(IPy.IP(ip.int() & IPV4_ONES ^ IPV4_ONES))
             return geo_ip.country_code_by_addr(addr)
     if hasattr(geo_ip6, 'country_code_by_addr_v6'):
@@ -440,10 +440,7 @@ class Transmission:
                     if tag == tag_waiting_for:
                         tag_waiting_for_occurred = True
 
-        if tag_waiting_for:
-            return tag_waiting_for_occurred
-        else:
-            return None
+        return tag_waiting_for_occurred if tag_waiting_for else None
 
     def parse_response(self, response):
         def get_main_tracker_domain(torrent):
@@ -451,9 +448,8 @@ class Transmission:
                 trackers = sorted(torrent['trackerStats'],
                                   key=operator.itemgetter('tier', 'id'))
                 return urllib.parse.urlparse(trackers[0]['announce']).hostname
-            else:
-                # Trackerless torrents
-                return None
+            # Trackerless torrents
+            return None
 
         # response is a reply to torrent-get
         if response['tag'] == self.TAG_TORRENT_LIST or response['tag'] == self.TAG_TORRENT_DETAILS:
@@ -574,10 +570,7 @@ class Transmission:
         i = 0
         while self.torrent_cache[i]['id'] != id:
             i += 1
-        if self.torrent_cache[i]['id'] == id:
-            return self.torrent_cache[i]
-        else:
-            return None
+        return self.torrent_cache[i] if self.torrent_cache[i]['id'] == id else None
 
     def get_torrent_details(self):
         return self.torrent_details_cache
@@ -715,10 +708,7 @@ class Transmission:
         request = TransmissionRequest(self.host, self.port, self.path, 'torrent-add', 1, args)
         request.send_request()
         response = request.get_response()
-        if response['result'] != 'success':
-            return response['result']
-        else:
-            return ''
+        return response['result'] if response['result'] != 'success' else ''
 
     def daemon_quit(self):
         request = TransmissionRequest(self.host, self.port, self.path, 'session-close', self.TAG_SESSION_CLOSE)
@@ -817,7 +807,7 @@ class Transmission:
             if not self.torrent_details_cache['wanted'][num]:
                 ref_num = num
                 break
-            elif self.torrent_details_cache['priorities'][num] < \
+            if self.torrent_details_cache['priorities'][num] < \
                     self.torrent_details_cache['priorities'][ref_num]:
                 ref_num = num
         current_priority = self.torrent_details_cache['priorities'][ref_num]
@@ -858,11 +848,11 @@ class Transmission:
         priority = self.torrent_details_cache['priorities'][file_num]
         if not self.torrent_details_cache['wanted'][file_num]:
             return 'off'
-        elif priority <= -1:
+        if priority <= -1:
             return 'low'
-        elif priority == 0:
+        if priority == 0:
             return 'normal'
-        elif priority >= 1:
+        if priority >= 1:
             return 'high'
         return '?'
 
@@ -944,27 +934,20 @@ class Transmission:
                 return True
         # Torrent can use DHT?
         # ('dht-enabled' may be missing; assume DHT is available until we can say for sure)
-        if 'dht-enabled' not in self.status_cache or \
-                (self.status_cache['dht-enabled'] and not torrent['isPrivate']):
-            return True
-        # No ways of finding peers remaining
-        return False
+        return 'dht-enabled' not in self.status_cache or \
+                (self.status_cache['dht-enabled'] and not torrent['isPrivate'])
 
     def get_bandwidth_priority(self, torrent):
         if torrent['bandwidthPriority'] == -1:
             return '-'
-        elif torrent['bandwidthPriority'] == 0:
+        if torrent['bandwidthPriority'] == 0:
             return ' '
-        elif torrent['bandwidthPriority'] == 1:
+        if torrent['bandwidthPriority'] == 1:
             return '+'
-        else:
-            return '?'
+        return '?'
 
     def get_honors_session_limits(self, torrent):
-        if torrent['honorsSessionLimits']:
-            return ' '
-        else:
-            return '*'
+        return ' ' if torrent['honorsSessionLimits'] else '*'
 
     def get_stats(self):
         request = TransmissionRequest(self.host, self.port, self.path, 'session-stats', 1)
@@ -1596,28 +1579,26 @@ class Interface:
                         if len(select) < min_select:
                             # Nothing to select
                             return
-                        else:
-                            indexes = 'abcdefghijklmnopqrstuvwxyz'
-                            select_list = []
-                            i = 0
-                            for x in select:
-                                select_list.append((x, '_' + indexes[i] + '. ' + x))
-                                i = i + 1
-                            try:
-                                s = list(map(lambda x: x[0] == current_choice, select_list)).index(True) + 1
-                            except Exception:
-                                s = 0
-                            selected = self.dialog_menu('Select ' + choice, select_list, s, winstack=winstack + [win])
-                            if selected not in select:
-                                return
-                            new_filter[choice] = selected
+                        indexes = 'abcdefghijklmnopqrstuvwxyz'
+                        select_list = []
+                        i = 0
+                        for x in select:
+                            select_list.append((x, '_' + indexes[i] + '. ' + x))
+                            i = i + 1
+                        try:
+                            s = list(map(lambda x: x[0] == current_choice, select_list)).index(True) + 1
+                        except Exception:
+                            s = 0
+                        selected = self.dialog_menu('Select ' + choice, select_list, s, winstack=winstack + [win])
+                        if selected not in select:
+                            return
+                        new_filter[choice] = selected
                     elif choice == 'regex':
                         regex = self.dialog_input_text('Regular expression to filter (case insensitive):',
                                                        new_filter['regex'] if 'regex' in new_filter else '', winstack=winstack + [win])
                         if regex == '':
                             return
-                        else:
-                            new_filter['regex'] = regex
+                        new_filter['regex'] = regex
                     new_filter['name'] = choice
                     new_filter['inverse'] = inverse
                 return new_filter
@@ -1664,11 +1645,9 @@ class Interface:
             return [self.torrent_details['id']]
         if self.selected:
             return list(self.selected)
-        else:
-            if self.focus == -1:
-                return []
-            else:
-                return [self.torrents[self.focus]['id']]
+        if self.focus == -1:
+            return []
+        return [self.torrents[self.focus]['id']]
 
     # Decide which torrent name to show for confirmation/prompt:
     # If focused torret is in the selection - select it.
@@ -2006,10 +1985,9 @@ class Interface:
                     result = server.rename_torrent_file(self.torrents[self.focus]['id'], oldname, newname)
                     if result == 'success':
                         return os.path.join(os.path.dirname(oldname), newname)
-                    else:
-                        self.dialog_ok('Couldn\'t rename\n"%s"\nto\n"%s":\n%s' %
-                                       (oldname, newname, result))
-                        return False
+                    self.dialog_ok('Couldn\'t rename\n"%s"\nto\n"%s":\n%s' %
+                                   (oldname, newname, result))
+                    return False
 
         if self.selected_torrent > -1 and self.details_category_focus == 1 and self.focus_detaillist >= 0:
             # rename files in torrent
@@ -2235,33 +2213,33 @@ class Interface:
     def filter_torrent(self, t, filter):
         if filter['name'] == 'downloading':
             return filter['inverse'] != (t['rateDownload'] > 0)
-        elif filter['name'] == 'uploading':
+        if filter['name'] == 'uploading':
             return filter['inverse'] != (t['rateUpload'] > 0)
-        elif filter['name'] == 'paused':
+        if filter['name'] == 'paused':
             return filter['inverse'] != (t['status'] == Transmission.STATUS_STOPPED)
-        elif filter['name'] == 'seeding':
+        if filter['name'] == 'seeding':
             return filter['inverse'] != (t['status'] == Transmission.STATUS_SEED or t['status'] == Transmission.STATUS_SEED_WAIT)
-        elif filter['name'] == 'incomplete':
+        if filter['name'] == 'incomplete':
             return filter['inverse'] != (t['percentDone'] < 100)
-        elif filter['name'] == 'private':
+        if filter['name'] == 'private':
             return filter['inverse'] != t['isPrivate']
-        elif filter['name'] == 'active':
+        if filter['name'] == 'active':
             return filter['inverse'] != (t['peersGettingFromUs'] > 0 or t['peersSendingToUs'] > 0 or t['status'] == Transmission.STATUS_CHECK)
-        elif filter['name'] == 'verifying':
+        if filter['name'] == 'verifying':
             return filter['inverse'] != (t['status'] == Transmission.STATUS_CHECK or t['status'] == Transmission.STATUS_CHECK_WAIT)
-        elif filter['name'] == 'isolated':
+        if filter['name'] == 'isolated':
             return filter['inverse'] != t['isIsolated']
-        elif filter['name'] == 'honors':
+        if filter['name'] == 'honors':
             return filter['inverse'] != t['honorsSessionLimits']
-        elif filter['name'] == 'selected':
+        if filter['name'] == 'selected':
             return filter['inverse'] != (t['id'] in self.selected)
-        elif filter['name'] == 'tracker':
+        if filter['name'] == 'tracker':
             return filter['inverse'] != (t['mainTrackerDomain'] == filter['tracker'])
-        elif filter['name'] == 'regex':
+        if filter['name'] == 'regex':
             return filter['inverse'] != bool(re.search(filter['regex'], t['name'], flags=re.I))
-        elif filter['name'] == 'location':
+        if filter['name'] == 'location':
             return filter['inverse'] != (homedir2tilde(t['downloadDir']) == filter['location'])
-        elif filter['name'] == 'label':
+        if filter['name'] == 'label':
             return filter['inverse'] != (filter['label'] in t['labels'])
 
         return True  # Unknown filter does not filter anything
@@ -2358,12 +2336,11 @@ class Interface:
             self.draw_torrentlist_status(torrent, focused, y)
 
             return self.tlist_item_height  # number of lines that were used for drawing the list item
-        else:
-            # Draw ratio in place of upload rate if upload rate = 0
-            if not torrent['rateUpload']:
-                self.draw_ratio(torrent, y - 1, selected)
+        # Draw ratio in place of upload rate if upload rate = 0
+        if not torrent['rateUpload']:
+            self.draw_ratio(torrent, y - 1, selected)
 
-            return 1
+        return 1
 
     def draw_downloadrate(self, torrent, ypos, selected, draw=True):
         if selected:
@@ -2748,17 +2725,16 @@ class Interface:
         t = self.torrent_details
         if t['seedRatioMode'] == 1:
             return t['seedRatioLimit']              # individual limit
-        elif t['seedRatioMode'] == 0 and self.stats['seedRatioLimited']:
+        if t['seedRatioMode'] == 0 and self.stats['seedRatioLimited']:
             return self.stats['seedRatioLimit']     # global limit
+        # round up to next 10/5/1
+        if t['uploadRatio'] >= 100:
+            step_size = 10.0
+        elif t['uploadRatio'] >= 10:
+            step_size = 5.0
         else:
-            # round up to next 10/5/1
-            if t['uploadRatio'] >= 100:
-                step_size = 10.0
-            elif t['uploadRatio'] >= 10:
-                step_size = 5.0
-            else:
-                step_size = 1.0
-            return int(round((t['uploadRatio'] + step_size / 2) / step_size) * step_size)
+            step_size = 1.0
+        return int(round((t['uploadRatio'] + step_size / 2) / step_size) * step_size)
 
     def draw_filelist_search(self, search_keyword=None, search=''):
         if search_keyword and search:
@@ -3622,9 +3598,9 @@ class Interface:
             else:
                 if c == ord('y'):
                     return True
-                elif c == ord('n'):
+                if c == ord('n'):
                     return False
-                elif c == ord("\t"):
+                if c == ord("\t"):
                     choice = not choice
                 elif c == curses.KEY_LEFT or c == ord('h'):
                     choice = True
@@ -3632,7 +3608,7 @@ class Interface:
                     choice = False
                 elif c == ord("\n") or c == ord(' '):
                     return choice
-                elif c in [27, curses.KEY_BREAK, curses.ascii.ctrl(ord('w'))]:
+                if c in [27, curses.KEY_BREAK, curses.ascii.ctrl(ord('w'))]:
                     return 0
             self.update_torrent_list([win])
 
@@ -3687,7 +3663,7 @@ class Interface:
             if c in [27, curses.KEY_BREAK, curses.ascii.ctrl(ord('w'))]:
                 hide_cursor()
                 return ''
-            elif index < len(text) and (c == curses.KEY_RIGHT or c == curses.ascii.ctrl(ord('f'))):
+            if index < len(text) and (c == curses.KEY_RIGHT or c == curses.ascii.ctrl(ord('f'))):
                 index += 1
             elif index > 0 and (c == curses.KEY_LEFT or c == curses.ascii.ctrl(ord('b'))):
                 index -= 1
@@ -3889,19 +3865,15 @@ class Interface:
             if c in [27, ord('q'), curses.KEY_BREAK, curses.ascii.ctrl(ord('w'))]:
                 hide_cursor()
                 return -128
-            elif c == ord("\n"):
+            if c == ord("\n"):
+                hide_cursor()
                 try:
                     if allow_empty and len(value) <= 0:
-                        hide_cursor()
                         return -2
-                    elif floating_point:
-                        hide_cursor()
+                    if floating_point:
                         return float(value)
-                    else:
-                        hide_cursor()
-                        return int(value)
+                    return int(value)
                 except ValueError:
-                    hide_cursor()
                     return -1
 
             elif c == curses.KEY_BACKSPACE or c == curses.KEY_DC or c == 127 or c == 8:
@@ -3971,13 +3943,13 @@ class Interface:
 
             if c > 47 and c < 123 and chr(c).lower() in keymap:
                 return (options[keymap[chr(c).lower()]][0], chr(c).isupper(), win) if extended else options[keymap[chr(c).lower()]][0]
-            elif c in [ord('q'), 27, curses.ascii.ctrl(ord('w'))]:
+            if c in [ord('q'), 27, curses.ascii.ctrl(ord('w'))]:
                 return (-128, False, win) if extended else -128
-            elif c == ord("\n"):
+            if c == ord("\n"):
                 return (options[focus - 1][0], False, win) if extended else options[focus - 1][0]
-            elif c == curses.KEY_BACKSPACE and extended:
+            if c == curses.KEY_BACKSPACE and extended:
                 return (options[focus - 1][0], True, win)
-            elif c == curses.KEY_DOWN or c == ord('j') or c == curses.ascii.ctrl(ord('n')):
+            if c == curses.KEY_DOWN or c == ord('j') or c == curses.ascii.ctrl(ord('n')):
                 focus += 1
                 if focus > len(options):
                     focus = 1
@@ -4069,7 +4041,7 @@ class Interface:
             c = self.wingetch(win)
             if c in [27, ord('q'), ord("\n"), curses.ascii.ctrl(ord('w'))]:
                 return
-            elif c == ord('p'):
+            if c == ord('p'):
                 port = self.dialog_input_number("Port for incoming connections",
                                                 self.stats['peer-port'],
                                                 cursorkeys=False, winstack=[win])
@@ -4205,10 +4177,7 @@ class Interface:
                 return self.filters
             if c == ord("\n"):
                 filters = [f for f in filters if f != []]
-                if filters == []:
-                    return [[{'name': '', 'inverse': False}]]
-                else:
-                    return filters
+                return [[{'name': '', 'inverse': False}]] if filters == [] else filters
             if c == curses.KEY_UP and current[0] > 0:
                 current[0] -= 1
                 changed = True
@@ -4284,49 +4253,39 @@ def scale_time(seconds, type='short'):
     if seconds < 0:
         return ('?', 'some time')[type == 'long']
 
-    elif seconds < minute_in_sec:
+    if seconds < minute_in_sec:
         if type == 'long':
-            if seconds < 5:
-                return 'now'
-            else:
-                return "%d second%s" % (seconds, ('', 's')[seconds > 1])
-        else:
-            return "%ds" % seconds
+            return 'now' if seconds < 5 else "%d second%s" % (seconds, ('', 's')[seconds > 1])
+        return "%ds" % seconds
 
-    elif seconds < hour_in_sec:
+    if seconds < hour_in_sec:
         minutes = round(seconds / minute_in_sec, 0)
         if type == 'long':
             return "%d minute%s" % (minutes, ('', 's')[minutes > 1])
-        else:
-            return "%dm" % minutes
+        return "%dm" % minutes
 
-    elif seconds < day_in_sec:
+    if seconds < day_in_sec:
         hours = round(seconds / hour_in_sec, 0)
         if type == 'long':
             return "%d hour%s" % (hours, ('', 's')[hours > 1])
-        else:
-            return "%dh" % hours
+        return "%dh" % hours
 
-    elif seconds < month_in_sec:
+    if seconds < month_in_sec:
         days = round(seconds / day_in_sec, 0)
         if type == 'long':
             return "%d day%s" % (days, ('', 's')[days > 1])
-        else:
-            return "%dd" % days
+        return "%dd" % days
 
-    elif seconds < year_in_sec:
+    if seconds < year_in_sec:
         months = round(seconds / month_in_sec, 0)
         if type == 'long':
             return "%d month%s" % (months, ('', 's')[months > 1])
-        else:
-            return "%dM" % months
+        return "%dM" % months
 
-    else:
-        years = round(seconds / year_in_sec, 0)
-        if type == 'long':
-            return "%d year%s" % (years, ('', 's')[years > 1])
-        else:
-            return "%dy" % years
+    years = round(seconds / year_in_sec, 0)
+    if type == 'long':
+        return "%d year%s" % (years, ('', 's')[years > 1])
+    return "%dy" % years
 
 
 def timestamp(timestamp, time_format="%x %X", narrow=False):
@@ -4387,8 +4346,7 @@ def scale_bytes(bytes=0, type='short'):
 
     if type == 'long':
         return num2str(bytes) + ' [' + num2str(scaled_bytes) + unit + ']'
-    else:
-        return str(scaled_bytes) + unit
+    return str(scaled_bytes) + unit
 
 
 def homedir2tilde(path):
@@ -4469,13 +4427,11 @@ def len_columns(text):
 def num2str(num, num_format='%s'):
     if int(num) == -1:
         return '?'
-    elif int(num) == -2:
+    if int(num) == -2:
         return 'oo'
-    else:
-        if num > 999:
-            return (re.sub(r'(\d{3})', r'\g<1>,', str(num)[::-1])[::-1]).lstrip(',')
-        else:
-            return num_format % num
+    if num > 999:
+        return (re.sub(r'(\d{3})', r'\g<1>,', str(num)[::-1])[::-1]).lstrip(',')
+    return num_format % num
 
 
 def exit_prog(msg='', exitcode=0):
@@ -4516,10 +4472,7 @@ def explode_connection_string(connection):
 def create_url(host, port, path):
     url = '%s:%d/%s' % (host, port, path)
     url = url.replace('//', '/')   # double-/ doesn't work for some reason
-    if config.getboolean('Connection', 'ssl'):
-        return 'https://%s' % url
-    else:
-        return 'http://%s' % url
+    return 'https://%s' % url if config.getboolean('Connection', 'ssl') else 'http://%s' % url
 
 
 def read_netrc(file=os.environ['HOME'] + '/.netrc', hostname=None):
@@ -4618,23 +4571,22 @@ def parse_filter_str(s):
 def parse_single_filter_str(s):
     if s == '':
         return {'name': '', 'inverse': False}
-    else:
-        s = s.split('#=')
-        if len(s) == 0 or len(s) % 2 == 1:
-            return [[{'name': '', 'inverse': False}]]
-        ret = []
-        for i in range(0, len(s), 2):
-            f = {}
-            if s[i].startswith(':'):
-                f['inverse'] = True
-                s[i] = s[i][1:]
-            else:
-                f['inverse'] = False
-            f['name'] = s[i]
-            if s[i] in gconfig.FILTERS_WITH_PARAM:
-                f[s[i]] = s[i + 1]
-            ret.append(f)
-        return ret
+    s = s.split('#=')
+    if len(s) == 0 or len(s) % 2 == 1:
+        return [[{'name': '', 'inverse': False}]]
+    ret = []
+    for i in range(0, len(s), 2):
+        f = {}
+        if s[i].startswith(':'):
+            f['inverse'] = True
+            s[i] = s[i][1:]
+        else:
+            f['inverse'] = False
+        f['name'] = s[i]
+        if s[i] in gconfig.FILTERS_WITH_PARAM:
+            f[s[i]] = s[i + 1]
+        ret.append(f)
+    return ret
 
 
 def parse_config_profiles(config, orders):
