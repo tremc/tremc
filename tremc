@@ -66,6 +66,7 @@ class gconfig:
 
     FILTERS_WITH_PARAM = ['tracker', 'regex', 'location', 'label']
 
+
 try:
     import IPy
     gconfig.ipy = True  # extract ipv4 from ipv6 addresses
@@ -82,6 +83,7 @@ if gconfig.ipy:
     IPV6_RANGE_6TO4 = IPy.IP('2002::/16')
     IPV6_RANGE_TEREDO = IPy.IP('2001::/32')
     IPV4_ONES = 0xffffffff
+
 
 def country_code_by_addr_vany(geo_ip, geo_ip6, addr):
     if gconfig.geoip2:
@@ -104,9 +106,11 @@ def country_code_by_addr_vany(geo_ip, geo_ip6, addr):
     if hasattr(geo_ip6, 'country_code_by_addr_v6'):
         return geo_ip6.country_code_by_addr_v6(addr)
 
+
 def pdebug(*argv):
     if gconfig.DEBUG:
         print(time.time() - gconfig.STARTTIME, ": ", *argv, file=sys.stderr, flush=True)
+
 
 # define config defaults
 config = configparser.ConfigParser()
@@ -210,6 +214,7 @@ vmode_id = -1
 
 class TransmissionRequest(object):
     """Handle communication with Transmission server."""
+
     def __init__(self, host, port, path, method=None, tag=None, arguments=None):
         self.url = create_url(host, port, path)
         self.open_request = None
@@ -970,9 +975,6 @@ class Transmission(object):
 # End of Class Transmission
 
 
-
-
-
 # User Interface
 class Interface(object):
     TRACKER_ITEM_HEIGHT = 6
@@ -1128,7 +1130,6 @@ class Interface(object):
             curses.KEY_SRIGHT: lambda c: self.move_queue('npage')
         }
 
-
         # queue was implemmented in transmission 2.4
         if server.get_rpc_version() >= 14:
             self.sort_options.append(('queuePosition', '_Queue Position'))
@@ -1160,7 +1161,6 @@ class Interface(object):
             if not i in history:
                 history[i] = []
         return history
-
 
     def save_history(self, filename, history):
         if filename:
@@ -3585,7 +3585,6 @@ class Interface(object):
                 return -1
             self.update_torrent_list([win])
 
-
     def dialog_yesno(self, message, important=False, hard=None):
         if hard:
             important = True
@@ -4267,11 +4266,13 @@ class Interface(object):
 
 # End of class Interface
 
+
 def reverse_dns(cache, address):
     try:
         cache[address] = socket.gethostbyaddr(address)[0]
     except:
         cache[address] = '<not resolvable>'
+
 
 def percent(full, part):
     try:
@@ -4592,12 +4593,14 @@ def save_config(filepath, force=False):
             return 0
     return -1
 
+
 def filter2string(f):
     s = '~' if f['inverse'] else ''
     s += f['name']
     if f['name'] in gconfig.FILTERS_WITH_PARAM:
         s += '=' + f[f['name']]
     return s
+
 
 def parse_sort_str(sort_str, orders):
     sort_orders = []
@@ -4611,12 +4614,14 @@ def parse_sort_str(sort_str, orders):
         sort_orders = [{'name': 'name', 'reverse': False}]
     return sort_orders
 
+
 def parse_filter_str(s):
     s = s.split(" #& ")
     ret = []
     for t in s:
         ret.append(parse_single_filter_str(t))
     return ret
+
 
 def parse_single_filter_str(s):
     if s == '':
@@ -4638,6 +4643,7 @@ def parse_single_filter_str(s):
                 f[s[i]] = s[i + 1]
             ret.append(f)
         return ret
+
 
 def parse_config_profiles(config, orders):
     if not 'Profiles' in config:
@@ -4669,6 +4675,7 @@ def xdg_config_home(*args):
         p = os.path.expanduser('~/.config')
 
     return os.path.join(p, *args)
+
 
 if __name__ == '__main__':
     # command line parameters
