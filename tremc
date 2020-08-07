@@ -61,7 +61,7 @@ class gconfig:
     # error codes
     class errors(enum.IntEnum):
         CONNECTION_ERROR = 1
-        JSON_ERROR       = 2
+        JSON_ERROR = 2
         CONFIGFILE_ERROR = 3
 
     FILTERS_WITH_PARAM = ['tracker', 'regex', 'location', 'label']
@@ -128,26 +128,26 @@ config.set('Misc', 'torrentname_is_progressbar', 'True')
 config.set('Misc', 'file_viewer', 'xdg-open %%s')
 config.set('Misc', 'file_open_in_terminal', 'True')
 config.add_section('Colors')
-config.set('Colors', 'title_seed',       'bg:green,fg:black')
-config.set('Colors', 'title_download',   'bg:blue,fg:black')
-config.set('Colors', 'title_idle',       'bg:cyan,fg:black')
-config.set('Colors', 'title_verify',     'bg:magenta,fg:black')
-config.set('Colors', 'title_paused',     'bg:black,fg:white')
-config.set('Colors', 'title_error',      'bg:red,fg:white')
-config.set('Colors', 'title_selected',   'bg:white,fg:black')
-config.set('Colors', 'download_rate',    'bg:black,fg:blue')
-config.set('Colors', 'upload_rate',      'bg:black,fg:red')
-config.set('Colors', 'eta+ratio',        'bg:black,fg:white')
-config.set('Colors', 'filter_status',    'bg:red,fg:black')
-config.set('Colors', 'filter_status2',   'bg:blue,fg:black')
-config.set('Colors', 'dialog',           'bg:black,fg:white')
+config.set('Colors', 'title_seed', 'bg:green,fg:black')
+config.set('Colors', 'title_download', 'bg:blue,fg:black')
+config.set('Colors', 'title_idle', 'bg:cyan,fg:black')
+config.set('Colors', 'title_verify', 'bg:magenta,fg:black')
+config.set('Colors', 'title_paused', 'bg:black,fg:white')
+config.set('Colors', 'title_error', 'bg:red,fg:white')
+config.set('Colors', 'title_selected', 'bg:white,fg:black')
+config.set('Colors', 'download_rate', 'bg:black,fg:blue')
+config.set('Colors', 'upload_rate', 'bg:black,fg:red')
+config.set('Colors', 'eta+ratio', 'bg:black,fg:white')
+config.set('Colors', 'filter_status', 'bg:red,fg:black')
+config.set('Colors', 'filter_status2', 'bg:blue,fg:black')
+config.set('Colors', 'dialog', 'bg:black,fg:white')
 config.set('Colors', 'dialog_important', 'bg:red,fg:black')
-config.set('Colors', 'button',           'bg:white,fg:black')
-config.set('Colors', 'button_focused',   'bg:black,fg:white')
-config.set('Colors', 'file_prio_high',   'bg:red,fg:black')
+config.set('Colors', 'button', 'bg:white,fg:black')
+config.set('Colors', 'button_focused', 'bg:black,fg:white')
+config.set('Colors', 'file_prio_high', 'bg:red,fg:black')
 config.set('Colors', 'file_prio_normal', 'bg:white,fg:black')
-config.set('Colors', 'file_prio_low',    'bg:yellow,fg:black')
-config.set('Colors', 'file_prio_off',    'bg:blue,fg:black')
+config.set('Colors', 'file_prio_low', 'bg:yellow,fg:black')
+config.set('Colors', 'file_prio_off', 'bg:blue,fg:black')
 
 
 class ColorManager(object):
@@ -211,9 +211,9 @@ vmode_id = -1
 class TransmissionRequest(object):
     """Handle communication with Transmission server."""
     def __init__(self, host, port, path, method=None, tag=None, arguments=None):
-        self.url           = create_url(host, port, path)
-        self.open_request  = None
-        self.last_update   = 0
+        self.url = create_url(host, port, path)
+        self.open_request = None
+        self.last_update = 0
         if method and tag:
             self.set_request_data(method, tag, arguments)
 
@@ -278,19 +278,19 @@ class TransmissionRequest(object):
 
 class Transmission(object):
     """Higher level of data exchange"""
-    STATUS_STOPPED       = 0   # Torrent is stopped
-    STATUS_CHECK_WAIT    = 1   # Queued to check files
-    STATUS_CHECK         = 2   # Checking files
+    STATUS_STOPPED = 0   # Torrent is stopped
+    STATUS_CHECK_WAIT = 1   # Queued to check files
+    STATUS_CHECK = 2   # Checking files
     STATUS_DOWNLOAD_WAIT = 3   # Queued to download
-    STATUS_DOWNLOAD      = 4   # Downloading
-    STATUS_SEED_WAIT     = 5   # Queued to seed
-    STATUS_SEED          = 6   # Seeding
+    STATUS_DOWNLOAD = 4   # Downloading
+    STATUS_SEED_WAIT = 5   # Queued to seed
+    STATUS_SEED = 6   # Seeding
 
-    TAG_TORRENT_LIST    = 7
+    TAG_TORRENT_LIST = 7
     TAG_TORRENT_DETAILS = 77
-    TAG_SESSION_STATS   = 21
-    TAG_SESSION_GET     = 22
-    TAG_SESSION_CLOSE   = 23
+    TAG_SESSION_STATS = 21
+    TAG_SESSION_GET = 22
+    TAG_SESSION_CLOSE = 23
 
     LIST_FIELDS = ['id', 'name', 'downloadDir', 'status', 'trackerStats', 'desiredAvailable',
                    'rateDownload', 'rateUpload', 'eta', 'uploadRatio',
@@ -353,13 +353,13 @@ class Transmission(object):
 
         # setup compatibility to Transmission <2.40
         if self.rpc_version < 14:
-            Transmission.STATUS_CHECK_WAIT    = 1 << 0
-            Transmission.STATUS_CHECK         = 1 << 1
+            Transmission.STATUS_CHECK_WAIT = 1 << 0
+            Transmission.STATUS_CHECK = 1 << 1
             Transmission.STATUS_DOWNLOAD_WAIT = 1 << 2
-            Transmission.STATUS_DOWNLOAD      = 1 << 2
-            Transmission.STATUS_SEED_WAIT     = 1 << 3
-            Transmission.STATUS_SEED          = 1 << 3
-            Transmission.STATUS_STOPPED       = 1 << 4
+            Transmission.STATUS_DOWNLOAD = 1 << 2
+            Transmission.STATUS_SEED_WAIT = 1 << 3
+            Transmission.STATUS_SEED = 1 << 3
+            Transmission.STATUS_STOPPED = 1 << 4
 
         # Queue was implemented in Transmission v2.4
         if self.rpc_version >= 14:
@@ -525,15 +525,15 @@ class Transmission(object):
 
                     this_peer['download_speed'] = \
                         norm.add(peerid + ':download_speed', downloaded / time_diff, 10)
-                    this_peer['time_left']   = download_left / this_peer['download_speed']
+                    this_peer['time_left'] = download_left / this_peer['download_speed']
                     this_peer['last_update'] = this_time
 
                 # infrequent progress updates lead to increasingly inaccurate
                 # estimates, so we go back to <guessing>
                 elif time_diff > 60:
                     this_peer['download_speed'] = 0
-                    this_peer['time_left']      = 0
-                    this_peer['last_update']    = time.time()
+                    this_peer['time_left'] = 0
+                    this_peer['last_update'] = time.time()
                 this_peer['last_progress'] = peer['progress']  # remember progress
             this_torrent['peers'][index].update(this_peer)
 
@@ -615,19 +615,19 @@ class Transmission(object):
     def set_rate_limit(self, direction, new_limit, torrent_id=-1):
         data = dict()
         if new_limit <= -1:
-            new_limit     = None
+            new_limit = None
             limit_enabled = False
         else:
             limit_enabled = True
 
         if torrent_id == -1:
             type = 'session-set'
-            data['speed-limit-' + direction]            = new_limit
+            data['speed-limit-' + direction] = new_limit
             data['speed-limit-' + direction + '-enabled'] = limit_enabled
         else:
             type = 'torrent-set'
             data['ids'] = torrent_id
-            data[direction + 'loadLimit']   = new_limit
+            data[direction + 'loadLimit'] = new_limit
             data[direction + 'loadLimited'] = limit_enabled
 
         request = TransmissionRequest(self.host, self.port, self.path, type, 1, data)
@@ -647,7 +647,7 @@ class Transmission(object):
         else:
             return
 
-        data['ids']            = ids
+        data['ids'] = ids
         data['seedRatioLimit'] = ratio
         data['seedRatioMode'] = mode
         request = TransmissionRequest(self.host, self.port, self.path, 'torrent-set', 1, data)
@@ -700,7 +700,7 @@ class Transmission(object):
     def add_torrent(self, location, paused=False):
         args = {'paused': paused}
         try:
-            with  open(location, 'rb') as fp:
+            with open(location, 'rb') as fp:
                 args['metainfo'] = base64.b64encode(fp.read()).decode()
         # If the file doesnt exist or we cant open it, then it is either a url or needs to
         # be open by the server
@@ -797,8 +797,8 @@ class Transmission(object):
         return response['result'] if response['result'] != 'success' else ''
 
     def remove_torrent_tracker(self, id, tracker):
-        data = { 'ids' : [id],
-                 'trackerRemove' : [tracker] }
+        data = {'ids': [id],
+                 'trackerRemove': [tracker]}
         request = TransmissionRequest(self.host, self.port, self.path, 'torrent-set', 1, data)
         request.send_request()
         response = request.get_response()
@@ -984,7 +984,7 @@ class Interface(object):
             ('status', 'S_tatus'), ('uploadedEver', 'Up_loaded'),
             ('rateUpload', '_Upload Speed'), ('rateDownload', '_Download Speed'),
             ('uploadRatio', '_Ratio'), ('peersConnected', 'P_eers'),
-            ('downloadDir', 'L_ocation'), ('mainTrackerDomain', 'Trac_ker') ]
+            ('downloadDir', 'L_ocation'), ('mainTrackerDomain', 'Trac_ker')]
         self.file_sort_options = [
             ('name', '_Name'), ('progress', '_Progress'),
             ('length', 'Si_ze'), ('bytesCompleted', '_Downloaded'),
@@ -993,139 +993,139 @@ class Interface(object):
             ]
 
         self.filters = [[{}]]
-        self.filters[0][0]['name']    = config.get('Filtering', 'filter', fallback='')
+        self.filters[0][0]['name'] = config.get('Filtering', 'filter', fallback='')
         self.filters[0][0]['inverse'] = config.getboolean('Filtering', 'invert', fallback=False)
-        self.sort_orders    = parse_sort_str(config.get('Sorting', 'order', fallback=''), [x[0] for x in self.sort_options])
-        self.file_sort_key  = 'name'
+        self.sort_orders = parse_sort_str(config.get('Sorting', 'order', fallback=''), [x[0] for x in self.sort_options])
+        self.file_sort_key = 'name'
         self.file_sort_reverse = False
-        self.filters[0][0]['regex']   = ''
-        self.filters[0][0]['tracker']   = ''
-        self.filters[0][0]['location']  = ''
+        self.filters[0][0]['regex'] = ''
+        self.filters[0][0]['tracker'] = ''
+        self.filters[0][0]['location'] = ''
         self.invert_filters = False
         self.histories = self.load_history(history_file)
         self.tlist_item_height = config.getint('Misc', 'lines_per_torrent')
         self.torrentname_is_progressbar = config.getboolean('Misc', 'torrentname_is_progressbar')
-        self.file_viewer    = config.get('Misc', 'file_viewer')
+        self.file_viewer = config.get('Misc', 'file_viewer')
         self.file_open_in_terminal = config.getboolean('Misc', 'file_open_in_terminal')
-        self.profiles       = parse_config_profiles(config, [x[0] for x in self.sort_options])
+        self.profiles = parse_config_profiles(config, [x[0] for x in self.sort_options])
         if cmd_args.profile in self.profiles:
             self.apply_profile(self.profiles[cmd_args.profile])
 
-        self.rdns             = config.getboolean('Misc', 'rdns', fallback=False) ^ bool(cmd_args.rdns)
-        self.torrents         = server.get_torrent_list(self.sort_orders)
-        self.stats            = server.get_global_stats()
-        self.torrent_details  = []
+        self.rdns = config.getboolean('Misc', 'rdns', fallback=False) ^ bool(cmd_args.rdns)
+        self.torrents = server.get_torrent_list(self.sort_orders)
+        self.stats = server.get_global_stats()
+        self.torrent_details = []
         self.selected_torrent = -1  # changes to >-1 when focus >-1 & user hits return
         self.highlight_dialog = False
         self.search_focus = 0   # like self.focus but for searches in torrent list
-        self.focused_id   = -1  # the id (provided by Transmission) of self.torrents[self.focus]
-        self.focus        = -1  # -1: nothing focused; 0: top of list; <# of torrents>-1: bottom of list
-        self.selected     = set()
-        self.scrollpos    = 0   # start of torrentlist
-        self.torrents_per_page  = 0 # will be set by manage_layout()
+        self.focused_id = -1  # the id (provided by Transmission) of self.torrents[self.focus]
+        self.focus = -1  # -1: nothing focused; 0: top of list; <# of torrents>-1: bottom of list
+        self.selected = set()
+        self.scrollpos = 0   # start of torrentlist
+        self.torrents_per_page = 0 # will be set by manage_layout()
         self.rateDownload_width = self.rateUpload_width = len(scale_bytes())
 
         self.details_category_focus = 0  # overview/files/peers/tracker in details
-        self.focus_detaillist       = -1 # same as focus but for details
-        self.selected_files         = [] # marked files in details
-        self.file_index_map         = {} # Maps local torrent's file indices to server file indices
-        self.scrollpos_detaillist   = [0] * 5  # same as scrollpos but for details
-        self.max_overview_scroll    = 0
-        self.exit_now               = False
+        self.focus_detaillist = -1 # same as focus but for details
+        self.selected_files = [] # marked files in details
+        self.file_index_map = {} # Maps local torrent's file indices to server file indices
+        self.scrollpos_detaillist = [0] * 5  # same as scrollpos but for details
+        self.max_overview_scroll = 0
+        self.exit_now = False
 
         self.keybindings = {
-            ord('?'):               self.call_list_key_bindings,
-            curses.KEY_F1:          self.call_list_key_bindings,
-            27:                     self.go_back_or_unfocus,
-            curses.KEY_BREAK:       self.go_back_or_unfocus,
-            12:                     self.go_back_or_unfocus,
-            curses.KEY_BACKSPACE:   self.leave_details,
-            ord('q'):               self.go_back_or_quit,
+            ord('?'): self.call_list_key_bindings,
+            curses.KEY_F1: self.call_list_key_bindings,
+            27: self.go_back_or_unfocus,
+            curses.KEY_BREAK: self.go_back_or_unfocus,
+            12: self.go_back_or_unfocus,
+            curses.KEY_BACKSPACE: self.leave_details,
+            ord('q'): self.go_back_or_quit,
             curses.ascii.ctrl(ord('w')): self.quit_now,
-            ord('o'):               self.o_key,
-            ord('\n'):              self.enter_key,
-            curses.KEY_RIGHT:       self.right_key,
-            ord('l'):               self.l_key,
-            ord('i'):               self.invert_selection,
-            ord('s'):               self.show_sort_order_menu,
-            ord('S'):               self.show_stats,
-            ord('f'):               self.f_key,
-            ord('F'):               self.rename_torrent_selected_file,
-            ord('u'):               self.global_upload,
-            ord('d'):               self.global_download,
-            ord('U'):               self.torrent_upload,
-            ord('D'):               self.torrent_download,
-            ord('L'):               self.seed_ratio,
-            ord('t'):               self.t_key,
-            ord('T'):               self.add_filter,
-            ord('I'):               self.edit_filters,
-            ord('~'):               self.invert_filters_action,
-            ord('*'):               self.honors_limits,
-            ord('+'):               self.bandwidth_priority,
-            ord('-'):               self.bandwidth_priority,
-            ord('J'):               self.J_key,
-            ord('K'):               self.K_key,
-            ord('p'):               self.pause_unpause_torrent,
-            ord('P'):               self.pause_unpause_all_torrent,
-            ord('N'):               self.start_now_torrent,
-            ord('v'):               self.verify_torrent,
-            ord('y'):               self.verify_torrent,
-            ord('V'):               self.V_key,
-            ord('r'):               self.r_key,
-            curses.KEY_DC:          self.r_key,
-            ord('R'):               self.remove_torrent_local_data,
-            curses.KEY_SDC:         self.remove_torrent_local_data,
+            ord('o'): self.o_key,
+            ord('\n'): self.enter_key,
+            curses.KEY_RIGHT: self.right_key,
+            ord('l'): self.l_key,
+            ord('i'): self.invert_selection,
+            ord('s'): self.show_sort_order_menu,
+            ord('S'): self.show_stats,
+            ord('f'): self.f_key,
+            ord('F'): self.rename_torrent_selected_file,
+            ord('u'): self.global_upload,
+            ord('d'): self.global_download,
+            ord('U'): self.torrent_upload,
+            ord('D'): self.torrent_download,
+            ord('L'): self.seed_ratio,
+            ord('t'): self.t_key,
+            ord('T'): self.add_filter,
+            ord('I'): self.edit_filters,
+            ord('~'): self.invert_filters_action,
+            ord('*'): self.honors_limits,
+            ord('+'): self.bandwidth_priority,
+            ord('-'): self.bandwidth_priority,
+            ord('J'): self.J_key,
+            ord('K'): self.K_key,
+            ord('p'): self.pause_unpause_torrent,
+            ord('P'): self.pause_unpause_all_torrent,
+            ord('N'): self.start_now_torrent,
+            ord('v'): self.verify_torrent,
+            ord('y'): self.verify_torrent,
+            ord('V'): self.V_key,
+            ord('r'): self.r_key,
+            curses.KEY_DC: self.r_key,
+            ord('R'): self.remove_torrent_local_data,
+            curses.KEY_SDC: self.remove_torrent_local_data,
             curses.ascii.ctrl(ord('r')): self.remove_selected_torrents,
-            curses.KEY_UP:          self.movement_keys,
-            ord('k'):               self.movement_keys,
-            curses.KEY_DOWN:        self.movement_keys,
-            ord('j'):               self.movement_keys,
-            curses.KEY_PPAGE:       self.movement_keys,
-            curses.KEY_NPAGE:       self.movement_keys,
-            curses.KEY_HOME:        self.movement_keys,
-            curses.KEY_END:         self.movement_keys,
-            ord('g'):               self.movement_keys,
-            ord('G'):               self.movement_keys,
+            curses.KEY_UP: self.movement_keys,
+            ord('k'): self.movement_keys,
+            curses.KEY_DOWN: self.movement_keys,
+            ord('j'): self.movement_keys,
+            curses.KEY_PPAGE: self.movement_keys,
+            curses.KEY_NPAGE: self.movement_keys,
+            curses.KEY_HOME: self.movement_keys,
+            curses.KEY_END: self.movement_keys,
+            ord('g'): self.movement_keys,
+            ord('G'): self.movement_keys,
             curses.ascii.ctrl(ord('f')): self.movement_keys,
             curses.ascii.ctrl(ord('b')): self.movement_keys,
             curses.ascii.ctrl(ord('n')): self.movement_keys,
             curses.ascii.ctrl(ord('p')): self.movement_keys,
-            ord("\t"):              self.move_in_details,
-            curses.KEY_BTAB:        self.move_in_details,
-            ord('e'):               self.move_in_details,
-            ord('c'):               self.move_in_details,
-            ord('C'):               self.toggle_compact_torrentlist,
-            ord('h'):               self.file_pritority_or_switch_details,
-            curses.KEY_LEFT:        self.file_pritority_or_switch_details,
-            ord(' '):               self.space_key,
+            ord("\t"): self.move_in_details,
+            curses.KEY_BTAB: self.move_in_details,
+            ord('e'): self.move_in_details,
+            ord('c'): self.move_in_details,
+            ord('C'): self.toggle_compact_torrentlist,
+            ord('h'): self.file_pritority_or_switch_details,
+            curses.KEY_LEFT: self.file_pritority_or_switch_details,
+            ord(' '): self.space_key,
             curses.ascii.ctrl(ord('a')): self.add_torrent_paused,
-            ord('a'):               self.a_key,
-            ord('A'):               self.A_key,
-            ord('m'):               self.move_torrent,
-            ord('M'):               self.copy_magnet_link,
-            ord('n'):               self.reannounce_torrent,
-            ord('/'):               self.search,
-            ord('.'):               self.search,
-            ord(','):               self.select_search,
-            ord('<'):               self.select_search,
-            ord('b'):               self.add_label,
-            ord('B'):               self.set_labels,
+            ord('a'): self.a_key,
+            ord('A'): self.A_key,
+            ord('m'): self.move_torrent,
+            ord('M'): self.copy_magnet_link,
+            ord('n'): self.reannounce_torrent,
+            ord('/'): self.search,
+            ord('.'): self.search,
+            ord(','): self.select_search,
+            ord('<'): self.select_search,
+            ord('b'): self.add_label,
+            ord('B'): self.set_labels,
             curses.ascii.ctrl(ord('l')): self.remove_labels,
-            ord('0'):               self.profile_selected,
-            ord('1'):               self.profile_selected,
-            ord('2'):               self.profile_selected,
-            ord('3'):               self.profile_selected,
-            ord('4'):               self.profile_selected,
-            ord('5'):               self.profile_selected,
-            ord('6'):               self.profile_selected,
-            ord('7'):               self.profile_selected,
-            ord('8'):               self.profile_selected,
-            ord('9'):               self.profile_selected,
-            ord('X'):               self.daemon_quit,
-            curses.KEY_SEND:        lambda c: self.move_queue('bottom'),
-            curses.KEY_SHOME:       lambda c: self.move_queue('top'),
-            curses.KEY_SLEFT:       lambda c: self.move_queue('ppage'),
-            curses.KEY_SRIGHT:      lambda c: self.move_queue('npage')
+            ord('0'): self.profile_selected,
+            ord('1'): self.profile_selected,
+            ord('2'): self.profile_selected,
+            ord('3'): self.profile_selected,
+            ord('4'): self.profile_selected,
+            ord('5'): self.profile_selected,
+            ord('6'): self.profile_selected,
+            ord('7'): self.profile_selected,
+            ord('8'): self.profile_selected,
+            ord('9'): self.profile_selected,
+            ord('X'): self.daemon_quit,
+            curses.KEY_SEND: lambda c: self.move_queue('bottom'),
+            curses.KEY_SHOME: lambda c: self.move_queue('top'),
+            curses.KEY_SLEFT: lambda c: self.move_queue('ppage'),
+            curses.KEY_SRIGHT: lambda c: self.move_queue('npage')
         }
 
 
@@ -1175,9 +1175,9 @@ class Interface(object):
                     pass
 
     def apply_profile(self, profile):
-        self.sort_orders  =  [s.copy() for s in profile['sort']]
+        self.sort_orders = [s.copy() for s in profile['sort']]
         # copy filter array from profile
-        self.filters  = [[f.copy() for f in l] for l in profile['filter']]
+        self.filters = [[f.copy() for f in l] for l in profile['filter']]
         self.invert_filters = False
 
     def profile_selected(self, p):
@@ -1222,7 +1222,7 @@ class Interface(object):
                 self.screen.addstr(1, 0, "Resize terminal or")
                 self.screen.addstr(2, 0, "Press 'q' to  quit")
                 c = self.screen.getch()
-                if c in [ 27, ord('q'), curses.ascii.ctrl(ord('w'))]:
+                if c in [27, ord('q'), curses.ascii.ctrl(ord('w'))]:
                     exit_prog()
             else:
                 break
@@ -1245,9 +1245,9 @@ class Interface(object):
 
         elif self.torrents:
             self.visible_torrents_start = self.scrollpos / self.tlist_item_height
-            self.visible_torrents = self.torrents[int(self.visible_torrents_start) : int(self.scrollpos / self.tlist_item_height + self.torrents_per_page + 1)]
+            self.visible_torrents = self.torrents[int(self.visible_torrents_start): int(self.scrollpos / self.tlist_item_height + self.torrents_per_page + 1)]
             self.rateDownload_width = self.get_rateDownload_width(self.visible_torrents)
-            self.rateUpload_width   = self.get_rateUpload_width(self.visible_torrents)
+            self.rateUpload_width = self.get_rateUpload_width(self.visible_torrents)
             self.torrent_title_width = self.width - self.rateUpload_width - 2
             # show downloading column only if any downloading torrents are visible
             if [x for x in self.visible_torrents if x['status'] == Transmission.STATUS_DOWNLOAD]:
@@ -1308,27 +1308,27 @@ class Interface(object):
 
     def go_back_or_unfocus(self, c):
         if self.focus_detaillist > -1:   # unfocus and deselect file
-            self.focus_detaillist     = -1
+            self.focus_detaillist = -1
             self.scrollpos_detaillist = [0] * 5
-            self.selected_files       = []
+            self.selected_files = []
         elif self.selected_torrent > -1: # return from details
             self.details_category_focus = 0
             self.selected_torrent = -1
-            self.selected_files   = []
+            self.selected_files = []
         else:
             if self.focus > -1:
                 self.scrollpos = 0    # unfocus main list
-                self.focus     = -1
+                self.focus = -1
             elif self.filters[0][0]['name']:
                 self.filters[0][0]['name'] = '' # reset filter
 
     def leave_details(self, c):
         if self.selected_torrent > -1:
             server.set_torrent_details_id(-1)
-            self.selected_torrent       = -1
+            self.selected_torrent = -1
             self.details_category_focus = 0
-            self.scrollpos_detaillist   = [0] * 5
-            self.selected_files         = []
+            self.scrollpos_detaillist = [0] * 5
+            self.selected_files = []
 
     def quit_now(self, c):
         self.exit_now = True
@@ -1338,11 +1338,11 @@ class Interface(object):
             self.exit_now = True
         else: # return to list view
             server.set_torrent_details_id(-1)
-            self.selected_torrent       = -1
+            self.selected_torrent = -1
             self.details_category_focus = 0
-            self.focus_detaillist       = -1
-            self.scrollpos_detaillist   = [0] * 5
-            self.selected_files         = []
+            self.focus_detaillist = -1
+            self.scrollpos_detaillist = [0] * 5
+            self.selected_files = []
 
     def space_key(self, c):
         # File list
@@ -1359,7 +1359,7 @@ class Interface(object):
         # Do nothing in other detail tabs
         elif self.selected_torrent > -1:
             return
-        if  self.selected_torrent == -1:
+        if self.selected_torrent == -1:
             self.select_unselect_torrent(invert=True)
 
     def A_key(self, c):
@@ -1369,7 +1369,7 @@ class Interface(object):
         # Do nothing in other detail tabs
         elif self.selected_torrent > -1:
             return
-        if  self.selected_torrent == -1:
+        if self.selected_torrent == -1:
             self.select_unselect_torrent(all=True)
 
     def a_key(self, c):
@@ -1541,12 +1541,12 @@ class Interface(object):
             else:
                 self.win_message(win, height, width, message)
             c = self.wingetch(win)
-            if c in [ 27, ord('q'), curses.ascii.ctrl(ord('w'))]:
+            if c in [27, ord('q'), curses.ascii.ctrl(ord('w'))]:
                 return -1
             self.update_torrent_list([win])
 
     def choose_profile(self):
-        profiles =  []
+        profiles = []
         keys = set({})
         for p in self.profiles:
             if p[0] in keys:
@@ -1625,9 +1625,9 @@ class Interface(object):
 
     def set_filter(self, c):
         prompt = ('Show only', 'Filter all')[self.filters[0][0]['inverse']]
-        new_filter = self.filter_menu( self.filters[0][0], prompt=prompt)
+        new_filter = self.filter_menu(self.filters[0][0], prompt=prompt)
         if new_filter:
-            self.filters = [[ new_filter ]]
+            self.filters = [[new_filter]]
             self.invert_filters = False
 
     def invert_filters_action(self, c):
@@ -1635,7 +1635,7 @@ class Interface(object):
             self.invert_filters = not self.invert_filters
 
     def add_filter(self, c):
-        new_filter = self.filter_menu( prompt="Add filter:")
+        new_filter = self.filter_menu(prompt="Add filter:")
         if new_filter:
             self.filters[0].append(new_filter)
 
@@ -1678,7 +1678,7 @@ class Interface(object):
     def get_focused(self, ids):
         if ids == []:
             return (None, "")
-        focused = self.torrents[self.focus] if ( self.focus > -1  and self.torrents[self.focus]['id'] in ids ) \
+        focused = self.torrents[self.focus] if (self.focus > -1 and self.torrents[self.focus]['id'] in ids) \
                         else server.get_torrent_by_id(ids[0])
         extraline = "\nand %d more" % (len(ids) - 1) if len(ids) > 1 else ""
         return (focused, extraline)
@@ -1703,7 +1703,7 @@ class Interface(object):
     def seed_ratio(self, c):
         ids = self.selected_ids()
         if ids:
-            focused = self.torrents[self.focus] if ( self.focus > -1  and self.torrents[self.focus]['id'] in ids ) \
+            focused = self.torrents[self.focus] if (self.focus > -1 and self.torrents[self.focus]['id'] in ids) \
                         else server.get_torrent_by_id(ids[0])
             if focused['seedRatioMode'] == 0:   # Use global settings
                 current_limit = ''
@@ -1768,7 +1768,7 @@ class Interface(object):
 
     def pause_unpause_all_torrent(self, c):
         if len(self.torrents) > 0:
-            focused_torrent = self.torrents[ max(0, self.focus) ]
+            focused_torrent = self.torrents[max(0, self.focus)]
             if focused_torrent['status'] == Transmission.STATUS_STOPPED:
                 server.start_torrents([t['id'] for t in self.torrents])
             else:
@@ -1777,7 +1777,7 @@ class Interface(object):
     def verify_torrent(self, c):
         ids = self.selected_ids()
         ids = [i for i in ids if not server.get_torrent_by_id(i)['status'] in
-                        [ Transmission.STATUS_CHECK, Transmission.STATUS_CHECK_WAIT]]
+                        [Transmission.STATUS_CHECK, Transmission.STATUS_CHECK_WAIT]]
         if ids:
                 server.verify_torrent(ids)
 
@@ -1955,8 +1955,8 @@ class Interface(object):
                     self.scrollpos_detaillist[self.details_category_focus] = \
                         max(self.scrollpos_detaillist[self.details_category_focus] - lines_per_page - ppage, 0)
                 elif c == curses.KEY_NPAGE or c == curses.ascii.ctrl(ord('f')):
-                        self.scrollpos_detaillist[self.details_category_focus] = min( list_len - 1,
-                            self.scrollpos_detaillist[self.details_category_focus] + lines_per_page )
+                        self.scrollpos_detaillist[self.details_category_focus] = min(list_len - 1,
+                            self.scrollpos_detaillist[self.details_category_focus] + lines_per_page)
                 elif c == curses.KEY_HOME or c == ord('g'):
                     self.scrollpos_detaillist[self.details_category_focus] = 0
                 elif c == curses.KEY_END or c == ord('G'):
@@ -2058,7 +2058,7 @@ class Interface(object):
                 else:
                     self.selected_files = list(range(0, len(self.torrent_details['files'])))
             elif c == ord('i'):
-                self.selected_files = [ f for f in range(0, len(self.torrent_details['files'])) if not f in self.selected_files ]
+                self.selected_files = [f for f in range(0, len(self.torrent_details['files'])) if not f in self.selected_files]
             elif c == ord('V'):
                 global vmode_id
                 if self.selected_files:
@@ -2169,7 +2169,7 @@ class Interface(object):
             focused, extraline = self.get_focused(ids)
             msg = ('Set labels of "%s"' % focused['name']) + extraline + '\nto:'
             labels_str = self.dialog_input_text(msg, '')
-            labels = [ s.strip() for s in labels_str.split(',')]
+            labels = [s.strip() for s in labels_str.split(',')]
             if labels:
                 server.set_labels(ids, labels)
 
@@ -2197,9 +2197,9 @@ class Interface(object):
         if ids:
             focused, extraline = self.get_focused(ids)
             location = homedir2tilde(self.torrents[self.focus]['downloadDir'])
-            msg = ('Move "%s"' % focused['name']) + extraline +  '\nfrom %s to' % location
+            msg = ('Move "%s"' % focused['name']) + extraline + '\nfrom %s to' % location
             path = self.dialog_input_text(msg, location, tab_complete='dirs',
-                        history=self.histories['location'], history_max=10, fixed_history=list(server.locations) )
+                        history=self.histories['location'], history_max=10, fixed_history=list(server.locations))
             if path:
                 server.move_torrent(ids, tilde2homedir(path))
 
@@ -2235,42 +2235,42 @@ class Interface(object):
 
     def filter_torrent(self, t, filter):
         if filter['name'] == 'downloading':
-            return filter['inverse'] != ( t['rateDownload'] > 0 )
+            return filter['inverse'] != (t['rateDownload'] > 0)
         elif filter['name'] == 'uploading':
-            return filter['inverse'] != ( t['rateUpload'] > 0 )
+            return filter['inverse'] != (t['rateUpload'] > 0)
         elif filter['name'] == 'paused':
-            return filter['inverse'] != ( t['status'] == Transmission.STATUS_STOPPED )
+            return filter['inverse'] != (t['status'] == Transmission.STATUS_STOPPED)
         elif filter['name'] == 'seeding':
-            return filter['inverse'] != ( t['status'] == Transmission.STATUS_SEED or t['status'] == Transmission.STATUS_SEED_WAIT )
+            return filter['inverse'] != (t['status'] == Transmission.STATUS_SEED or t['status'] == Transmission.STATUS_SEED_WAIT)
         elif filter['name'] == 'incomplete':
-            return filter['inverse'] != ( t['percentDone'] < 100 )
+            return filter['inverse'] != (t['percentDone'] < 100)
         elif filter['name'] == 'private':
             return filter['inverse'] != t['isPrivate']
         elif filter['name'] == 'active':
-            return filter['inverse'] != ( t['peersGettingFromUs'] > 0 or t['peersSendingToUs'] > 0 or t['status'] == Transmission.STATUS_CHECK )
+            return filter['inverse'] != (t['peersGettingFromUs'] > 0 or t['peersSendingToUs'] > 0 or t['status'] == Transmission.STATUS_CHECK)
         elif filter['name'] == 'verifying':
-            return filter['inverse'] != ( t['status'] == Transmission.STATUS_CHECK or t['status'] == Transmission.STATUS_CHECK_WAIT )
+            return filter['inverse'] != (t['status'] == Transmission.STATUS_CHECK or t['status'] == Transmission.STATUS_CHECK_WAIT)
         elif filter['name'] == 'isolated':
             return filter['inverse'] != t['isIsolated']
         elif filter['name'] == 'honors':
             return filter['inverse'] != t['honorsSessionLimits']
         elif filter['name'] == 'selected':
-            return filter['inverse'] != ( t['id'] in self.selected )
+            return filter['inverse'] != (t['id'] in self.selected)
         elif filter['name'] == 'tracker':
-            return filter['inverse'] != ( t['mainTrackerDomain'] == filter['tracker'] )
+            return filter['inverse'] != (t['mainTrackerDomain'] == filter['tracker'])
         elif filter['name'] == 'regex':
             return filter['inverse'] != bool(re.search(filter['regex'], t['name'], flags=re.I))
         elif filter['name'] == 'location':
-            return filter['inverse'] != ( homedir2tilde(t['downloadDir']) == filter['location'] )
+            return filter['inverse'] != (homedir2tilde(t['downloadDir']) == filter['location'])
         elif filter['name'] == 'label':
-            return filter['inverse'] != ( filter['label'] in t['labels'] )
+            return filter['inverse'] != (filter['label'] in t['labels'])
 
         return True # Unknown filters does not filter anything
 
     def filter_torrent_list(self):
         unfiltered = self.torrents
 
-        self.torrents = [t for t in self.torrents if any ( all( self.filter_torrent(t, f) for f in fs ) for fs in self.filters ) != self.invert_filters ]
+        self.torrents = [t for t in self.torrents if any (all(self.filter_torrent(t, f) for f in fs) for fs in self.filters) != self.invert_filters]
         # Also filter selected:
         self.selected.intersection_update(set([t['id'] for t in self.torrents]))
 
@@ -2549,7 +2549,7 @@ class Interface(object):
         self.draw_torrentlist_item(self.torrent_details, False, False, 0)
 
         # divider + menu
-        menu_items = ['_Overview', "_Files", 'P_eers', '_Trackers', '_Chunks' ]
+        menu_items = ['_Overview', "_Files", 'P_eers', '_Trackers', '_Chunks']
         xpos = max(0, int((self.width - sum([len(x) for x in menu_items]) - len(menu_items)) / 2))
         for item in menu_items:
             self.pad.move(3, xpos)
@@ -2583,7 +2583,7 @@ class Interface(object):
     def draw_details_overview(self, ypos):
         t = self.torrent_details
         if self.narrow:
-            strings = [ 'C: ', 'D: ', 'U: ',
+            strings = ['C: ', 'D: ', 'U: ',
                       '<waiting for %d peers, %d done>',
                       'Swarm: ',
                       '<no downloading peers>',
@@ -2595,7 +2595,7 @@ class Interface(object):
                       'Private torrent',
                     ]
         else:
-            strings = [ 'connected to ',
+            strings = ['connected to ',
                       'downloading from ',
                       'uploading to ',
                       '<gathering info from %d peers, %d done>',
@@ -2610,7 +2610,7 @@ class Interface(object):
             ]
         info = []
         info.append(['Hash: ', "%s" % t['hashString']])
-        info.append(['ID: ',   "%s" % t['id']])
+        info.append(['ID: ', "%s" % t['id']])
 
         wanted = 0
         for i, file_info in enumerate(t['files']):
@@ -2625,9 +2625,9 @@ class Interface(object):
         info.append(sizes)
 
         info.append(['Files: ', "%d;  " % len(t['files'])])
-        complete     = list(map(lambda x: x['bytesCompleted'] == x['length'], t['files'])).count(True)
+        complete = list(map(lambda x: x['bytesCompleted'] == x['length'], t['files'])).count(True)
         not_complete = [x for x in t['files'] if x['bytesCompleted'] != x['length']]
-        partial      = list(map(lambda x: x['bytesCompleted'] > 0, not_complete)).count(True)
+        partial = list(map(lambda x: x['bytesCompleted'] > 0, not_complete)).count(True)
         if complete == len(t['files']):
             info[-1].append("all complete")
         else:
@@ -2642,7 +2642,7 @@ class Interface(object):
                         " (%.2f%%) received;  " % percent(t['sizeWhenDone'], t['downloadedEver']))
         info[-1].append("%s" % scale_bytes(t['haveValid'], 'long') + \
                         " (%.2f%%) verified;  " % percent(t['sizeWhenDone'], t['haveValid']))
-        info[-1].append("%s corrupt"  % scale_bytes(t['corruptEver'], 'long'))
+        info[-1].append("%s corrupt" % scale_bytes(t['corruptEver'], 'long'))
         if t['percentDone'] < 100:
             info[-1][-1] += ';  '
             if t['rateDownload']:
@@ -2665,8 +2665,8 @@ class Interface(object):
         norm_upload_rate = norm.add('%s:rateUpload' % t['id'], t['rateUpload'], 50)
         if norm_upload_rate > 0:
             target_ratio = self.get_target_ratio()
-            bytes_left   = (max(t['downloadedEver'], t['sizeWhenDone']) * target_ratio) - t['uploadedEver']
-            time_left    = bytes_left / norm_upload_rate
+            bytes_left = (max(t['downloadedEver'], t['sizeWhenDone']) * target_ratio) - t['uploadedEver']
+            time_left = bytes_left / norm_upload_rate
             info.append(' Approaching %.2f ... %s' % (target_ratio, timestamp(time.time() + time_left, "%x %X")))
 
         info.append(['Seed limit: '])
@@ -2676,19 +2676,19 @@ class Interface(object):
             else:
                 info[-1].append('default (unlimited)')
         elif t['seedRatioMode'] == 1:
-            info[-1].append( strings[6] % t['seedRatioLimit'])
+            info[-1].append(strings[6] % t['seedRatioLimit'])
         elif t['seedRatioMode'] == 2:
             info[-1].append(strings[7])
 
         info.append([strings[8]])
         unlimited = 'session' if t['honorsSessionLimits'] else 'unlimited'
-        info[-1].append(strings[9] + ( scale_bytes(t['downloadLimit'] * 1024) if t['downloadLimited'] else unlimited) + ";  ")
-        info[-1].append(strings[10] + ( scale_bytes(t['uploadLimit'] * 1024) if t['uploadLimited'] else unlimited))
+        info[-1].append(strings[9] + (scale_bytes(t['downloadLimit'] * 1024) if t['downloadLimited'] else unlimited) + ";  ")
+        info[-1].append(strings[10] + (scale_bytes(t['uploadLimit'] * 1024) if t['uploadLimited'] else unlimited))
 
         info.append(['Peers: ',
-                     strings[0] + "%d;  "     % t['peersConnected'],
+                     strings[0] + "%d;  " % t['peersConnected'],
                      strings[1] + "%d;  " % t['peersSendingToUs'],
-                     strings[2] + "%d"        % t['peersGettingFromUs']])
+                     strings[2] + "%d" % t['peersGettingFromUs']])
 
         # average peer speed
         incomplete_peers = [peer for peer in self.torrent_details['peers'] if peer['progress'] < 1]
@@ -2697,7 +2697,7 @@ class Interface(object):
             active_peers = [peer for peer in incomplete_peers if peer['download_speed']]
             min_active_peers = min(10, max(1, round(len(incomplete_peers) * 0.666)))
             if 1 <= len(active_peers) >= min_active_peers:
-                swarm_speed  = sum([peer['download_speed'] for peer in active_peers]) / len(active_peers)
+                swarm_speed = sum([peer['download_speed'] for peer in active_peers]) / len(active_peers)
                 info.append(['Swarm speed: ', "%s on average;  " % scale_bytes(swarm_speed),
                              "distribution of 1 copy takes %s" % \
                                  scale_time(int(t['totalSize'] / swarm_speed), 'long')])
@@ -2720,15 +2720,15 @@ class Interface(object):
 
         if 'labels' in t and t['labels']:
             info.append(['Labels: '])
-            info[-1].extend([ s + '; ' for s in t['labels'][:-1]])
+            info[-1].extend([s + '; ' for s in t['labels'][:-1]])
             info[-1].append(t['labels'][-1])
 
         info.append([''])
 
         format_str = "%X" if self.narrow else "%x %X"
-        info.append(['Created: ',  "%s" % timestamp(t['dateCreated'], narrow=self.narrow, time_format=format_str)])
-        info.append(['Added: ',    "%s" % timestamp(t['addedDate'], narrow=self.narrow, time_format=format_str)])
-        info.append(['Started: ',  "%s" % timestamp(t['startDate'], narrow=self.narrow, time_format=format_str)])
+        info.append(['Created: ', "%s" % timestamp(t['dateCreated'], narrow=self.narrow, time_format=format_str)])
+        info.append(['Added: ', "%s" % timestamp(t['addedDate'], narrow=self.narrow, time_format=format_str)])
+        info.append(['Started: ', "%s" % timestamp(t['startDate'], narrow=self.narrow, time_format=format_str)])
         info.append(['Activity: ', "%s" % timestamp(t['activityDate'], narrow=self.narrow, time_format=format_str)])
 
         if t['percentDone'] < 100 and t['eta'] > 0:
@@ -2744,7 +2744,7 @@ class Interface(object):
 
         ypos = self.draw_details_list(ypos, info)
 
-        self.max_overview_scroll = max(self.max_overview_scroll, ypos + self.scrollpos_detaillist[0] - self.height + 3 )
+        self.max_overview_scroll = max(self.max_overview_scroll, ypos + self.scrollpos_detaillist[0] - self.height + 3)
 
         return ypos + 1
 
@@ -2800,7 +2800,7 @@ class Interface(object):
             # highlight focused/selected line(s)
             while line.startswith('_'):
                 if line[1] == 'S':
-                    curses_tags  = curses.A_BOLD
+                    curses_tags = curses.A_BOLD
                     line = line[2:]
                 if line[1] == 'F':
                     curses_tags += curses.A_REVERSE
@@ -2983,7 +2983,7 @@ class Interface(object):
 
             upload_tag = download_tag = line_tag = 0
             if peer['rateToPeer']:
-                upload_tag   = curses.A_BOLD
+                upload_tag = curses.A_BOLD
             if peer['rateToClient']:
                 download_tag = curses.A_BOLD
 
@@ -3074,10 +3074,10 @@ class Interface(object):
 
             if t['lastScrapeSucceeded']:
                 if self.narrow:
-                    seeds   = "S:%s" % num2str(t['seederCount'])
+                    seeds = "S:%s" % num2str(t['seederCount'])
                     leeches = "P:%s" % num2str(t['leecherCount'])
                 else:
-                    seeds   = "%s seed%s" % (num2str(t['seederCount']), ('s', '')[t['seederCount'] == 1])
+                    seeds = "%s seed%s" % (num2str(t['seederCount']), ('s', '')[t['seederCount'] == 1])
                     leeches = "%s leech%s" % (num2str(t['leecherCount']), ('es', '')[t['leecherCount'] == 1])
                 addstr(ypos + 5, 4, "Tracker knows: %s and %s" % (seeds, leeches), curses.A_BOLD)
             else:
@@ -3089,10 +3089,10 @@ class Interface(object):
 
             if t['lastAnnounceSucceeded']:
                 peers = "%s peer%s" % (num2str(t['lastAnnouncePeerCount']), ('s', '')[t['lastAnnouncePeerCount'] == 1])
-                addstr(ypos,   2, t['announce'][:self.width - 2], curses.A_BOLD + curses.A_UNDERLINE)
+                addstr(ypos, 2, t['announce'][:self.width - 2], curses.A_BOLD + curses.A_UNDERLINE)
                 addstr(ypos + 6, 11, "Result: %s received" % peers, curses.A_BOLD)
             else:
-                addstr(ypos,   2, t['announce'][:self.width - 2], curses.A_UNDERLINE)
+                addstr(ypos, 2, t['announce'][:self.width - 2], curses.A_UNDERLINE)
                 if t['lastAnnounceResult']:
                     if self.narrow:
                         addstr(ypos + 6, 9, "Announce: %s" % t['lastAnnounceResult'].replace("Tracker gave HTTP response code ", "")[:self.width - 20])
@@ -3185,7 +3185,7 @@ class Interface(object):
             self.details_category_focus += 1
         if self.details_category_focus == 1: # We moved to file list
             self.filelist_needs_refresh = True
-        self.focus_detaillist     = -1
+        self.focus_detaillist = -1
         self.pad.erase()
 
     def prev_details(self):
@@ -3234,7 +3234,7 @@ class Interface(object):
         return 0, 0
 
     def move_to_end(self, step_size, elements_per_page, list_height):
-        focus     = list_height - 1
+        focus = list_height - 1
         scrollpos = max(0, (list_height - elements_per_page) * step_size)
         return focus, scrollpos
 
@@ -3259,9 +3259,9 @@ class Interface(object):
             self.screen.addstr((self.height - 1), 0, "-- VISUAL --", curses.A_REVERSE)
         else:
             if self.narrow:
-                strings = [ 'T', 'D', 'S', 'P', '', '!', ' ', ' S:%d', ' F:%d']
+                strings = ['T', 'D', 'S', 'P', '', '!', ' ', ' S:%d', ' F:%d']
             else:
-               strings = [ "Torrent%s:" % ('s', '')[len(self.torrents) == 1], "Downloading:", "Seeding:", "Paused:",
+               strings = ["Torrent%s:" % ('s', '')[len(self.torrents) == 1], "Downloading:", "Seeding:", "Paused:",
                            "Filter:", "not ", " Sort by:", " Selected:%d", " Files:%d"]
             self.screen.addstr((self.height - 1), 0, strings[0],
                                    curses.A_REVERSE)
@@ -3269,8 +3269,8 @@ class Interface(object):
 
             downloading = len([x for x in self.torrents if x['status'] == Transmission.STATUS_DOWNLOAD])
             seeding = len([x for x in self.torrents if x['status'] == Transmission.STATUS_SEED])
-            paused = len([x for x in self.torrents if x['status'] in [ Transmission.STATUS_STOPPED, Transmission.STATUS_CHECK_WAIT,
-                        Transmission.STATUS_CHECK, Transmission.STATUS_DOWNLOAD_WAIT, Transmission.STATUS_SEED_WAIT] ])
+            paused = len([x for x in self.torrents if x['status'] in [Transmission.STATUS_STOPPED, Transmission.STATUS_CHECK_WAIT,
+                        Transmission.STATUS_CHECK, Transmission.STATUS_DOWNLOAD_WAIT, Transmission.STATUS_SEED_WAIT]])
 
             self.screen.addstr(strings[1], curses.A_REVERSE)
             self.screen.addstr("%d " % downloading, curses.A_REVERSE)
@@ -3333,13 +3333,13 @@ class Interface(object):
         rates_width = self.rateDownload_width + self.rateUpload_width + 3
 
         if self.stats['alt-speed-enabled']:
-            upload_limit   = "/%dK" % self.stats['alt-speed-up']
+            upload_limit = "/%dK" % self.stats['alt-speed-up']
             download_limit = "/%dK" % self.stats['alt-speed-down']
         else:
-            upload_limit   = ('', "/%dK" % self.stats['speed-limit-up'])[self.stats['speed-limit-up-enabled']]
+            upload_limit = ('', "/%dK" % self.stats['speed-limit-up'])[self.stats['speed-limit-up-enabled']]
             download_limit = ('', "/%dK" % self.stats['speed-limit-down'])[self.stats['speed-limit-down-enabled']]
 
-        limits = {'dn_limit' : download_limit, 'up_limit' : upload_limit}
+        limits = {'dn_limit': download_limit, 'up_limit': upload_limit}
         limits_width = len(limits['dn_limit']) + len(limits['up_limit'])
 
         if self.stats['alt-speed-enabled']:
@@ -3509,8 +3509,8 @@ class Interface(object):
                 else:
                     message += "q/Backspace/Esc  Back to torrent list"
 
-        width  = max([len(x) for x in message.split("\n")]) + 4
-        width  = min(self.width, width)
+        width = max([len(x) for x in message.split("\n")]) + 4
+        width = min(self.width, width)
         height = min(self.height, message.count("\n") + 3)
         while True:
             win, last = self.help_window(height, width, message=message, title=title)
@@ -3551,10 +3551,10 @@ class Interface(object):
 
     def real_window(self, height, width, message='', title='', first=0, win=None, keypad=True, xpos=None):
         height = min(self.height, height)
-        width  = min(self.width, width)
-        ypos = int( (self.height - height) / 2 )
+        width = min(self.width, width)
+        ypos = int((self.height - height) / 2)
         if xpos == None:
-            xpos = int( (self.width  - width) / 2 )
+            xpos = int((self.width - width) / 2)
         if not win:
             win = curses.newwin(height, width, ypos, xpos)
             win.keypad(keypad)
@@ -3571,17 +3571,17 @@ class Interface(object):
         if width >= (len(title) + 6) and title != '':
             win.addch(0, 1, curses.ACS_RTEE)
             win.addstr(0, 2, " " + title + " ")
-            win.addch(0, len(title) + 4 , curses.ACS_LTEE)
+            win.addch(0, len(title) + 4, curses.ACS_LTEE)
 
         return self.win_message(win, height, width, message, first)
 
     def dialog_ok(self, message):
         height = 3 + message.count("\n")
-        width  = max(max([len_columns(x) for x in message.split("\n")]), 40) + 4
+        width = max(max([len_columns(x) for x in message.split("\n")]), 40) + 4
         win = self.window(height, width, message=message)
         while True:
             c = self.wingetch(win)
-            if c in [ 27, ord('q'), curses.ascii.ctrl(ord('w'))]:
+            if c in [27, ord('q'), curses.ascii.ctrl(ord('w'))]:
                 return -1
             self.update_torrent_list([win])
 
@@ -3591,14 +3591,14 @@ class Interface(object):
             important = True
             message = message + "\n" + hard + "\n" + "Press ctrl-y to accept.\n"
         height = 5 + message.count("\n")
-        width  = max(len_columns(message), 8) + 4
+        width = max(len_columns(message), 8) + 4
         win = self.window(height, width, message=message)
 
         if important:
             win.bkgd(' ', curses.color_pair(self.colors.id('dialog_important'))
                           + curses.A_REVERSE)
 
-        focus_tags   = curses.color_pair(self.colors.id('button_focused'))
+        focus_tags = curses.color_pair(self.colors.id('button_focused'))
         unfocus_tags = 0
 
         choice = False
@@ -3606,16 +3606,16 @@ class Interface(object):
             win.move(int(height - 2), int(width / 2) - 4)
             if not hard:
                 if choice:
-                    win.addstr('Y',  focus_tags + curses.A_UNDERLINE)
+                    win.addstr('Y', focus_tags + curses.A_UNDERLINE)
                     win.addstr('es', focus_tags)
                     win.addstr('   ')
-                    win.addstr('N',  curses.A_UNDERLINE)
+                    win.addstr('N', curses.A_UNDERLINE)
                     win.addstr('o')
                 else:
                     win.addstr('Y', curses.A_UNDERLINE)
                     win.addstr('es')
                     win.addstr('   ')
-                    win.addstr('N',  focus_tags + curses.A_UNDERLINE)
+                    win.addstr('N', focus_tags + curses.A_UNDERLINE)
                     win.addstr('o', focus_tags)
 
             c = self.wingetch(win)
@@ -3639,7 +3639,7 @@ class Interface(object):
                     choice = False
                 elif c == ord("\n") or c == ord(' '):
                     return choice
-                elif c in [ 27, curses.KEY_BREAK, curses.ascii.ctrl(ord('w'))]:
+                elif c in [27, curses.KEY_BREAK, curses.ascii.ctrl(ord('w'))]:
                     return 0
             self.update_torrent_list([win])
 
@@ -3657,7 +3657,7 @@ class Interface(object):
         else:
             localhistory = [text]
         history_pos = len(localhistory) - 1
-        width  = min(maxwidth, self.width - 4)
+        width = min(maxwidth, self.width - 4)
         textwidth = width - 4
         height = message.count("\n") + 4
         if align == 'center':
@@ -3683,25 +3683,25 @@ class Interface(object):
             win.move(height - 2, displayindex + 2)
             c = self.wingetch(win)
             if history != None:
-                if  c == curses.KEY_UP or c == curses.ascii.ctrl(ord('p')):
+                if c == curses.KEY_UP or c == curses.ascii.ctrl(ord('p')):
                     history_pos = (history_pos - 1) % len(localhistory)
                     text = localhistory[history_pos]
                     index = len(text)
-                if  c == curses.KEY_DOWN or c == curses.ascii.ctrl(ord('n')):
+                if c == curses.KEY_DOWN or c == curses.ascii.ctrl(ord('n')):
                     history_pos = (history_pos + 1) % len(localhistory)
                     text = localhistory[history_pos]
                     index = len(text)
-            if c in [ 27, curses.KEY_BREAK, curses.ascii.ctrl(ord('w'))]:
+            if c in [27, curses.KEY_BREAK, curses.ascii.ctrl(ord('w'))]:
                 hide_cursor()
                 return ''
-            elif index < len(text) and ( c == curses.KEY_RIGHT or c == curses.ascii.ctrl(ord('f')) ):
+            elif index < len(text) and (c == curses.KEY_RIGHT or c == curses.ascii.ctrl(ord('f'))):
                 index += 1
-            elif index > 0 and ( c == curses.KEY_LEFT or c == curses.ascii.ctrl(ord('b')) ):
+            elif index > 0 and (c == curses.KEY_LEFT or c == curses.ascii.ctrl(ord('b'))):
                 index -= 1
             elif (c == curses.KEY_BACKSPACE or c == 127) and index > 0:
                 text = text[:index - 1] + (index < len(text) and text[index:] or '')
                 index -= 1
-            elif index < len(text) and ( c == curses.KEY_DC or c == curses.ascii.ctrl(ord('d')) ):
+            elif index < len(text) and (c == curses.KEY_DC or c == curses.ascii.ctrl(ord('d'))):
                 text = text[:index] + text[index + 1:]
             elif index < len(text) and c == curses.ascii.ctrl(ord('k')):
                 text = text[:index]
@@ -3739,19 +3739,19 @@ class Interface(object):
                     if not dirname:
                         dirname = str(os.getcwd())
                     try:
-                        possible_choices = [ os.path.join(dirname, choice) for choice in os.listdir(dirname)
-                                             if choice.startswith(filename) ]
+                        possible_choices = [os.path.join(dirname, choice) for choice in os.listdir(dirname)
+                                             if choice.startswith(filename)]
                     except OSError:
                         continue
                     if tab_complete == 'dirs':
-                        possible_choices = [ d for d in possible_choices
-                                             if os.path.isdir(d) ]
+                        possible_choices = [d for d in possible_choices
+                                             if os.path.isdir(d)]
                 elif tab_complete == 'torrent_list':
-                    possible_choices = [ t['name'] for t in self.torrents
-                                         if t['name'].startswith(text) ]
+                    possible_choices = [t['name'] for t in self.torrents
+                                         if t['name'].startswith(text)]
                 elif tab_complete == 'file_list':
-                    possible_choices = [ f for f in [ os.path.basename(g['name']) for g in self.sorted_files ]
-                                         if f.startswith(text) ]
+                    possible_choices = [f for f in [os.path.basename(g['name']) for g in self.sorted_files]
+                                         if f.startswith(text)]
                 if(possible_choices):
                     text = os.path.commonprefix(possible_choices)
                     if tab_complete in ('files', 'dirs'):
@@ -3868,8 +3868,8 @@ class Interface(object):
         if not allow_zero:
             allow_negative_one = False
 
-        width  = max(max([len(x) for x in message.split("\n")]), 40) + 4
-        width  = min(self.width, width)
+        width = max(max([len(x) for x in message.split("\n")]), 40) + 4
+        width = min(self.width, width)
         height = message.count("\n") + (4, 6)[cursorkeys]
 
         show_cursor()
@@ -3877,10 +3877,10 @@ class Interface(object):
         value = str(current_value)
         if cursorkeys:
             if floating_point:
-                bigstep   = 1
+                bigstep = 1
                 smallstep = 0.1
             else:
-                bigstep   = 100
+                bigstep = 100
                 smallstep = 10
             win.addstr(height - 4, 2, ("   up/down +/- %-3s" % bigstep).rjust(width - 4))
             win.addstr(height - 3, 2, ("left/right +/- %3s" % smallstep).rjust(width - 4))
@@ -3893,7 +3893,7 @@ class Interface(object):
             win.addstr(height - 2, 2, value.ljust(width - 4), curses.color_pair(self.colors.id('dialog')))
             win.move(height - 2, len(value) + 2)
             c = self.wingetch(win)
-            if c in [ 27, ord('q'), curses.KEY_BREAK, curses.ascii.ctrl(ord('w'))]:
+            if c in [27, ord('q'), curses.KEY_BREAK, curses.ascii.ctrl(ord('w'))]:
                 hide_cursor()
                 return -128
             elif c == ord("\n"):
@@ -3955,7 +3955,7 @@ class Interface(object):
             height = self.height
             paging = True
         pagelines = height - 2
-        width  = max(max([len(x[1]) + 3 for x in options]), len(title) + 3)
+        width = max(max([len(x[1]) + 3 for x in options]), len(title) + 3)
         win = self.window(height, width)
 
         win.addstr(0, 1, title)
@@ -3978,7 +3978,7 @@ class Interface(object):
             c = self.wingetch(win)
 
             if c > 47 and c < 123 and chr(c).lower() in keymap:
-                return ( options[keymap[chr(c).lower()]][0], chr(c).isupper(), win) if extended else options[keymap[chr(c).lower()]][0]
+                return (options[keymap[chr(c).lower()]][0], chr(c).isupper(), win) if extended else options[keymap[chr(c).lower()]][0]
             elif c in [ord('q'), 27, curses.ascii.ctrl(ord('w'))]:
                 return (-128, False, win) if extended else -128
             elif c == ord("\n"):
@@ -4076,7 +4076,7 @@ class Interface(object):
                 line_num += 1
 
             c = self.wingetch(win)
-            if c in [ 27, ord('q'), ord("\n"), curses.ascii.ctrl(ord('w'))]:
+            if c in [27, ord('q'), ord("\n"), curses.ascii.ctrl(ord('w'))]:
                 return
             elif c == ord('p'):
                 port = self.dialog_input_number("Port for incoming connections",
@@ -4176,7 +4176,7 @@ class Interface(object):
             self.update_torrent_list([win])
 
     def dialog_filters(self):
-        filters  = [[f.copy() for f in l] for l in self.filters]
+        filters = [[f.copy() for f in l] for l in self.filters]
         filters.append([])
         win = None
         changed = True
@@ -4213,7 +4213,7 @@ class Interface(object):
             if c in [27, ord('q'), curses.ascii.ctrl(ord('w'))]:
                 return self.filters
             if c == ord("\n"):
-                filters = [ f for f in filters if f != [] ]
+                filters = [f for f in filters if f != []]
                 if filters == []:
                     return [[{'name': '', 'inverse': False}]]
                 else:
@@ -4283,10 +4283,10 @@ def percent(full, part):
 
 def scale_time(seconds, type='short'):
     minute_in_sec = float(60)
-    hour_in_sec   = float(3600)
-    day_in_sec    = float(86400)
-    month_in_sec  = 27.321661 * day_in_sec # from wikipedia
-    year_in_sec   = 365.25    * day_in_sec # from wikipedia
+    hour_in_sec = float(3600)
+    day_in_sec = float(86400)
+    month_in_sec = 27.321661 * day_in_sec # from wikipedia
+    year_in_sec = 365.25 * day_in_sec # from wikipedia
 
     if seconds < 0:
         return ('?', 'some time')[type == 'long']
@@ -4604,11 +4604,11 @@ def parse_sort_str(sort_str, orders):
     for i in sort_str.split(','):
         x = i.split(':')
         if len(x) > 1 and x[1] in orders:
-            sort_orders.append( { 'name': x[1], 'reverse': True } )
+            sort_orders.append({'name': x[1], 'reverse': True})
         elif x[0] in orders:
-            sort_orders.append( { 'name': x[0], 'reverse': False } )
+            sort_orders.append({'name': x[0], 'reverse': False})
     if sort_orders == []:
-        sort_orders = [{ 'name': 'name', 'reverse': False }]
+        sort_orders = [{'name': 'name', 'reverse': False}]
     return sort_orders
 
 def parse_filter_str(s):
@@ -4649,7 +4649,7 @@ def parse_config_profiles(config, orders):
             if name:
                 s = config['Profiles'][i].rsplit('#=', 1)
                 if s == ['']:
-                    ret[name] = { 'sort': [{ 'name': 'name', 'reverse': False }], 'filter': [[{'name': '', 'inverse': False}]] }
+                    ret[name] = {'sort': [{'name': 'name', 'reverse': False}], 'filter': [[{'name': '', 'inverse': False}]]}
                 elif len(s) == 2:
                     ret[name] = {}
                     ret[name]['sort'] = parse_sort_str(s[1], orders)
