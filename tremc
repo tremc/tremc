@@ -90,11 +90,11 @@ def country_code_by_addr_vany(geo_ip, geo_ip6, addr):
         try:
             return geo_ip.country(addr).country.iso_code
         except Exception:
-            return None
+            return '?'
     if '.' in addr:
         return geo_ip.country_code_by_addr(addr)
     if ':' not in addr:
-        return None
+        return '?'
     if gconfig.ipy:
         ip = IPy.IP(addr)
         if ip in IPV6_RANGE_6TO4:
@@ -105,6 +105,7 @@ def country_code_by_addr_vany(geo_ip, geo_ip6, addr):
             return geo_ip.country_code_by_addr(addr)
     if hasattr(geo_ip6, 'country_code_by_addr_v6'):
         return geo_ip6.country_code_by_addr_v6(addr)
+    return '?'
 
 
 def pdebug(*argv):
@@ -543,8 +544,6 @@ class Transmission:
                 self.threading.Thread(target=reverse_dns, args=(self.hosts_cache, ip)).start()
             if gconfig.geoip and ip not in self.geo_ips_cache:
                 self.geo_ips_cache[ip] = country_code_by_addr_vany(self.geo_ip, self.geo_ip6, ip)
-                if self.geo_ips_cache[ip] is None:
-                    self.geo_ips_cache[ip] = '?'
 
     def get_rpc_version(self):
         return self.rpc_version
