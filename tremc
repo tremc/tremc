@@ -248,7 +248,7 @@ class TransmissionRequest(object):
                 msg = str(e)
 
             # extract session id and send request again
-            m = re.search('X-Transmission-Session-Id:\s*(\w+)', msg)
+            m = re.search(r'X-Transmission-Session-Id:\s*(\w+)', msg)
             try:
                 session_id = m.group(1)
                 self.send_request()
@@ -4481,7 +4481,7 @@ def num2str(num, num_format='%s'):
         return 'oo'
     else:
         if num > 999:
-            return (re.sub(r'(\d{3})', '\g<1>,', str(num)[::-1])[::-1]).lstrip(',')
+            return (re.sub(r'(\d{3})', r'\g<1>,', str(num)[::-1])[::-1]).lstrip(',')
         else:
             return num_format % num
 
