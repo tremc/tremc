@@ -609,7 +609,7 @@ class Transmission(object):
         else:
             free = 0
 
-        return free # free space in bytes
+        return free  # free space in bytes
 
     def set_option(self, option_name, option_value):
         request = TransmissionRequest(self.host, self.port, self.path, 'session-set', 1, {option_name: option_value})
@@ -876,7 +876,7 @@ class Transmission(object):
         self.wait_for_update(22)
 
     def wait_for_update(self, update_id):
-        self.update(0) # send request
+        self.update(0)  # send request
         while True:    # wait for response
             if self.update(0, update_id):
                 break
@@ -1024,13 +1024,13 @@ class Interface(object):
         self.focus = -1  # -1: nothing focused; 0: top of list; <# of torrents>-1: bottom of list
         self.selected = set()
         self.scrollpos = 0   # start of torrentlist
-        self.torrents_per_page = 0 # will be set by manage_layout()
+        self.torrents_per_page = 0  # will be set by manage_layout()
         self.rateDownload_width = self.rateUpload_width = len(scale_bytes())
 
         self.details_category_focus = 0  # overview/files/peers/tracker in details
-        self.focus_detaillist = -1 # same as focus but for details
-        self.selected_files = [] # marked files in details
-        self.file_index_map = {} # Maps local torrent's file indices to server file indices
+        self.focus_detaillist = -1  # same as focus but for details
+        self.selected_files = []  # marked files in details
+        self.file_index_map = {}  # Maps local torrent's file indices to server file indices
         self.scrollpos_detaillist = [0] * 5  # same as scrollpos but for details
         self.max_overview_scroll = 0
         self.exit_now = False
@@ -1187,12 +1187,12 @@ class Interface(object):
             self.apply_profile(self.profiles[p])
 
     def init_screen(self):
-        os.environ['ESCDELAY'] = '0' # make escape usable
+        os.environ['ESCDELAY'] = '0'  # make escape usable
         self.screen = curses.initscr()
         curses.noecho()
         curses.cbreak()
         self.screen.keypad(1)
-        curses.halfdelay(10) # STDIN timeout
+        curses.halfdelay(10)  # STDIN timeout
         hide_cursor()
         self.colors = ColorManager(dict(config.items('Colors')))
 
@@ -1210,7 +1210,7 @@ class Interface(object):
         curses.endwin()
 
     def get_screen_size(self):
-        time.sleep(0.1) # prevents curses.error on rapid resizing
+        time.sleep(0.1)  # prevents curses.error on rapid resizing
         while True:
             curses.endwin()
             self.screen.refresh()
@@ -1260,14 +1260,14 @@ class Interface(object):
         new_width = max([len(scale_bytes(x['rateDownload'])) for x in torrents])
         new_width = max(max([len(scale_time(x['eta'])) for x in torrents]), new_width)
         new_width = max(len(scale_bytes(self.stats['downloadSpeed'])), new_width)
-        new_width = max(self.rateDownload_width, new_width) # don't shrink
+        new_width = max(self.rateDownload_width, new_width)  # don't shrink
         return new_width
 
     def get_rateUpload_width(self, torrents):
         new_width = max([len(scale_bytes(x['rateUpload'])) for x in torrents])
         new_width = max(max([len(num2str(x['uploadRatio'], '%.02f')) for x in torrents]), new_width)
         new_width = max(len(scale_bytes(self.stats['uploadSpeed'])), new_width)
-        new_width = max(self.rateUpload_width, new_width) # don't shrink
+        new_width = max(self.rateUpload_width, new_width)  # don't shrink
         return new_width
 
     def recalculate_torrents_per_page(self):
@@ -1311,7 +1311,7 @@ class Interface(object):
             self.focus_detaillist = -1
             self.scrollpos_detaillist = [0] * 5
             self.selected_files = []
-        elif self.selected_torrent > -1: # return from details
+        elif self.selected_torrent > -1:  # return from details
             self.details_category_focus = 0
             self.selected_torrent = -1
             self.selected_files = []
@@ -1320,7 +1320,7 @@ class Interface(object):
                 self.scrollpos = 0    # unfocus main list
                 self.focus = -1
             elif self.filters[0][0]['name']:
-                self.filters[0][0]['name'] = '' # reset filter
+                self.filters[0][0]['name'] = ''  # reset filter
 
     def leave_details(self, c):
         if self.selected_torrent > -1:
@@ -1336,7 +1336,7 @@ class Interface(object):
     def go_back_or_quit(self, c):
         if self.selected_torrent == -1:
             self.exit_now = True
-        else: # return to list view
+        else:  # return to list view
             server.set_torrent_details_id(-1)
             self.selected_torrent = -1
             self.details_category_focus = 0
@@ -1449,7 +1449,7 @@ class Interface(object):
         free_space = None
         if server.get_rpc_version() >= 15:
             # 10^9 instead of 2^30 to be consistent with web interface
-            free_space = float(server.get_free_space()) / (10**9) # Bytes > GB
+            free_space = float(server.get_free_space()) / (10**9)  # Bytes > GB
         pause = "(paused) " if paused else ""
 
         location = self.dialog_input_text("Add " + pause + "torrent from file, URL or pure hash"
@@ -1707,16 +1707,16 @@ class Interface(object):
                 else server.get_torrent_by_id(ids[0])
             if focused['seedRatioMode'] == 0:   # Use global settings
                 current_limit = ''
-            elif focused['seedRatioMode'] == 1: # Stop seeding at seedRatioLimit
+            elif focused['seedRatioMode'] == 1:  # Stop seeding at seedRatioLimit
                 current_limit = focused['seedRatioLimit']
-            elif focused['seedRatioMode'] == 2: # Seed regardless of ratio
+            elif focused['seedRatioMode'] == 2:  # Seed regardless of ratio
                 current_limit = -1
             limit = self.dialog_input_number("Seed ratio limit for\n%s" % focused['name'] +
                                              ("\nand %d more" % (len(ids) - 1) if len(ids) > 1 else ""),
                                              current_limit, floating_point=True, allow_empty=True)
             if limit == -1:
                 limit = 0
-            if limit == -2: # -2 means 'empty' in dialog_input_number return codes
+            if limit == -2:  # -2 means 'empty' in dialog_input_number return codes
                 limit = -1
             server.set_seed_ratio(float(limit), ids)
 
@@ -2018,7 +2018,7 @@ class Interface(object):
             newpath = rename_dialog(self.torrent_details['files'][file_id]['name'])
             if newpath:
                 self.torrent_details['files'][file_id]['name'] = newpath
-                self.filelist_needs_refresh = True # force read
+                self.filelist_needs_refresh = True  # force read
         elif self.focus > -1:
             # rename torrent folder
             rename_dialog(self.torrents[self.focus]['name'])
@@ -2265,7 +2265,7 @@ class Interface(object):
         elif filter['name'] == 'label':
             return filter['inverse'] != (filter['label'] in t['labels'])
 
-        return True # Unknown filters does not filter anything
+        return True  # Unknown filters does not filter anything
 
     def filter_torrent_list(self):
         unfiltered = self.torrents
@@ -2361,7 +2361,7 @@ class Interface(object):
             self.draw_ratio(torrent, y, False)
             self.draw_torrentlist_status(torrent, focused, y)
 
-            return self.tlist_item_height # number of lines that were used for drawing the list item
+            return self.tlist_item_height  # number of lines that were used for drawing the list item
         else:
             # Draw ratio in place of upload rate if upload rate = 0
             if not torrent['rateUpload']:
@@ -2407,11 +2407,11 @@ class Interface(object):
 
     def draw_torrentlist_title(self, torrent, focused, width, ypos):
         if torrent['status'] == Transmission.STATUS_SEED:
-            if torrent['seedRatioMode'] == 0: # Use global limit if set, otherwise unlimited
+            if torrent['seedRatioMode'] == 0:  # Use global limit if set, otherwise unlimited
                 limit = self.stats['seedRatioLimit'] if self.stats['seedRatioLimited'] else -1
-            elif torrent['seedRatioMode'] == 1: # Stop seeding at seedRatioLimit
+            elif torrent['seedRatioMode'] == 1:  # Stop seeding at seedRatioLimit
                 limit = torrent['seedRatioLimit']
-            elif torrent['seedRatioMode'] == 2: # Seed regardless of ratio
+            elif torrent['seedRatioMode'] == 2:  # Seed regardless of ratio
                 limit = -1
 
             if limit > 0:
@@ -3160,9 +3160,9 @@ class Interface(object):
                         i[1] = i[1][len(i[0].rjust(key_width + 1)):]
                     if yp >= ypos:
                         if self.narrow:
-                            self.pad.addstr(yp, 0, i[0].rjust(key_width), curses.color_pair(self.colors.id('button')) + curses.A_DIM) # key
+                            self.pad.addstr(yp, 0, i[0].rjust(key_width), curses.color_pair(self.colors.id('button')) + curses.A_DIM)  # key
                         else:
-                            self.pad.addstr(yp, 1, i[0].rjust(key_width)) # key
+                            self.pad.addstr(yp, 1, i[0].rjust(key_width))  # key
                         xp = key_width
                     value_x = key_width
                 # value part may be wrapped if it gets too long
@@ -3183,7 +3183,7 @@ class Interface(object):
             self.details_category_focus = 0
         else:
             self.details_category_focus += 1
-        if self.details_category_focus == 1: # We moved to file list
+        if self.details_category_focus == 1:  # We moved to file list
             self.filelist_needs_refresh = True
         self.focus_detaillist = -1
         self.pad.erase()
@@ -3193,7 +3193,7 @@ class Interface(object):
             self.details_category_focus = 4
         else:
             self.details_category_focus -= 1
-        if self.details_category_focus == 1: # We moved to file list
+        if self.details_category_focus == 1:  # We moved to file list
             self.filelist_needs_refresh = True
         self.pad.erase()
 
@@ -4286,8 +4286,8 @@ def scale_time(seconds, type='short'):
     minute_in_sec = float(60)
     hour_in_sec = float(3600)
     day_in_sec = float(86400)
-    month_in_sec = 27.321661 * day_in_sec # from wikipedia
-    year_in_sec = 365.25 * day_in_sec # from wikipedia
+    month_in_sec = 27.321661 * day_in_sec  # from wikipedia
+    year_in_sec = 365.25 * day_in_sec  # from wikipedia
 
     if seconds < 0:
         return ('?', 'some time')[type == 'long']
@@ -4418,7 +4418,7 @@ def hide_cursor():
     try:
         curses.curs_set(0)   # hide cursor if possible
     except curses.error:
-        pass # some terminals seem to have problems with that
+        pass  # some terminals seem to have problems with that
 
 
 def show_cursor():
