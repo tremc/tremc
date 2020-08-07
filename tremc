@@ -2197,7 +2197,7 @@ class Interface(object):
             else:
                 self.draw_details()
         except Exception as e:
-            debug('caught %s in handle_user_input(): %s\n' % (type(e), str(e)))
+            pdebug('caught %s in handle_user_input(): %s\n' % (type(e), str(e)))
             pass
         return c
 
@@ -2789,7 +2789,7 @@ class Interface(object):
                 try:
                     self.pad.addstr(ypos, 0, ' '*self.width, curses_tags)
                 except Exception as e:
-                    debug('caught %s in draw_filelist(): %s\n' % (type(e), str(e)))
+                    pdebug('caught %s in draw_filelist(): %s\n' % (type(e), str(e)))
                     pass
 
             # colored priority (only in the first 33 chars, the rest is filename)
@@ -4439,18 +4439,6 @@ def num2str(num, num_format='%s'):
             return (re.sub(r'(\d{3})', '\g<1>,', str(num)[::-1])[::-1]).lstrip(',')
         else:
             return num_format % num
-
-
-def debug(data):
-    if cmd_args.DEBUG:
-        file = open("debug.log", 'a')
-        if isinstance(data, str) or isinstance(data, str):
-            file.write(data.encode(ENCODING, 'replace'))
-        else:
-            import pprint
-            pp = pprint.PrettyPrinter(indent=4)
-            file.write("\n====================\n" + pp.pformat(data) + "\n====================\n\n")
-        file.close
 
 
 def exit_prog(msg='', exitcode=0):
