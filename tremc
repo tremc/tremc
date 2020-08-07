@@ -176,11 +176,11 @@ class ColorManager:
         fg_name = pair.split(',')[0].split(':')[1].upper()
         color_pair = {'id': len(list(self.config.keys())) + 1}
         try:
-            color_pair['bg'] = eval('curses.COLOR_' + bg_name)
+            color_pair['bg'] = getattr(curses,'COLOR_' + bg_name)
         except AttributeError:
             color_pair['bg'] = -1
         try:
-            color_pair['fg'] = eval('curses.COLOR_' + fg_name)
+            color_pair['fg'] = getattr(curses, 'COLOR_' + fg_name)
         except AttributeError:
             color_pair['fg'] = -1
         return color_pair
