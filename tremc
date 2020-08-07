@@ -1965,7 +1965,7 @@ class Interface:
                 if self.details_category_focus == 1 and \
                         (self.selected_files or self.focus_detaillist > -1):
                     if self.selected_files:
-                        files = set([self.file_index_map[index] for index in self.selected_files])
+                        files = {self.file_index_map[index] for index in self.selected_files}
                         server.increase_file_priority(files)
                     elif self.focus_detaillist > -1:
                         server.increase_file_priority([self.file_index_map[self.focus_detaillist]])
@@ -1976,7 +1976,7 @@ class Interface:
                 if self.details_category_focus == 1 and \
                         (self.selected_files or self.focus_detaillist > -1):
                     if self.selected_files:
-                        files = set([self.file_index_map[index] for index in self.selected_files])
+                        files = {self.file_index_map[index] for index in self.selected_files}
                         server.decrease_file_priority(files)
                     elif self.focus_detaillist > -1:
                         server.decrease_file_priority([self.file_index_map[self.focus_detaillist]])
@@ -2214,9 +2214,9 @@ class Interface:
             if self.selected:
                 self.selected = set()
             else:
-                self.selected = set([x['id'] for x in self.torrents])
+                self.selected = {x['id'] for x in self.torrents}
         elif invert:
-            self.selected.symmetric_difference_update(set([x['id'] for x in self.torrents]))
+            self.selected.symmetric_difference_update({x['id'] for x in self.torrents})
         else:
             if self.focus != -1:
                 self.selected.symmetric_difference_update(set([self.torrents[self.focus]['id']]))
@@ -2259,7 +2259,7 @@ class Interface:
     def filter_torrent_list(self):
         self.torrents = [t for t in self.torrents if any(all(self.filter_torrent(t, f) for f in fs) for fs in self.filters) != self.invert_filters]
         # Also filter selected:
-        self.selected.intersection_update(set([t['id'] for t in self.torrents]))
+        self.selected.intersection_update({t['id'] for t in self.torrents})
 
     def follow_list_focus(self):
         if self.focus == -1:
@@ -3811,11 +3811,11 @@ class Interface:
 
     def select_pattern_torrents(self, pattern, inc=1, search=None):
         if search == 'pattern':
-            matched_torrents = set([t['id'] for t in self.torrents if pattern.lower() in t['name'].lower()])
+            matched_torrents = {t['id'] for t in self.torrents if pattern.lower() in t['name'].lower()}
         elif search == 'regex':
             try:
                 regex = re.compile(pattern, re.I)
-                matched_torrents = set([t['id'] for t in self.torrents if regex.search(t['name'])])
+                matched_torrents = {t['id'] for t in self.torrents if regex.search(t['name'])}
             except Exception:
                 return True
         else:
