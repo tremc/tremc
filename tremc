@@ -3369,10 +3369,10 @@ class Interface:
             help_strings = [('Move with', 'cursor keys'), ('q', 'Back to List')]
             if self.details_category_focus == 1 and self.focus_detaillist > -1:
                 help_strings = [('enter', 'Open File'),
-                        ('space', '(De)Select File'),
-                        ('V', 'Visually Select Files'),
-                        ('left/right', 'De-/Increase Priority'),
-                        ('esc', 'Unfocus/-select')] + help_strings
+                                ('space', '(De)Select File'),
+                                ('V', 'Visually Select Files'),
+                                ('left/right', 'De-/Increase Priority'),
+                                ('esc', 'Unfocus/-select')] + help_strings
             elif self.details_category_focus == 2:
                 help_strings = [('F1/?', 'Explain flags')] + help_strings
             elif self.details_category_focus == 3:
