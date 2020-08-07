@@ -3697,7 +3697,7 @@ class Interface:
                     history.append(text)
                 if on_enter:
                     if on_enter(text, inc=1 if c == ord('\n') else -1, search=search):
-                        return
+                        return None
                 else:
                     hide_cursor()
                     return text
