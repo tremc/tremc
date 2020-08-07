@@ -41,7 +41,7 @@ import enum
 
 locale.setlocale(locale.LC_ALL, '')
 
-# global constants and constant configuration
+# Global constants and constant configuration
 class gconfig:
     VERSION = '0.9.2'
 
