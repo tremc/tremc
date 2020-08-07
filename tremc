@@ -50,6 +50,8 @@ class gconfig:
     RPC_VERSION_MIN = 8
     RPC_VERSION_MAX = 16
 
+    STARTTIME = time.time()
+    DEBUG = False
     ENCODING = locale.getpreferredencoding() or 'UTF-8'
 
     # optional features provided by non-standard modules
@@ -102,11 +104,9 @@ def country_code_by_addr_vany(geo_ip, geo_ip6, addr):
     if hasattr(geo_ip6, 'country_code_by_addr_v6'):
         return geo_ip6.country_code_by_addr_v6(addr)
 
-starttime=time.time()
-debug_time=True
 def pdebug(*argv):
-    if debug_time:
-        print(time.time()-starttime,": ",*argv,file=sys.stderr,flush=True)
+    if gconfig.DEBUG:
+        print(time.time()-gconfig.STARTTIME,": ",*argv,file=sys.stderr,flush=True)
 
 # define config defaults
 config = configparser.ConfigParser()
@@ -338,7 +338,7 @@ class Transmission(object):
         try:
             if response['arguments']['rpc-version'] < gconfig.RPC_VERSION_MIN:
                 if cmd_args.SKIPVERSIONCHECK:
-                    print(version_error + skip_msg, file=sys.stderr)
+                    pdebug(version_error + skip_msg)
                 else:
                     exit_prog(version_error + min_msg)
         except KeyError:
@@ -347,7 +347,7 @@ class Transmission(object):
         # rpc version too new?
         if response['arguments']['rpc-version'] > gconfig.RPC_VERSION_MAX:
             if cmd_args.SKIPVERSIONCHECK:
-                print(version_error + skip_msg, file=sys.stderr)
+                pdebug(version_error + skip_msg)
             else:
                 exit_prog(version_error + "Please install Transmission version " + gconfig.TRNSM_VERSION_MAX + " or lower.\n")
 
@@ -3349,7 +3349,7 @@ class Interface(object):
             status = "V.%s@%s:%s" % (server.version, server.host, server.port)
         else:
             status = "Transmission %s@%s:%s" % (server.version, server.host, server.port)
-        if cmd_args.DEBUG:
+        if gconfig.DEBUG:
             status = "%d x %d " % (self.width, self.height) + status
         self.screen.addstr(0, 0, status, curses.A_REVERSE)
         return len(status)
@@ -4506,9 +4506,9 @@ def read_netrc(file=os.environ['HOME'] + '/.netrc', hostname=None):
             netrc.netrc(file).hosts[hostname]
         except KeyError:
             if hostname != 'localhost':
-                print("Unknown machine in %s: %s" % (file, hostname))
+                pdebug("Unknown machine in %s: %s" % (file, hostname))
                 if login and password:
-                    print("Using default login: %s" % login)
+                    pdebug("Using default login: %s" % login)
                 else:
                     sys.exit(gconfig.errors.CONFIGFILE_ERROR)
     except netrc.NetrcParseError as e:
@@ -4663,6 +4663,8 @@ if __name__ == '__main__':
                       help="Everything passed to the debug() function will be added to the file debug.log.")
     (cmd_args, transmissionremote_args) = parser.parse_args()
 
+    gconfig.DEBUG = cmd_args.DEBUG
+
     # read config from config file
     if not os.path.isfile(cmd_args.configfile) and not '/' in cmd_args.configfile:
         if os.path.isfile(xdg_config_home('tremc/'+cmd_args.configfile)):
@@ -4712,7 +4714,7 @@ if __name__ == '__main__':
         else:
             cmd.extend(transmissionremote_args)
 
-        print("EXECUTING:\n%s\nRESPONSE:" % ' '.join(cmd))
+        pdebug("EXECUTING:\n%s\nRESPONSE:" % ' '.join(cmd))
 
         try:
             retcode = call(cmd)
