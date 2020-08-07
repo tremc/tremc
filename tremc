@@ -194,19 +194,19 @@ class Normalizer:
     def __init__(self):
         self.values = {}
 
-    def add(self, id, value, max):
-        if id not in list(self.values.keys()):
-            self.values[id] = [float(value)]
+    def add(self, key, value, max_len):
+        if key not in list(self.values.keys()):
+            self.values[key] = [float(value)]
         else:
-            if len(self.values[id]) >= max:
-                self.values[id].pop(0)
-            self.values[id].append(float(value))
-        return self.get(id)
+            if len(self.values[key]) >= max_len:
+                self.values[key].pop(0)
+            self.values[key].append(float(value))
+        return self.get(key)
 
-    def get(self, id):
-        if id not in list(self.values.keys()):
+    def get(self, key):
+        if key not in list(self.values.keys()):
             return 0.0
-        return sum(self.values[id]) / len(self.values[id])
+        return sum(self.values[key]) / len(self.values[key])
 
 
 session_id = 0
@@ -565,21 +565,21 @@ class Transmission:
             return []
         return self.torrent_cache
 
-    def get_torrent_by_id(self, id):
+    def get_torrent_by_id(self, t_id):
         i = 0
-        while self.torrent_cache[i]['id'] != id:
+        while self.torrent_cache[i]['id'] != t_id:
             i += 1
-        return self.torrent_cache[i] if self.torrent_cache[i]['id'] == id else None
+        return self.torrent_cache[i] if self.torrent_cache[i]['id'] == t_id else None
 
     def get_torrent_details(self):
         return self.torrent_details_cache
 
-    def set_torrent_details_id(self, id):
-        if id < 0:
+    def set_torrent_details_id(self, t_id):
+        if t_id < 0:
             self.requests['torrent-details'] = TransmissionRequest(self.host, self.port, self.path)
         else:
             self.requests['torrent-details'].set_request_data('torrent-get', self.TAG_TORRENT_DETAILS,
-                                                              {'ids': id, 'fields': self.DETAIL_FIELDS})
+                                                              {'ids': t_id, 'fields': self.DETAIL_FIELDS})
 
     def get_hosts(self):
         return self.hosts_cache
@@ -591,9 +591,9 @@ class Transmission:
         request = TransmissionRequest(self.host, self.port, self.path, 'session-get', self.TAG_SESSION_GET)
         request.send_request()
         response = request.get_response()
-        dir = response['arguments']['download-dir']
+        path = response['arguments']['download-dir']
 
-        request = TransmissionRequest(self.host, self.port, self.path, 'free-space', 1, {'path': dir})
+        request = TransmissionRequest(self.host, self.port, self.path, 'free-space', 1, {'path': path})
         request.send_request()
         response = request.get_response()
         if 'size-bytes' in response['arguments']:
@@ -618,16 +618,16 @@ class Transmission:
             limit_enabled = True
 
         if torrent_id == -1:
-            type = 'session-set'
+            request_type = 'session-set'
             data['speed-limit-' + direction] = new_limit
             data['speed-limit-' + direction + '-enabled'] = limit_enabled
         else:
-            type = 'torrent-set'
+            request_type = 'torrent-set'
             data['ids'] = torrent_id
             data[direction + 'loadLimit'] = new_limit
             data[direction + 'loadLimited'] = limit_enabled
 
-        request = TransmissionRequest(self.host, self.port, self.path, type, 1, data)
+        request = TransmissionRequest(self.host, self.port, self.path, request_type, 1, data)
         request.send_request()
         self.wait_for_torrentlist_update()
 
@@ -750,9 +750,9 @@ class Transmission:
         request.send_request()
         self.wait_for_torrentlist_update()
 
-    def rename_torrent_file(self, id, path, newname):
+    def rename_torrent_file(self, t_id, path, newname):
         request = TransmissionRequest(self.host, self.port, self.path, 'torrent-rename-path', 1,
-                                      {'ids': [id], 'path': path, 'name': newname})
+                                      {'ids': [t_id], 'path': path, 'name': newname})
         request.send_request()
         response = request.get_response()
         return response['result']
@@ -783,9 +783,9 @@ class Transmission:
                     ret = response['result'] if response['result'] != 'success' else ''
         return ret
 
-    def add_torrent_tracker(self, id, tracker):
+    def add_torrent_tracker(self, t_id, tracker):
         data = {
-            'ids': [id],
+            'ids': [t_id],
             'trackerAdd': [tracker]
         }
         request = TransmissionRequest(self.host, self.port, self.path, 'torrent-set', 1, data)
@@ -793,8 +793,8 @@ class Transmission:
         response = request.get_response()
         return response['result'] if response['result'] != 'success' else ''
 
-    def remove_torrent_tracker(self, id, tracker):
-        data = {'ids': [id],
+    def remove_torrent_tracker(self, t_id, tracker):
+        data = {'ids': [t_id],
                 'trackerRemove': [tracker]}
         request = TransmissionRequest(self.host, self.port, self.path, 'torrent-set', 1, data)
         request.send_request()
@@ -1355,7 +1355,7 @@ class Interface:
         elif self.selected_torrent > -1:
             return
         if self.selected_torrent == -1:
-            self.select_unselect_torrent(all=True)
+            self.select_unselect_torrent(all_torrents=True)
 
     def a_key(self, c):
         # File list
@@ -1512,11 +1512,11 @@ class Interface:
                        "  Duration:   {t_duration}\n").format(s_ul=scale_bytes(session_ul),
                                                               s_dl=scale_bytes(session_dl),
                                                               s_ratio=session_ratio,
-                                                              s_duration=scale_time(session_time, 'long'),
+                                                              s_duration=scale_time(session_time, long=True),
                                                               t_ul=scale_bytes(total_ul),
                                                               t_dl=scale_bytes(total_dl),
                                                               t_ratio=total_ratio,
-                                                              t_duration=scale_time(total_time, 'long'))
+                                                              t_duration=scale_time(total_time, long=True))
 
             width = max([len(x) for x in message.split("\n")]) + 4
             width = min(self.width, width)
@@ -2200,8 +2200,8 @@ class Interface:
             pass
         return c
 
-    def select_unselect_torrent(self, all=False, invert=False):
-        if all:
+    def select_unselect_torrent(self, all_torrents=False, invert=False):
+        if all_torrents:
             if self.selected:
                 self.selected = set()
             else:
@@ -2213,37 +2213,37 @@ class Interface:
                 self.selected.symmetric_difference_update(set([self.torrents[self.focus]['id']]))
                 self.movement_keys(curses.KEY_DOWN)
 
-    def filter_torrent(self, t, filter):
-        if filter['name'] == 'downloading':
-            return filter['inverse'] != (t['rateDownload'] > 0)
-        if filter['name'] == 'uploading':
-            return filter['inverse'] != (t['rateUpload'] > 0)
-        if filter['name'] == 'paused':
-            return filter['inverse'] != (t['status'] == Transmission.STATUS_STOPPED)
-        if filter['name'] == 'seeding':
-            return filter['inverse'] != (t['status'] == Transmission.STATUS_SEED or t['status'] == Transmission.STATUS_SEED_WAIT)
-        if filter['name'] == 'incomplete':
-            return filter['inverse'] != (t['percentDone'] < 100)
-        if filter['name'] == 'private':
-            return filter['inverse'] != t['isPrivate']
-        if filter['name'] == 'active':
-            return filter['inverse'] != (t['peersGettingFromUs'] > 0 or t['peersSendingToUs'] > 0 or t['status'] == Transmission.STATUS_CHECK)
-        if filter['name'] == 'verifying':
-            return filter['inverse'] != (t['status'] == Transmission.STATUS_CHECK or t['status'] == Transmission.STATUS_CHECK_WAIT)
-        if filter['name'] == 'isolated':
-            return filter['inverse'] != t['isIsolated']
-        if filter['name'] == 'honors':
-            return filter['inverse'] != t['honorsSessionLimits']
-        if filter['name'] == 'selected':
-            return filter['inverse'] != (t['id'] in self.selected)
-        if filter['name'] == 'tracker':
-            return filter['inverse'] != (t['mainTrackerDomain'] == filter['tracker'])
-        if filter['name'] == 'regex':
-            return filter['inverse'] != bool(re.search(filter['regex'], t['name'], flags=re.I))
-        if filter['name'] == 'location':
-            return filter['inverse'] != (homedir2tilde(t['downloadDir']) == filter['location'])
-        if filter['name'] == 'label':
-            return filter['inverse'] != (filter['label'] in t['labels'])
+    def filter_torrent(self, t, filtr):
+        if filtr['name'] == 'downloading':
+            return filtr['inverse'] != (t['rateDownload'] > 0)
+        if filtr['name'] == 'uploading':
+            return filtr['inverse'] != (t['rateUpload'] > 0)
+        if filtr['name'] == 'paused':
+            return filtr['inverse'] != (t['status'] == Transmission.STATUS_STOPPED)
+        if filtr['name'] == 'seeding':
+            return filtr['inverse'] != (t['status'] == Transmission.STATUS_SEED or t['status'] == Transmission.STATUS_SEED_WAIT)
+        if filtr['name'] == 'incomplete':
+            return filtr['inverse'] != (t['percentDone'] < 100)
+        if filtr['name'] == 'private':
+            return filtr['inverse'] != t['isPrivate']
+        if filtr['name'] == 'active':
+            return filtr['inverse'] != (t['peersGettingFromUs'] > 0 or t['peersSendingToUs'] > 0 or t['status'] == Transmission.STATUS_CHECK)
+        if filtr['name'] == 'verifying':
+            return filtr['inverse'] != (t['status'] == Transmission.STATUS_CHECK or t['status'] == Transmission.STATUS_CHECK_WAIT)
+        if filtr['name'] == 'isolated':
+            return filtr['inverse'] != t['isIsolated']
+        if filtr['name'] == 'honors':
+            return filtr['inverse'] != t['honorsSessionLimits']
+        if filtr['name'] == 'selected':
+            return filtr['inverse'] != (t['id'] in self.selected)
+        if filtr['name'] == 'tracker':
+            return filtr['inverse'] != (t['mainTrackerDomain'] == filtr['tracker'])
+        if filtr['name'] == 'regex':
+            return filtr['inverse'] != bool(re.search(filtr['regex'], t['name'], flags=re.I))
+        if filtr['name'] == 'location':
+            return filtr['inverse'] != (homedir2tilde(t['downloadDir']) == filtr['location'])
+        if filtr['name'] == 'label':
+            return filtr['inverse'] != (filtr['label'] in t['labels'])
 
         return True  # Unknown filter does not filter anything
 
@@ -2593,11 +2593,11 @@ class Interface:
             if t['wanted'][i] is True:
                 wanted += t['files'][i]['length']
 
-        sizes = ['Size: ', "%s;  " % scale_bytes(t['totalSize'], 'long'),
-                 "%s wanted;  " % (scale_bytes(wanted, 'long'), 'everything')[t['totalSize'] == wanted]]
+        sizes = ['Size: ', "%s;  " % scale_bytes(t['totalSize'], long=True),
+                 "%s wanted;  " % (scale_bytes(wanted, long=True), 'everything')[t['totalSize'] == wanted]]
         if t['available'] < t['totalSize']:
-            sizes.append("%s available;  " % scale_bytes(t['available'], 'long'))
-        sizes.extend(["%s left" % scale_bytes(t['leftUntilDone'], 'long')])
+            sizes.append("%s available;  " % scale_bytes(t['available'], long=True))
+        sizes.extend(["%s left" % scale_bytes(t['leftUntilDone'], long=True)])
         info.append(sizes)
 
         info.append(['Files: ', "%d;  " % len(t['files'])])
@@ -2611,31 +2611,31 @@ class Interface:
             info[-1].append("%d commenced" % partial)
 
         info.append(['Chunks: ', "%s;  " % t['pieceCount'],
-                     "%s each" % scale_bytes(t['pieceSize'], 'long')])
+                     "%s each" % scale_bytes(t['pieceSize'], long=True)])
 
         info.append(['Download: '])
-        info[-1].append("%s" % scale_bytes(t['downloadedEver'], 'long')
+        info[-1].append("%s" % scale_bytes(t['downloadedEver'], long=True)
                         + " (%.2f%%) received;  " % percent(t['sizeWhenDone'], t['downloadedEver']))
-        info[-1].append("%s" % scale_bytes(t['haveValid'], 'long')
+        info[-1].append("%s" % scale_bytes(t['haveValid'], long=True)
                         + " (%.2f%%) verified;  " % percent(t['sizeWhenDone'], t['haveValid']))
-        info[-1].append("%s corrupt" % scale_bytes(t['corruptEver'], 'long'))
+        info[-1].append("%s corrupt" % scale_bytes(t['corruptEver'], long=True))
         if t['percentDone'] < 100:
             info[-1][-1] += ';  '
             if t['rateDownload']:
-                info[-1].append("receiving %s per second" % scale_bytes(t['rateDownload'], 'long'))
+                info[-1].append("receiving %s per second" % scale_bytes(t['rateDownload'], long=True))
                 if t['downloadLimited']:
-                    info[-1][-1] += " (throttled to %s)" % scale_bytes(t['downloadLimit'] * 1024, 'long')
+                    info[-1][-1] += " (throttled to %s)" % scale_bytes(t['downloadLimit'] * 1024, long=True)
 
         try:
             copies_distributed = (float(t['uploadedEver']) / float(t['sizeWhenDone']))
         except ZeroDivisionError:
             copies_distributed = 0
         info.append(['Upload: ', "%s (%.2f%%) transmitted" %
-                     (scale_bytes(t['uploadedEver'], 'long'), t['uploadRatio'] * 100)])
+                     (scale_bytes(t['uploadedEver'], long=True), t['uploadRatio'] * 100)])
         if t['rateUpload']:
-            info.append(" Sending %s per second" % scale_bytes(t['rateUpload'], 'long'))
+            info.append(" Sending %s per second" % scale_bytes(t['rateUpload'], long=True))
             if t['uploadLimited']:
-                info[-1] += " (throttled to %s)" % scale_bytes(t['uploadLimit'] * 1024, 'long')
+                info[-1] += " (throttled to %s)" % scale_bytes(t['uploadLimit'] * 1024, long=True)
 
         info.append(['Ratio: ', '%.2f copies distributed' % copies_distributed])
         norm_upload_rate = norm.add('%s:rateUpload' % t['id'], t['rateUpload'], 50)
@@ -2676,7 +2676,7 @@ class Interface:
                 swarm_speed = sum([peer['download_speed'] for peer in active_peers]) / len(active_peers)
                 info.append(['Swarm speed: ', "%s on average;  " % scale_bytes(swarm_speed),
                              "distribution of 1 copy takes %s" %
-                             scale_time(int(t['totalSize'] / swarm_speed), 'long')])
+                             scale_time(int(t['totalSize'] / swarm_speed), long=True)])
             else:
                 info.append(['Swarm speed: ', strings[3] %
                              (min_active_peers, len(active_peers))])
@@ -3350,29 +3350,29 @@ class Interface:
         return len(status)
 
     def draw_quick_help(self, maxwidth):
-        help = [('?', 'Help')]
+        help_strings = [('?', 'Help')]
 
         if self.selected_torrent == -1:
             if self.focus >= 0:
-                help = [('enter', 'View'), ('p', 'Pause/Unpause'), ('r', 'Remove'), ('v', 'Verify')]
+                help_strings = [('enter', 'View'), ('p', 'Pause/Unpause'), ('r', 'Remove'), ('v', 'Verify')]
             else:
-                help = [('/', 'Search'), ('f', 'Filter'), ('s', 'Sort')] + help + [('o', 'Options'), ('q', 'Quit')]
+                help_strings = [('/', 'Search'), ('f', 'Filter'), ('s', 'Sort')] + help_strings + [('o', 'Options'), ('q', 'Quit')]
         else:
-            help = [('Move with', 'cursor keys'), ('q', 'Back to List')]
+            help_strings = [('Move with', 'cursor keys'), ('q', 'Back to List')]
             if self.details_category_focus == 1 and self.focus_detaillist > -1:
-                help = [('enter', 'Open File'),
+                help_strings = [('enter', 'Open File'),
                         ('space', '(De)Select File'),
                         ('V', 'Visually Select Files'),
                         ('left/right', 'De-/Increase Priority'),
-                        ('esc', 'Unfocus/-select')] + help
+                        ('esc', 'Unfocus/-select')] + help_strings
             elif self.details_category_focus == 2:
-                help = [('F1/?', 'Explain flags')] + help
+                help_strings = [('F1/?', 'Explain flags')] + help_strings
             elif self.details_category_focus == 3:
-                help = [('a', 'Add Tracker'), ('r', 'Remove Tracker')] + help
+                help_strings = [('a', 'Add Tracker'), ('r', 'Remove Tracker')] + help_strings
 
         # Greedy algorithm
         line = ''
-        for x in help:
+        for x in help_strings:
             t = "%s:%s" % (x[0], x[1])
             if len(line) + len(t) + 1 <= maxwidth:
                 line = line + ' ' + t
@@ -4246,7 +4246,7 @@ def percent(full, part):
     return percent
 
 
-def scale_time(seconds, type='short'):
+def scale_time(seconds, long=False):
     minute_in_sec = float(60)
     hour_in_sec = float(3600)
     day_in_sec = float(86400)
@@ -4254,39 +4254,39 @@ def scale_time(seconds, type='short'):
     year_in_sec = 365.25 * day_in_sec  # from wikipedia
 
     if seconds < 0:
-        return ('?', 'some time')[type == 'long']
+        return ('?', 'some time')[long]
 
     if seconds < minute_in_sec:
-        if type == 'long':
+        if long:
             return 'now' if seconds < 5 else "%d second%s" % (seconds, ('', 's')[seconds > 1])
         return "%ds" % seconds
 
     if seconds < hour_in_sec:
         minutes = round(seconds / minute_in_sec, 0)
-        if type == 'long':
+        if long:
             return "%d minute%s" % (minutes, ('', 's')[minutes > 1])
         return "%dm" % minutes
 
     if seconds < day_in_sec:
         hours = round(seconds / hour_in_sec, 0)
-        if type == 'long':
+        if long:
             return "%d hour%s" % (hours, ('', 's')[hours > 1])
         return "%dh" % hours
 
     if seconds < month_in_sec:
         days = round(seconds / day_in_sec, 0)
-        if type == 'long':
+        if long:
             return "%d day%s" % (days, ('', 's')[days > 1])
         return "%dd" % days
 
     if seconds < year_in_sec:
         months = round(seconds / month_in_sec, 0)
-        if type == 'long':
+        if long:
             return "%d month%s" % (months, ('', 's')[months > 1])
         return "%dM" % months
 
     years = round(seconds / year_in_sec, 0)
-    if type == 'long':
+    if long:
         return "%d year%s" % (years, ('', 's')[years > 1])
     return "%dy" % years
 
@@ -4309,47 +4309,43 @@ def timestamp(timestamp, time_format="%x %X", narrow=False):
     else:
         timeobj = time.localtime(timestamp)
 
-    time_f = '' if narrow else 'long'
     if time_format == "%X" and (timestamp - time.time() < -86400 or timestamp - time.time() > 86400):
         time_format = "%x"
     absolute = time.strftime(time_format, timeobj)
     if narrow:
         if timestamp > time.time():
-            relative = '+' + scale_time(int(timestamp - time.time()), time_f)
+            relative = '+' + scale_time(int(timestamp - time.time()), not narrow)
         else:
-            relative = '-' + scale_time(int(time.time() - timestamp), time_f)
+            relative = '-' + scale_time(int(time.time() - timestamp), not narrow)
     else:
         if timestamp > time.time():
-            relative = 'in ' + scale_time(int(timestamp - time.time()), 'long')
+            relative = 'in ' + scale_time(int(timestamp - time.time()), True)
         else:
-            relative = scale_time(int(time.time() - timestamp), 'long') + ' ago'
+            relative = scale_time(int(time.time() - timestamp), True) + ' ago'
 
     if relative.startswith('now') or relative.endswith('now'):
         relative = 'now'
     return "%s (%s)" % (absolute, relative)
 
 
-def scale_bytes(bytes=0, type='short'):
-    if bytes >= 1099511627776:
-        scaled_bytes = round((bytes / 1099511627776.0), 1)
+def scale_bytes(num=0, long=False):
+    if num >= 1099511627776:
+        scaled_num = round((num / 1099511627776.0), 1)
         unit = 'T'
-    elif bytes >= 1073741824:
-        scaled_bytes = round((bytes / 1073741824.0), 1)
+    elif num >= 1073741824:
+        scaled_num = round((num / 1073741824.0), 1)
         unit = 'G'
-    elif bytes >= 1048576:
-        scaled_bytes = round((bytes / 1048576.0), 1)
+    elif num >= 1048576:
+        scaled_num = round((num / 1048576.0), 1)
         unit = 'M'
     else:
-        scaled_bytes = round((bytes / 1024.0), 1)
+        scaled_num = round((num / 1024.0), 1)
         unit = 'K'
 
-    # handle 0 bytes special
-    if bytes == 0 and type == 'long':
+    # handle 0 num special
+    if num == 0 and long:
         return 'nothing'
-
-    if type == 'long':
-        return num2str(bytes) + ' [' + num2str(scaled_bytes) + unit + ']'
-    return str(scaled_bytes) + unit
+    return num2str(num) + ' [' + num2str(scaled_num) + unit + ']' if long else str(scaled_num) + unit
 
 
 def homedir2tilde(path):
@@ -4360,11 +4356,11 @@ def tilde2homedir(path):
     return re.sub(r'^~', os.environ['HOME'], path)
 
 
-def html2text(str):
-    str = re.sub(r'</h\d+>', "\n", str)
-    str = re.sub(r'</p>', ' ', str)
-    str = re.sub(r'<[^>]*?>', '', str)
-    return str
+def html2text(s):
+    s = re.sub(r'</h\d+>', "\n", s)
+    s = re.sub(r'</p>', ' ', s)
+    s = re.sub(r'<[^>]*?>', '', s)
+    return s
 
 
 def hide_cursor():
@@ -4514,10 +4510,10 @@ def create_config(option, opt_str, value, parser):
         config.set('Connection', 'password', password)
 
     # create directory if necessary
-    dir = os.path.dirname(configfile)
-    if dir != '' and not os.path.isdir(dir):
+    config_dir = os.path.dirname(configfile)
+    if config_dir != '' and not os.path.isdir(config_dir):
         try:
-            os.makedirs(dir)
+            os.makedirs(config_dir)
         except OSError as msg:
             print(msg)
             sys.exit(gconfig.errors.CONFIGFILE_ERROR)
