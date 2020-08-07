@@ -154,7 +154,7 @@ config.set('Colors', 'file_prio_low', 'bg:yellow,fg:black')
 config.set('Colors', 'file_prio_off', 'bg:blue,fg:black')
 
 
-class ColorManager(object):
+class ColorManager:
     def __init__(self, config):
         self.config = dict()
         self.term_has_colors = curses.has_colors()
@@ -189,7 +189,7 @@ class ColorManager(object):
         return self.config[name]['id']
 
 
-class Normalizer(object):
+class Normalizer:
     def __init__(self):
         self.values = {}
 
@@ -212,7 +212,7 @@ session_id = 0
 vmode_id = -1
 
 
-class TransmissionRequest(object):
+class TransmissionRequest:
     """Handle communication with Transmission server."""
 
     def __init__(self, host, port, path, method=None, tag=None, arguments=None):
@@ -281,7 +281,7 @@ class TransmissionRequest(object):
 # End of Class TransmissionRequest
 
 
-class Transmission(object):
+class Transmission:
     """Higher level of data exchange"""
     STATUS_STOPPED = 0   # Torrent is stopped
     STATUS_CHECK_WAIT = 1   # Queued to check files
@@ -976,7 +976,7 @@ class Transmission(object):
 
 
 # User Interface
-class Interface(object):
+class Interface:
     TRACKER_ITEM_HEIGHT = 6
 
     def __init__(self):
