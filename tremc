@@ -1218,7 +1218,7 @@ class Interface:
                 self.screen.addstr(1, 0, "Resize terminal or")
                 self.screen.addstr(2, 0, "Press 'q' to  quit")
                 c = self.screen.getch()
-                if c in [27, K.q, K.w_]:
+                if c in (27, K.q, K.w_):
                     exit_prog()
             else:
                 break
@@ -1537,7 +1537,7 @@ class Interface:
             else:
                 self.win_message(win, height, width, message)
             c = self.wingetch(win)
-            if c in [27, K.q, K.w_]:
+            if c in (27, K.q, K.w_):
                 return -1
             self.update_torrent_list([win])
 
@@ -1857,54 +1857,54 @@ class Interface:
 
     def movement_keys(self, c):
         if self.selected_torrent == -1 and len(self.torrents) > 0:
-            if c == curses.KEY_UP or c == K.k or c == K.p_:
+            if c in (curses.KEY_UP, K.k, K.p_):
                 self.focus, self.scrollpos = self.move_up(self.focus, self.scrollpos, self.tlist_item_height)
-            elif c == curses.KEY_DOWN or c == K.j or c == K.n_:
+            elif c in (curses.KEY_DOWN, K.j, K.n_):
                 self.focus, self.scrollpos = self.move_down(self.focus, self.scrollpos, self.tlist_item_height,
                                                             self.torrents_per_page, len(self.torrents))
-            elif c == curses.KEY_PPAGE or c == K.b_:
+            elif c in (curses.KEY_PPAGE, K.b_):
                 self.focus, self.scrollpos = self.move_page_up(self.focus, self.scrollpos, self.tlist_item_height,
                                                                self.torrents_per_page)
-            elif c == curses.KEY_NPAGE or c == K.f_:
+            elif c in (curses.KEY_NPAGE, K.f_):
                 self.focus, self.scrollpos = self.move_page_down(self.focus, self.scrollpos, self.tlist_item_height,
                                                                  self.torrents_per_page, len(self.torrents))
-            elif c == curses.KEY_HOME or c == K.g:
+            elif c in (curses.KEY_HOME, K.g):
                 self.focus, self.scrollpos = self.move_to_top()
-            elif c == curses.KEY_END or c == K.G:
+            elif c in (curses.KEY_END, K.G):
                 self.focus, self.scrollpos = self.move_to_end(self.tlist_item_height, self.torrents_per_page, len(self.torrents))
             self.focused_id = self.torrents[self.focus]['id']
         elif self.selected_torrent > -1:
             # overview
             if self.details_category_focus == 0:
-                if (c == curses.KEY_UP or c == K.k or c == K.p_) and self.scrollpos_detaillist[0] > 0:
+                if (c in (curses.KEY_UP, K.k, K.p_)) and self.scrollpos_detaillist[0] > 0:
                     self.scrollpos_detaillist[0] -= 1
-                elif (c == curses.KEY_DOWN or c == K.j or c == K.n_) and self.scrollpos_detaillist[0] < self.max_overview_scroll:
+                elif (c in (curses.KEY_DOWN, K.j, K.n_)) and self.scrollpos_detaillist[0] < self.max_overview_scroll:
                     self.scrollpos_detaillist[0] += 1
-                elif c == curses.KEY_HOME or c == K.g:
+                elif c in (curses.KEY_HOME, K.g):
                     self.scrollpos_detaillist[0] = 0
-                elif c == curses.KEY_END or c == K.G:
+                elif c in (curses.KEY_END, K.G):
                     self.scrollpos_detaillist[0] = self.max_overview_scroll
             # file list
             if self.details_category_focus == 1:
                 # focus/movement
-                if c == curses.KEY_UP or c == K.k or c == K.p_:
+                if c in (curses.KEY_UP, K.k, K.p_):
                     self.focus_detaillist, self.scrollpos_detaillist[1] = \
                         self.move_up(self.focus_detaillist, self.scrollpos_detaillist[1], 1)
-                elif c == curses.KEY_DOWN or c == K.j or c == K.n_:
+                elif c in (curses.KEY_DOWN, K.j, K.n_):
                     self.focus_detaillist, self.scrollpos_detaillist[1] = \
                         self.move_down(self.focus_detaillist, self.scrollpos_detaillist[1], 1,
                                        self.detaillines_per_page, len(self.torrent_details['files']))
-                elif c == curses.KEY_PPAGE or c == K.b_:
+                elif c in (curses.KEY_PPAGE, K.b_):
                     self.focus_detaillist, self.scrollpos_detaillist[1] = \
                         self.move_page_up(self.focus_detaillist, self.scrollpos_detaillist[1], 1,
                                           self.detaillines_per_page)
-                elif c == curses.KEY_NPAGE or c == K.f_:
+                elif c in (curses.KEY_NPAGE, K.f_):
                     self.focus_detaillist, self.scrollpos_detaillist[1] = \
                         self.move_page_down(self.focus_detaillist, self.scrollpos_detaillist[1], 1,
                                             self.detaillines_per_page, len(self.torrent_details['files']))
-                elif c == curses.KEY_HOME or c == K.g:
+                elif c in (curses.KEY_HOME, K.g):
                     self.focus_detaillist, self.scrollpos_detaillist[1] = self.move_to_top()
-                elif c == curses.KEY_END or c == K.G:
+                elif c in (curses.KEY_END, K.G):
                     self.focus_detaillist, self.scrollpos_detaillist[1] = \
                         self.move_to_end(1, self.detaillines_per_page, len(self.torrent_details['files']))
                 # visual mode
@@ -1937,21 +1937,21 @@ class Interface:
                 lines_per_page = self.detaillines_per_page
 
             if list_len:
-                if c == curses.KEY_UP or c == K.k or c == K.p_:
+                if c in (curses.KEY_UP, K.k, K.p_):
                     if self.scrollpos_detaillist[self.details_category_focus] > 0:
                         self.scrollpos_detaillist[self.details_category_focus] -= 1
-                elif c == curses.KEY_DOWN or c == K.j or c == K.n_:
+                elif c in (curses.KEY_DOWN, K.j, K.n_):
                     if self.scrollpos_detaillist[self.details_category_focus] < list_len - 1:
                         self.scrollpos_detaillist[self.details_category_focus] += 1
-                elif c == curses.KEY_PPAGE or c == K.b_:
+                elif c in (curses.KEY_PPAGE, K.b_):
                     self.scrollpos_detaillist[self.details_category_focus] = \
                         max(self.scrollpos_detaillist[self.details_category_focus] - lines_per_page - ppage, 0)
-                elif c == curses.KEY_NPAGE or c == K.f_:
+                elif c in (curses.KEY_NPAGE, K.f_):
                     self.scrollpos_detaillist[self.details_category_focus] = min(list_len - 1,
                                                                                  self.scrollpos_detaillist[self.details_category_focus] + lines_per_page)
-                elif c == curses.KEY_HOME or c == K.g:
+                elif c in (curses.KEY_HOME, K.g):
                     self.scrollpos_detaillist[self.details_category_focus] = 0
-                elif c == curses.KEY_END or c == K.G:
+                elif c in (curses.KEY_END, K.G):
                     self.scrollpos_detaillist[self.details_category_focus] = list_len - 1
 
             # Disallow scrolling past the last item that would cause blank
@@ -1963,7 +1963,7 @@ class Interface:
     def file_pritority_or_switch_details(self, c):
         if self.selected_torrent > -1:
             # file priority OR walk through details
-            if c == curses.KEY_RIGHT or c == K.l:
+            if c in (curses.KEY_RIGHT, K.l):
                 if self.details_category_focus == 1 and \
                         (self.selected_files or self.focus_detaillist > -1):
                     if self.selected_files:
@@ -1974,7 +1974,7 @@ class Interface:
                     self.filelist_needs_refresh = True
                 else:
                     self.next_details()
-            elif c == curses.KEY_LEFT or c == K.h:
+            elif c in (curses.KEY_LEFT, K.h):
                 if self.details_category_focus == 1 and \
                         (self.selected_files or self.focus_detaillist > -1):
                     if self.selected_files:
@@ -3563,7 +3563,7 @@ class Interface:
         win = self.window(height, width, message=message)
         while True:
             c = self.wingetch(win)
-            if c in [27, K.q, K.w_]:
+            if c in (27, K.q, K.w_):
                 return -1
             self.update_torrent_list([win])
 
@@ -3602,9 +3602,9 @@ class Interface:
             if hard:
                 if c == K.y_:
                     return True
-                if c in [K.n, ord("\n"), ord(' ')]:
+                if c in (K.n, ord("\n"), ord(' ')):
                     return False
-                if c in [27, curses.KEY_BREAK, K.w_]:
+                if c in (27, curses.KEY_BREAK, K.w_):
                     return 0
             else:
                 if c == K.y:
@@ -3613,13 +3613,13 @@ class Interface:
                     return False
                 if c == ord("\t"):
                     choice = not choice
-                elif c == curses.KEY_LEFT or c == K.h:
+                elif c in (curses.KEY_LEFT, K.h):
                     choice = True
-                elif c == curses.KEY_RIGHT or c == K.l:
+                elif c in (curses.KEY_RIGHT, K.l):
                     choice = False
                 elif c == ord("\n") or c == ord(' '):
                     return choice
-                if c in [27, curses.KEY_BREAK, K.w_]:
+                if c in (27, curses.KEY_BREAK, K.w_):
                     return 0
             self.update_torrent_list([win])
 
@@ -3663,25 +3663,25 @@ class Interface:
             win.move(height - 2, displayindex + 2)
             c = self.wingetch(win)
             if history is not None:
-                if c == curses.KEY_UP or c == K.p_:
+                if c in (curses.KEY_UP, K.p_):
                     history_pos = (history_pos - 1) % len(localhistory)
                     text = localhistory[history_pos]
                     index = len(text)
-                if c == curses.KEY_DOWN or c == K.n_:
+                if c in (curses.KEY_DOWN, K.n_):
                     history_pos = (history_pos + 1) % len(localhistory)
                     text = localhistory[history_pos]
                     index = len(text)
-            if c in [27, curses.KEY_BREAK, K.w_]:
+            if c in (27, curses.KEY_BREAK, K.w_):
                 hide_cursor()
                 return ''
-            if index < len(text) and (c == curses.KEY_RIGHT or c == K.f_):
+            if index < len(text) and (c in (curses.KEY_RIGHT, K.f_)):
                 index += 1
-            elif index > 0 and (c == curses.KEY_LEFT or c == K.b_):
+            elif index > 0 and (c in (curses.KEY_LEFT, K.b_)):
                 index -= 1
-            elif (c == curses.KEY_BACKSPACE or c == K.DEL) and index > 0:
+            elif (c in (curses.KEY_BACKSPACE, K.DEL)) and index > 0:
                 text = text[:index - 1] + (index < len(text) and text[index:] or '')
                 index -= 1
-            elif index < len(text) and (c == curses.KEY_DC or c == K.d_):
+            elif index < len(text) and (c in (curses.KEY_DC, K.d_)):
                 text = text[:index] + text[index + 1:]
             elif index < len(text) and c == K.k_:
                 text = text[:index]
@@ -3689,9 +3689,9 @@ class Interface:
                 # Delete from cursor until beginning of line
                 text = text[index:]
                 index = 0
-            elif c == curses.KEY_HOME or c == K.a_:
+            elif c in (curses.KEY_HOME, K.a_):
                 index = 0
-            elif c == curses.KEY_END or c == K.e_:
+            elif c in (curses.KEY_END, K.e_):
                 index = len(text)
             elif c == ord('\n') or c == K.r_:
                 if history is not None and text != '':
@@ -3873,7 +3873,7 @@ class Interface:
             win.addstr(height - 2, 2, value.ljust(width - 4), curses.color_pair(self.colors.ind('dialog')))
             win.move(height - 2, len(value) + 2)
             c = self.wingetch(win)
-            if c in [27, K.q, curses.KEY_BREAK, K.w_]:
+            if c in (27, K.q, curses.KEY_BREAK, K.w_):
                 hide_cursor()
                 return -128
             if c == ord("\n"):
@@ -3905,13 +3905,13 @@ class Interface:
                     if value == '':
                         value = 0
                     number = float(value) if floating_point else int(value)
-                    if c == curses.KEY_LEFT or c == K.h:
+                    if c in (curses.KEY_LEFT, K.h):
                         number -= smallstep
-                    elif c == curses.KEY_RIGHT or c == K.l:
+                    elif c in (curses.KEY_RIGHT, K.l):
                         number += smallstep
-                    elif c == curses.KEY_DOWN or c == K.j:
+                    elif c in (curses.KEY_DOWN, K.j):
                         number -= bigstep
-                    elif c == curses.KEY_UP or c == K.k:
+                    elif c in (curses.KEY_UP, K.k):
                         number += bigstep
                     if not allow_zero and number <= 0:
                         number = 1
@@ -3954,23 +3954,23 @@ class Interface:
 
             if 47 < c < 123 and chr(c).lower() in keymap:
                 return (options[keymap[chr(c).lower()]][0], chr(c).isupper(), win) if extended else options[keymap[chr(c).lower()]][0]
-            if c in [K.q, 27, K.w_]:
+            if c in (K.q, 27, K.w_):
                 return (-128, False, win) if extended else -128
             if c == ord("\n"):
                 return (options[focus - 1][0], False, win) if extended else options[focus - 1][0]
             if c == curses.KEY_BACKSPACE and extended:
                 return (options[focus - 1][0], True, win)
-            if c == curses.KEY_DOWN or c == K.j or c == K.n_:
+            if c in (curses.KEY_DOWN, K.j, K.n_):
                 focus += 1
                 if focus > len(options):
                     focus = 1
-            elif c == curses.KEY_UP or c == K.k or c == K.p_:
+            elif c in (curses.KEY_UP, K.k, K.p_):
                 focus -= 1
                 if focus < 1:
                     focus = len(options)
-            elif c == curses.KEY_HOME or c == K.g:
+            elif c in (curses.KEY_HOME, K.g):
                 focus = 1
-            elif c == curses.KEY_END or c == K.G:
+            elif c in (curses.KEY_END, K.G):
                 focus = len(options)
             elif c == -1:
                 self.update_torrent_list(winstack + [win])
@@ -4050,7 +4050,7 @@ class Interface:
                 line_num += 1
 
             c = self.wingetch(win)
-            if c in [27, K.q, ord("\n"), K.w_]:
+            if c in (27, K.q, ord("\n"), K.w_):
                 return
             if c == K.p:
                 port = self.dialog_input_number("Port for incoming connections",
@@ -4184,7 +4184,7 @@ class Interface:
                     y += 1
                 win.chgat(1 + current[0], commas[current[1]] + 4, commas[current[1] + 1] - commas[current[1]] - 2, curses.A_UNDERLINE + curses.A_REVERSE)
             c = self.wingetch(win)
-            if c in [27, K.q, K.w_]:
+            if c in (27, K.q, K.w_):
                 return self.filters
             if c == ord("\n"):
                 filters = [f for f in filters if f != []]
