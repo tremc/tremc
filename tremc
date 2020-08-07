@@ -89,7 +89,7 @@ def country_code_by_addr_vany(geo_ip, geo_ip6, addr):
     if gconfig.geoip2:
         try:
             return geo_ip.country(addr).country.iso_code
-        except:
+        except Exception:
             return None
     if '.' in addr:
         return geo_ip.country_code_by_addr(addr)
@@ -244,7 +244,7 @@ class TransmissionRequest(object):
         except urllib.error.HTTPError as e:
             try:
                 msg = html2text(str(e.read()))
-            except:
+            except Exception:
                 msg = str(e)
 
             # extract session id and send request again
@@ -399,7 +399,7 @@ class Transmission(object):
             try:
                 import threading
                 self.threading = threading
-            except:
+            except Exception:
                 self.rdns = False
 
         self.geo_ips_cache = dict()
@@ -415,7 +415,7 @@ class Transmission(object):
             self.geo_ip6 = None
             try:
                 self.geo_ip = geoip2.database.Reader(gconfig.geoip2_database)
-            except:
+            except Exception:
                 gconfig.geoip = False
 
         # make sure there are no undefined values
@@ -1153,7 +1153,7 @@ class Interface(object):
             try:
                 history = json.load(open(filename, "r"))
                 assert isinstance(history, dict)
-            except:
+            except Exception:
                 history = {}
         else:
             history = {}
@@ -1166,12 +1166,12 @@ class Interface(object):
         if filename:
             try:
                 oldhistory = json.load(open(history_file, "r"))
-            except:
+            except Exception:
                 oldhistory = {}
             if oldhistory != history:
                 try:
                     json.dump(history, open(history_file, "w"))
-                except:
+                except Exception:
                     pass
 
     def apply_profile(self, profile):
@@ -1575,7 +1575,7 @@ class Interface(object):
                 options.insert(-2, ('label', 'La_bel'))
             try:
                 s = list(map(lambda x: x[0] == oldfilter['name'], options)).index(True) + 1
-            except:
+            except Exception:
                 s = 0
             choice, inverse, win = self.dialog_menu(prompt, options, s, extended=True, winstack=winstack)
             if choice != -128:
@@ -1605,7 +1605,7 @@ class Interface(object):
                                 i = i + 1
                             try:
                                 s = list(map(lambda x: x[0] == current_choice, select_list)).index(True) + 1
-                            except:
+                            except Exception:
                                 s = 0
                             selected = self.dialog_menu('Select ' + choice, select_list, s, winstack=winstack + [win])
                             if selected not in select:
@@ -2310,7 +2310,7 @@ class Interface(object):
                 try:
                     regex = re.compile(search_keyword, re.I)
                     matched_torrents = [t for t in self.torrents if regex.search(t['name'])]
-                except:
+                except Exception:
                     matched_torrents = self.torrents
             if matched_torrents:
                 self.focus = 0
@@ -2768,7 +2768,7 @@ class Interface(object):
                 try:
                     regex = re.compile(search_keyword, re.I)
                     matched_files = [f for f in self.sorted_files if regex.search(os.path.basename(f['name']))]
-                except:
+                except Exception:
                     matched_files = self.sorted_files
             if matched_files:
                 if self.search_focus >= len(matched_files):
@@ -3711,7 +3711,7 @@ class Interface(object):
                     try:
                         p = history.index(text)
                         history.pop(p)
-                    except:
+                    except Exception:
                         p = -1
                     if len(history) >= history_max:
                         history.pop(0)
@@ -3828,7 +3828,7 @@ class Interface(object):
             try:
                 regex = re.compile(pattern, re.I)
                 matched_torrents = set([t['id'] for t in self.torrents if regex.search(t['name'])])
-            except:
+            except Exception:
                 return True
         else:
             return True
@@ -3845,7 +3845,7 @@ class Interface(object):
             try:
                 regex = re.compile(pattern, re.I)
                 matched_files = [i for i in range(len(self.sorted_files)) if regex.search(os.path.basename(self.sorted_files[i]['name']))]
-            except:
+            except Exception:
                 return True
         else:
             return True
@@ -4262,7 +4262,7 @@ class Interface(object):
 def reverse_dns(cache, address):
     try:
         cache[address] = socket.gethostbyaddr(address)[0]
-    except:
+    except Exception:
         cache[address] = '<not resolvable>'
 
 
@@ -4770,7 +4770,7 @@ if __name__ == '__main__':
                     s = l.split()
                     if len(s) == 2 and s[0] == 'DatabaseDirectory':
                         geoip2_database = s[1] + '/GeoLite2-Country.mmdb'
-            except:
+            except Exception:
                 pass
         if not os.path.isfile(geoip2_database):
             geoip2_database = "/usr/share/GeoIP/GeoLite2-Country.mmdb"
