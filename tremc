@@ -1644,18 +1644,18 @@ class Interface(object):
             self.filters = self.dialog_filters()
 
     def global_upload(self, c):
-       current_limit = (-1, self.stats['speed-limit-up'])[self.stats['speed-limit-up-enabled']]
-       limit = self.dialog_input_number("Global upload limit in kilobytes per second", current_limit)
-       if limit == -128:
-           return
-       server.set_rate_limit('up', limit)
+        current_limit = (-1, self.stats['speed-limit-up'])[self.stats['speed-limit-up-enabled']]
+        limit = self.dialog_input_number("Global upload limit in kilobytes per second", current_limit)
+        if limit == -128:
+            return
+        server.set_rate_limit('up', limit)
 
     def global_download(self, c):
-       current_limit = (-1, self.stats['speed-limit-down'])[self.stats['speed-limit-down-enabled']]
-       limit = self.dialog_input_number("Global download limit in kilobytes per second", current_limit)
-       if limit == -128:
-           return
-       server.set_rate_limit('down', limit)
+        current_limit = (-1, self.stats['speed-limit-down'])[self.stats['speed-limit-down-enabled']]
+        limit = self.dialog_input_number("Global download limit in kilobytes per second", current_limit)
+        if limit == -128:
+            return
+        server.set_rate_limit('down', limit)
 
     def selected_ids(self):
         # If viewing torrent details, act on viewed torrent, even if there is a
@@ -1779,7 +1779,7 @@ class Interface(object):
         ids = [i for i in ids if not server.get_torrent_by_id(i)['status'] in
                [Transmission.STATUS_CHECK, Transmission.STATUS_CHECK_WAIT]]
         if ids:
-                server.verify_torrent(ids)
+            server.verify_torrent(ids)
 
     def reannounce_torrent(self, c):
         ids = self.selected_ids()
@@ -1955,8 +1955,8 @@ class Interface(object):
                     self.scrollpos_detaillist[self.details_category_focus] = \
                         max(self.scrollpos_detaillist[self.details_category_focus] - lines_per_page - ppage, 0)
                 elif c == curses.KEY_NPAGE or c == curses.ascii.ctrl(ord('f')):
-                        self.scrollpos_detaillist[self.details_category_focus] = min(list_len - 1,
-                                                                                     self.scrollpos_detaillist[self.details_category_focus] + lines_per_page)
+                    self.scrollpos_detaillist[self.details_category_focus] = min(list_len - 1,
+                                                                                 self.scrollpos_detaillist[self.details_category_focus] + lines_per_page)
                 elif c == curses.KEY_HOME or c == ord('g'):
                     self.scrollpos_detaillist[self.details_category_focus] = 0
                 elif c == curses.KEY_END or c == ord('G'):
@@ -3261,8 +3261,8 @@ class Interface(object):
             if self.narrow:
                 strings = ['T', 'D', 'S', 'P', '', '!', ' ', ' S:%d', ' F:%d']
             else:
-               strings = ["Torrent%s:" % ('s', '')[len(self.torrents) == 1], "Downloading:", "Seeding:", "Paused:",
-                          "Filter:", "not ", " Sort by:", " Selected:%d", " Files:%d"]
+                strings = ["Torrent%s:" % ('s', '')[len(self.torrents) == 1], "Downloading:", "Seeding:", "Paused:",
+                           "Filter:", "not ", " Sort by:", " Selected:%d", " Files:%d"]
             self.screen.addstr((self.height - 1), 0, strings[0],
                                curses.A_REVERSE)
             self.screen.addstr("%d (" % len(self.torrents), curses.A_REVERSE)
@@ -4253,16 +4253,16 @@ class Interface(object):
                 self.update_torrent_list([win])
 
     def update_torrent_list(self, winstack=[], pattern='', search=''):
-                server.update(1)
-                self.draw_stats()
-                if self.selected_torrent == -1:
-                    self.draw_torrent_list(search_keyword=pattern, search=search)
-                else:
-                    self.draw_details(search_keyword=pattern, search=search)
-                for win in winstack[:-1]:
-                    win.redrawwin()
-                    win.refresh()
-                winstack[-1].redrawwin()
+        server.update(1)
+        self.draw_stats()
+        if self.selected_torrent == -1:
+            self.draw_torrent_list(search_keyword=pattern, search=search)
+        else:
+            self.draw_details(search_keyword=pattern, search=search)
+        for win in winstack[:-1]:
+            win.redrawwin()
+            win.refresh()
+        winstack[-1].redrawwin()
 
 # End of class Interface
 
