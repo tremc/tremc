@@ -2206,7 +2206,6 @@ class Interface:
                 self.draw_details()
         except Exception as e:
             pdebug('caught %s in handle_user_input(): %s\n' % (type(e), str(e)))
-            pass
         return c
 
     def select_unselect_torrent(self, all_torrents=False, invert=False):
@@ -2793,7 +2792,6 @@ class Interface:
                     self.pad.addstr(ypos, 0, ' ' * self.width, curses_tags)
                 except Exception as e:
                     pdebug('caught %s in draw_filelist(): %s\n' % (type(e), str(e)))
-                    pass
 
             # colored priority (only in the first 33 chars, the rest is filename)
             xpos = 0
@@ -3134,7 +3132,6 @@ class Interface:
             xp = 0
             if self.narrow and i[0] == 'Hash: ' and self.width < 46:
                 value_x = 0
-                pass
             else:
                 if i[0] == 'Comment: ':
                     i = [i[0]] + list(wrap_multiline(i[1], self.width - 1, initial_indent=i[0].rjust(key_width + 1)))
