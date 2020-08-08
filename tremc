@@ -2189,7 +2189,7 @@ class Interface:
             f = self.details_keybindings.get(c, None)
         if f:
             #Temporarily:
-            if f == self.movement_keys:
+            if f == self.movement_keys or f == self.profile_selected:
                 f(c)
             else:
                 f()
