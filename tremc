@@ -978,7 +978,8 @@ class Transmission:
 class Interface:
     TRACKER_ITEM_HEIGHT = 6
 
-    def __init__(self):
+    def __init__(self, server):
+        self.server = server
         self.sort_options = [
             ('name', '_Name'), ('addedDate', '_Age'), ('percentDone', '_Progress'),
             ('seeders', '_Seeds'), ('leechers', 'Lee_ches'), ('sizeWhenDone', 'Si_ze'),
@@ -992,7 +993,6 @@ class Interface:
             ('none', '_Torrent order'),
             ('reverse', 'Re_verse')
         ]
-
         self.filters = [[{}]]
         self.filters[0][0]['name'] = config.get('Filtering', 'filter', fallback='')
         self.filters[0][0]['inverse'] = config.getboolean('Filtering', 'invert', fallback=False)
@@ -1013,8 +1013,8 @@ class Interface:
             self.apply_profile(self.profiles[cmd_args.profile])
 
         self.rdns = config.getboolean('Misc', 'rdns', fallback=False) ^ bool(cmd_args.rdns)
-        self.torrents = server.get_torrent_list(self.sort_orders)
-        self.stats = server.get_global_stats()
+        self.torrents = self.server.get_torrent_list(self.sort_orders)
+        self.stats = self.server.get_global_stats()
         self.torrent_details = []
         self.selected_torrent = -1  # changes to >-1 when focus >-1 & user hits return
         self.highlight_dialog = False
@@ -1214,7 +1214,7 @@ class Interface:
         }
 
         # queue was implemmented in transmission 2.4
-        if server.get_rpc_version() >= 14:
+        if self.server.get_rpc_version() >= 14:
             self.sort_options.append(('queuePosition', '_Queue Position'))
 
         self.sort_options.append(('reverse', 'Re_verse'))
@@ -1363,14 +1363,14 @@ class Interface:
         self.draw_torrent_list()
 
         while True:
-            server.update(1)
+            self.server.update(1)
 
             if self.selected_torrent == -1:
                 self.draw_torrent_list()
             else:
                 self.draw_details()
 
-            self.stats = server.get_global_stats()
+            self.stats = self.server.get_global_stats()
             self.draw_title_bar()  # show shortcuts and stuff
             self.draw_stats()      # show global states
             self.screen.move(0, 0)  # in case cursor can't be invisible
@@ -1379,15 +1379,15 @@ class Interface:
                 # It takes a long time, so avoid when handling user input
                 if self.selected_torrent > -1 and self.details_category_focus == 1:
                     self.filelist_needs_refresh = True
-                    server.set_torrent_details_id(self.torrents[self.focus]['id'])
-                    server.wait_for_details_update()
+                    self.server.set_torrent_details_id(self.torrents[self.focus]['id'])
+                    self.server.wait_for_details_update()
             if self.exit_now:
                 self.save_history(history_file, self.histories)
                 return
 
     def daemon_quit(self, c):
         if self.dialog_yesno("Ask daemon to shut down?"):
-            server.daemon_quit()
+            self.server.daemon_quit()
 
     def go_back_or_unfocus(self, c):
         if self.focus_detaillist > -1:   # unfocus and deselect file
@@ -1407,7 +1407,7 @@ class Interface:
 
     def leave_details(self, c):
         if self.selected_torrent > -1:
-            server.set_torrent_details_id(-1)
+            self.server.set_torrent_details_id(-1)
             self.selected_torrent = -1
             self.details_category_focus = 0
             self.scrollpos_detaillist = [0] * 5
@@ -1420,7 +1420,7 @@ class Interface:
         if self.selected_torrent == -1:
             self.exit_now = True
         else:  # return to list view
-            server.set_torrent_details_id(-1)
+            self.server.set_torrent_details_id(-1)
             self.selected_torrent = -1
             self.details_category_focus = 0
             self.focus_detaillist = -1
@@ -1428,7 +1428,7 @@ class Interface:
             self.selected_files = []
 
     def turtle_mode(self, c):
-        server.toggle_turtle_mode()
+        self.server.toggle_turtle_mode()
 
     def move_queue_down(self, c):
         self.move_queue('down')
@@ -1441,9 +1441,9 @@ class Interface:
 
     def add_torrent(self, c, paused=False):
         free_space = None
-        if server.get_rpc_version() >= 15:
+        if self.server.get_rpc_version() >= 15:
             # 10^9 instead of 2^30 to be consistent with web interface
-            free_space = float(server.get_free_space()) / (10**9)  # Bytes > GB
+            free_space = float(self.server.get_free_space()) / (10**9)  # Bytes > GB
         pause = "(paused) " if paused else ""
 
         location = self.dialog_input_text("Add " + pause + "torrent from file, URL or pure hash"
@@ -1454,7 +1454,7 @@ class Interface:
             if re.match('^[0-9a-fA-F]{40}$', location):
                 location = 'magnet:?xt=urn:btih:{}'.format(location)
 
-            error = server.add_torrent(tilde2homedir(location), paused=paused)
+            error = self.server.add_torrent(tilde2homedir(location), paused=paused)
             if error:
                 msg = wrap("Couldn't add torrent \"%s\":" % location)
                 msg.extend(wrap(error, self.width - 4))
@@ -1464,8 +1464,8 @@ class Interface:
         if self.focus > -1:
             self.screen.clear()
             self.selected_torrent = self.focus
-            server.set_torrent_details_id(self.torrents[self.focus]['id'])
-            server.wait_for_details_update()
+            self.server.set_torrent_details_id(self.torrents[self.focus]['id'])
+            self.server.wait_for_details_update()
 
     def show_sort_order_menu(self, c):
         if self.selected_torrent == -1:
@@ -1493,7 +1493,7 @@ class Interface:
         title = "Global statistics"
         win = None
         while True:
-            stats = server.get_stats()
+            stats = self.server.get_stats()
 
             total_ul = stats['cumulative-stats']['uploadedBytes']
             total_dl = stats['cumulative-stats']['downloadedBytes']
@@ -1560,7 +1560,7 @@ class Interface:
                    ('selected', 'S_elected'),
                    ('honors', '_Honors limits'),
                    ('invert', 'In_vert'), ('', '_All')]
-        if server.get_rpc_version() >= 16:
+        if self.server.get_rpc_version() >= 16:
             options.insert(-2, ('label', 'La_bel'))
         try:
             s = list(map(lambda x: x[0] == oldfilter['name'], options)).index(True) + 1
@@ -1573,13 +1573,13 @@ class Interface:
             else:
                 if choice in ['tracker', 'location', 'label']:
                     if choice == 'tracker':
-                        select = server.trackers
+                        select = self.server.trackers
                         min_select = 2
                     elif choice == 'location':
-                        select = server.locations
+                        select = self.server.locations
                         min_select = 2
                     elif choice == 'label':
-                        select = server.labels
+                        select = self.server.labels
                         min_select = 1
                     current_choice = new_filter[choice] if choice in new_filter else ''
                     if len(select) < min_select:
@@ -1633,14 +1633,14 @@ class Interface:
         limit = self.dialog_input_number("Global upload limit in kilobytes per second", current_limit)
         if limit == -128:
             return
-        server.set_rate_limit('up', limit)
+        self.server.set_rate_limit('up', limit)
 
     def global_download(self, c):
         current_limit = (-1, self.stats['speed-limit-down'])[self.stats['speed-limit-down-enabled']]
         limit = self.dialog_input_number("Global download limit in kilobytes per second", current_limit)
         if limit == -128:
             return
-        server.set_rate_limit('down', limit)
+        self.server.set_rate_limit('down', limit)
 
     def selected_ids(self):
         # If viewing torrent details, act on viewed torrent, even if there is a
@@ -1662,7 +1662,7 @@ class Interface:
         if ids == []:
             return (None, "")
         focused = self.torrents[self.focus] if (self.focus > -1 and self.torrents[self.focus]['id'] in ids) \
-            else server.get_torrent_by_id(ids[0])
+            else self.server.get_torrent_by_id(ids[0])
         extraline = "\nand %d more" % (len(ids) - 1) if len(ids) > 1 else ""
         return (focused, extraline)
 
@@ -1675,7 +1675,7 @@ class Interface:
                                              extraline, current_limit)
             if limit == -128:
                 return
-            server.set_rate_limit(direction, limit, ids)
+            self.server.set_rate_limit(direction, limit, ids)
 
     def torrent_upload(self, c):
         self.torrent_up_down_load('up')
@@ -1687,7 +1687,7 @@ class Interface:
         ids = self.selected_ids()
         if ids:
             focused = self.torrents[self.focus] if (self.focus > -1 and self.torrents[self.focus]['id'] in ids) \
-                else server.get_torrent_by_id(ids[0])
+                else self.server.get_torrent_by_id(ids[0])
             if focused['seedRatioMode'] == 0:   # Use global settings
                 current_limit = ''
             elif focused['seedRatioMode'] == 1:  # Stop seeding at seedRatioLimit
@@ -1701,16 +1701,16 @@ class Interface:
                 limit = 0
             if limit == -2:  # -2 means 'empty' in dialog_input_number return codes
                 limit = -1
-            server.set_seed_ratio(float(limit), ids)
+            self.server.set_seed_ratio(float(limit), ids)
 
     def honors_limits(self, c):
-        server.toggle_honors_session_limits(self.selected_ids())
+        self.server.toggle_honors_session_limits(self.selected_ids())
 
     def bandwidth_priority(self, c):
         if c == ord('-'):
-            server.decrease_bandwidth_priority(self.selected_ids())
+            self.server.decrease_bandwidth_priority(self.selected_ids())
         elif c == ord('+'):
-            server.increase_bandwidth_priority(self.selected_ids())
+            self.server.increase_bandwidth_priority(self.selected_ids())
 
     def copy_magnet_link(self, c):
         if self.focus > -1 and gconfig.clipboard:
@@ -1722,7 +1722,7 @@ class Interface:
 
     def move_queue(self, direction):
         # queue was implemmented in Transmission v2.4
-        if server.get_rpc_version() >= 14 and self.focus > -1:
+        if self.server.get_rpc_version() >= 14 and self.focus > -1:
             if direction in ('ppage', 'npage'):
                 new_position = self.torrents[self.focus]['queuePosition']
                 if direction == 'ppage':
@@ -1731,40 +1731,40 @@ class Interface:
                     new_position += 10
             else:
                 new_position = direction
-            server.move_queue(self.torrents[self.focus]['id'], new_position)
+            self.server.move_queue(self.torrents[self.focus]['id'], new_position)
 
     def pause_unpause_torrent(self, c):
         ids = self.selected_ids()
         if ids:
-            if any(server.get_torrent_by_id(i)['status'] == Transmission.STATUS_STOPPED for i in ids):
-                server.start_torrents(ids)
+            if any(self.server.get_torrent_by_id(i)['status'] == Transmission.STATUS_STOPPED for i in ids):
+                self.server.start_torrents(ids)
             else:
-                server.stop_torrents(ids)
+                self.server.stop_torrents(ids)
 
     def start_now_torrent(self, c):
         ids = self.selected_ids()
         if ids:
-            server.start_now_torrent(ids)
+            self.server.start_now_torrent(ids)
 
     def pause_unpause_all_torrent(self, c):
         if len(self.torrents) > 0:
             focused_torrent = self.torrents[max(0, self.focus)]
             if focused_torrent['status'] == Transmission.STATUS_STOPPED:
-                server.start_torrents([t['id'] for t in self.torrents])
+                self.server.start_torrents([t['id'] for t in self.torrents])
             else:
-                server.stop_torrents([t['id'] for t in self.torrents])
+                self.server.stop_torrents([t['id'] for t in self.torrents])
 
     def verify_torrent(self, c):
         ids = self.selected_ids()
-        ids = [i for i in ids if server.get_torrent_by_id(i)['status'] not in
+        ids = [i for i in ids if self.server.get_torrent_by_id(i)['status'] not in
                [Transmission.STATUS_CHECK, Transmission.STATUS_CHECK_WAIT]]
         if ids:
-            server.verify_torrent(ids)
+            self.server.verify_torrent(ids)
 
     def reannounce_torrent(self, c):
         ids = self.selected_ids()
         if ids:
-            server.reannounce_torrent(ids)
+            self.server.reannounce_torrent(ids)
 
     def remove_selected_torrents(self, c):
         if not self.selected:
@@ -1776,17 +1776,17 @@ class Interface:
             focused, extraline = self.get_focused(ids)
             name = focused['name'][:self.width - 15]
             if self.dialog_yesno("Remove %s?" % name + extraline, hard="WARNING: this will remove more than one torrent"):
-                server.remove_torrent(ids)
+                self.server.remove_torrent(ids)
 
     def remove_torrent(self, c):
         if self.focus > -1:
             name = self.torrents[self.focus]['name'][0:self.width - 15]
             if self.dialog_yesno("Remove %s?" % name):
                 if self.selected_torrent > -1:  # leave details
-                    server.set_torrent_details_id(-1)
+                    self.server.set_torrent_details_id(-1)
                     self.selected_torrent = -1
                     self.details_category_focus = 0
-                server.remove_torrent([self.torrents[self.focus]['id']])
+                self.server.remove_torrent([self.torrents[self.focus]['id']])
                 self.focus_next_after_delete()
 
     def remove_torrent_local_data(self, c):
@@ -1794,10 +1794,10 @@ class Interface:
             name = self.torrents[self.focus]['name'][0:self.width - 15]
             if self.dialog_yesno("Remove and delete %s?" % name, important=True):
                 if self.selected_torrent > -1:  # leave details
-                    server.set_torrent_details_id(-1)
+                    self.server.set_torrent_details_id(-1)
                     self.selected_torrent = -1
                     self.details_category_focus = 0
-                server.remove_torrent([self.torrents[self.focus]['id']], data=True)
+                self.server.remove_torrent([self.torrents[self.focus]['id']], data=True)
                 self.focus_next_after_delete()
 
     def focus_next_after_delete(self):
@@ -1812,15 +1812,15 @@ class Interface:
             self.focused_id = self.torrents[new_focus + 1]['id']
 
     def add_tracker(self):
-        if server.get_rpc_version() < 10:
+        if self.server.get_rpc_version() < 10:
             self.dialog_ok("You need Transmission v2.10 or higher to add trackers.")
             return
 
         tracker = self.dialog_input_text('Add tracker URL:', history=self.histories['tracker'], history_max=10,
-                                         fixed_history=list(server.trackers))
+                                         fixed_history=list(self.server.trackers))
         if tracker:
             t = self.torrent_details
-            response = server.add_torrent_tracker(t['id'], tracker)
+            response = self.server.add_torrent_tracker(t['id'], tracker)
 
             if response:
                 msg = wrap("Couldn't add tracker: %s" % response)
@@ -1828,7 +1828,7 @@ class Interface:
 
     def remove_tracker(self, c):
         if self.details_category_focus == 3:
-            if server.get_rpc_version() < 10:
+            if self.server.get_rpc_version() < 10:
                 self.dialog_ok("You need Transmission v2.10 or higher to remove trackers.")
                 return
 
@@ -1838,7 +1838,7 @@ class Interface:
                     and self.dialog_yesno("Do you want to remove this tracker?")):
 
                 tracker = t['trackerStats'][self.scrollpos_detaillist[3]]
-                response = server.remove_torrent_tracker(t['id'], tracker['id'])
+                response = self.server.remove_torrent_tracker(t['id'], tracker['id'])
 
                 if response:
                     msg = wrap("Couldn't remove tracker: %s" % response)
@@ -1954,9 +1954,9 @@ class Interface:
                 (self.selected_files or self.focus_detaillist > -1):
             if self.selected_files:
                 files = {self.file_index_map[index] for index in self.selected_files}
-                server.increase_file_priority(files)
+                self.server.increase_file_priority(files)
             elif self.focus_detaillist > -1:
-                server.increase_file_priority([self.file_index_map[self.focus_detaillist]])
+                self.server.increase_file_priority([self.file_index_map[self.focus_detaillist]])
             self.filelist_needs_refresh = True
         else:
             self.next_details(0)
@@ -1966,9 +1966,9 @@ class Interface:
                 (self.selected_files or self.focus_detaillist > -1):
             if self.selected_files:
                 files = {self.file_index_map[index] for index in self.selected_files}
-                server.decrease_file_priority(files)
+                self.server.decrease_file_priority(files)
             elif self.focus_detaillist > -1:
-                server.decrease_file_priority([self.file_index_map[self.focus_detaillist]])
+                self.server.decrease_file_priority([self.file_index_map[self.focus_detaillist]])
             self.filelist_needs_refresh = True
         else:
             self.prev_details(0)
@@ -1982,7 +1982,7 @@ class Interface:
                 if len(newname.split(os.sep)) > 1:
                     self.dialog_ok("Moving is not supported.")
                 else:
-                    result = server.rename_torrent_file(self.torrents[self.focus]['id'], oldname, newname)
+                    result = self.server.rename_torrent_file(self.torrents[self.focus]['id'], oldname, newname)
                     if result == 'success':
                         return os.path.join(os.path.dirname(oldname), newname)
                     self.dialog_ok('Couldn\'t rename\n"%s"\nto\n"%s":\n%s' %
@@ -2092,8 +2092,8 @@ class Interface:
 
     def open_torrent_file(self, c):
         if self.focus_detaillist >= 0 and self.details_category_focus == 1:
-            details = server.get_torrent_details()
-            stats = server.get_global_stats()
+            details = self.server.get_torrent_details()
+            stats = self.server.get_global_stats()
 
             file_server_index = self.file_index_map[self.focus_detaillist]
             file_name = details['files'][file_server_index]['name']
@@ -2156,17 +2156,17 @@ class Interface:
             self.choose_profile()
 
     def remove_labels(self, c):
-        if server.get_rpc_version() < 16:
+        if self.server.get_rpc_version() < 16:
             return
         ids = self.selected_ids()
         if ids:
             focused, extraline = self.get_focused(ids)
             name = focused['name'][:self.width - 15]
             if self.dialog_yesno("Remove labels from %s?" % name + extraline):
-                server.set_labels(ids, [])
+                self.server.set_labels(ids, [])
 
     def set_labels(self, c):
-        if server.get_rpc_version() < 16:
+        if self.server.get_rpc_version() < 16:
             return
         ids = self.selected_ids()
         if ids:
@@ -2175,18 +2175,18 @@ class Interface:
             labels_str = self.dialog_input_text(msg, '')
             labels = [s.strip() for s in labels_str.split(',')]
             if labels:
-                server.set_labels(ids, labels)
+                self.server.set_labels(ids, labels)
 
     def add_label(self, c):
-        if server.get_rpc_version() < 16:
+        if self.server.get_rpc_version() < 16:
             return
         ids = self.selected_ids()
         if ids:
             focused, extraline = self.get_focused(ids)
             msg = ('Label to add to "%s"' % focused['name']) + extraline
-            label = self.dialog_input_text(msg, '', history=self.histories['label'], history_max=10, fixed_history=list(server.labels))
+            label = self.dialog_input_text(msg, '', history=self.histories['label'], history_max=10, fixed_history=list(self.server.labels))
             if label:
-                server.add_label(ids, label)
+                self.server.add_label(ids, label)
 
     def call_list_key_bindings(self, c):
         self.list_key_bindings()
@@ -2203,9 +2203,9 @@ class Interface:
             location = homedir2tilde(self.torrents[self.focus]['downloadDir'])
             msg = ('Move "%s"' % focused['name']) + extraline + '\nfrom %s to' % location
             path = self.dialog_input_text(msg, location, tab_complete='dirs',
-                                          history=self.histories['location'], history_max=10, fixed_history=list(server.locations))
+                                          history=self.histories['location'], history_max=10, fixed_history=list(self.server.locations))
             if path:
-                server.move_torrent(ids, tilde2homedir(path))
+                self.server.move_torrent(ids, tilde2homedir(path))
 
     def handle_user_input(self):
         c = self.screen.getch()
@@ -2315,7 +2315,7 @@ class Interface:
         self.scrollpos = max(0, self.scrollpos)
 
     def draw_torrent_list(self, search_keyword='', search=''):
-        self.torrents = server.get_torrent_list(self.sort_orders)
+        self.torrents = self.server.get_torrent_list(self.sort_orders)
         self.filter_torrent_list()
 
         if search_keyword and search:
@@ -2489,7 +2489,7 @@ class Interface:
 
     def draw_torrentlist_status(self, torrent, focused, ypos):
         peers = ''
-        parts = [server.get_status(torrent, self.narrow)]
+        parts = [self.server.get_status(torrent, self.narrow)]
 
         if torrent['isIsolated'] and torrent['peersConnected'] <= 0:
             if not torrent['trackerStats']:
@@ -2541,14 +2541,14 @@ class Interface:
         remaining_space = self.torrent_title_width - sum([len(x) for x in parts], len(peers)) - 3
         delimiter = ' ' * int(remaining_space / (len(parts)))
 
-        line = server.get_bandwidth_priority(torrent) + server.get_honors_session_limits(torrent) + ' ' + delimiter.join(parts)
+        line = self.server.get_bandwidth_priority(torrent) + self.server.get_honors_session_limits(torrent) + ' ' + delimiter.join(parts)
 
         # make sure the peers element is always right justified
         line += ' ' * int(self.torrent_title_width - len(line) - len(peers)) + peers
         self.pad.addstr(ypos + 1, 0, line, tags)
 
     def draw_details(self, search_keyword=None, search=''):
-        self.torrent_details = server.get_torrent_details()
+        self.torrent_details = self.server.get_torrent_details()
         self.manage_layout()
 
         # details could need more space than the torrent list
@@ -2941,7 +2941,7 @@ class Interface:
     def create_filelist_line(self, name, index, percent, length, current_depth):
         line = "%s  %6.2f%%" % (str(index + 1).rjust(4), percent) + \
             '  ' + scale_bytes(length).rjust(7) + \
-            '  ' + server.get_file_priority(self.torrent_details['id'], self.file_index_map[index]).center(8) + \
+            '  ' + self.server.get_file_priority(self.torrent_details['id'], self.file_index_map[index]).center(8) + \
             " %s| %s" % ('  ' * current_depth, name[0:self.width - 34 - current_depth])
         return line
 
@@ -2979,8 +2979,8 @@ class Interface:
         ypos += 1
 
         # Peers
-        hosts = server.get_hosts()
-        geo_ips = server.get_geo_ips()
+        hosts = self.server.get_hosts()
+        geo_ips = self.server.get_geo_ips()
         for _, peer in enumerate(peers):
             if self.rdns:
                 if peer['address'] in hosts:
@@ -3373,9 +3373,9 @@ class Interface:
 
     def draw_connection_status(self):
         if self.narrow:
-            status = "V.%s@%s:%s" % (server.version, server.host, server.port)
+            status = "V.%s@%s:%s" % (self.server.version, self.server.host, self.server.port)
         else:
-            status = "Transmission %s@%s:%s" % (server.version, server.host, server.port)
+            status = "Transmission %s@%s:%s" % (self.server.version, self.server.host, self.server.port)
         if gconfig.DEBUG:
             status = "%d x %d " % (self.width, self.height) + status
         self.screen.addstr(0, 0, status, curses.A_REVERSE)
@@ -3434,13 +3434,13 @@ class Interface:
         if gconfig.clipboard:
             message += "              M  Copy Magnet Link to the System Clipboard\n"
 
-        if server.get_rpc_version() >= 16:
+        if self.server.get_rpc_version() >= 16:
             message += "              b  Add label\n" + \
                        "              B  Set labels\n" + \
                        "             ^l  Remove labels\n"
 
         # Queue was implemented in Transmission v2.4
-        if server.get_rpc_version() >= 14 and self.details_category_focus != 1:
+        if self.server.get_rpc_version() >= 14 and self.details_category_focus != 1:
             message += "            J/K  Move focused torrent in queue up/down\n" + \
                        " Shift+Lft/Rght  Move focused torrent in queue up/down by 10\n" + \
                        " Shift+Home/End  Move focused torrent to top/bottom of queue\n"
@@ -4026,7 +4026,7 @@ class Interface:
         options.append(('_Local Peer Discovery', ('disabled', 'enabled ')[self.stats['lpd-enabled']]))
         options.append(('Protocol En_cryption', "%s" % self.stats['encryption']))
         # uTP support was added in Transmission v2.3
-        if server.get_rpc_version() >= 13:
+        if self.server.get_rpc_version() >= 13:
             options.append(('_Micro Transport Protocol', ('disabled', 'enabled')[self.stats['utp-enabled']]))
         options.append(('_Global Peer Limit', "%d" % self.stats['peer-limit-global']))
         options.append(('Peer Limit per _Torrent', "%d" % self.stats['peer-limit-per-torrent']))
@@ -4034,7 +4034,7 @@ class Interface:
         options.append(('Tu_rtle Mode DL Limit', "%dK" % self.stats['alt-speed-down']))
         options.append(('_Seed Ratio Limit', "%s" % ('unlimited', self.stats['seedRatioLimit'])[self.stats['seedRatioLimited']]))
         # queue was implemented in Transmission v2.4
-        if server.get_rpc_version() >= 14:
+        if self.server.get_rpc_version() >= 14:
             options.append(('Do_wnload Queue Size', "%s" % ('disabled', self.stats['download-queue-size'])[self.stats['download-queue-enabled']]))
             options.append(('S_eed Queue Size', "%s" % ('disabled', self.stats['seed-queue-size'])[self.stats['seed-queue-enabled']]))
         options.append(('Title is Progress _Bar', ('no', 'yes')[self.torrentname_is_progressbar]))
@@ -4082,85 +4082,85 @@ class Interface:
                                                 self.stats['peer-port'],
                                                 cursorkeys=False, winstack=[win])
                 if 0 <= port <= 65535:
-                    server.set_option('peer-port', port)
+                    self.server.set_option('peer-port', port)
                 elif port != -128:  # user hit ESC
                     self.dialog_ok('Port must be in the range of 0 - 65535')
             elif c == K.n:
-                server.set_option('port-forwarding-enabled',
+                self.server.set_option('port-forwarding-enabled',
                                   (1, 0)[self.stats['port-forwarding-enabled']])
             elif c == K.x:
-                server.set_option('pex-enabled', (1, 0)[self.stats['pex-enabled']])
+                self.server.set_option('pex-enabled', (1, 0)[self.stats['pex-enabled']])
             elif c == K.d:
-                server.set_option('dht-enabled', (1, 0)[self.stats['dht-enabled']])
+                self.server.set_option('dht-enabled', (1, 0)[self.stats['dht-enabled']])
             elif c == K.l:
-                server.set_option('lpd-enabled', (1, 0)[self.stats['lpd-enabled']])
+                self.server.set_option('lpd-enabled', (1, 0)[self.stats['lpd-enabled']])
             # uTP support was added in Transmission v2.3
-            elif c == K.m and server.get_rpc_version() >= 13:
-                server.set_option('utp-enabled', (1, 0)[self.stats['utp-enabled']])
+            elif c == K.m and self.server.get_rpc_version() >= 13:
+                self.server.set_option('utp-enabled', (1, 0)[self.stats['utp-enabled']])
             elif c == K.g:
                 limit = self.dialog_input_number("Maximum number of connected peers",
                                                  self.stats['peer-limit-global'],
                                                  allow_negative_one=False, winstack=[win])
                 if limit >= 0:
-                    server.set_option('peer-limit-global', limit)
+                    self.server.set_option('peer-limit-global', limit)
             elif c == K.t:
                 limit = self.dialog_input_number("Maximum number of connected peers per torrent",
                                                  self.stats['peer-limit-per-torrent'],
                                                  allow_negative_one=False, winstack=[win])
                 if limit >= 0:
-                    server.set_option('peer-limit-per-torrent', limit)
+                    self.server.set_option('peer-limit-per-torrent', limit)
             elif c == K.s:
                 limit = self.dialog_input_number('Stop seeding with upload/download ratio',
                                                  (-1, self.stats['seedRatioLimit'])[self.stats['seedRatioLimited']],
                                                  floating_point=True, winstack=[win])
                 if limit >= 0:
-                    server.set_option('seedRatioLimit', limit)
-                    server.set_option('seedRatioLimited', True)
+                    self.server.set_option('seedRatioLimit', limit)
+                    self.server.set_option('seedRatioLimited', True)
                 elif limit < 0 and limit != -128:
-                    server.set_option('seedRatioLimited', False)
+                    self.server.set_option('seedRatioLimited', False)
             elif c == K.c:
                 choice = self.dialog_menu('Encryption', enc_options,
                                           list(map(lambda x: x[0] == self.stats['encryption'], enc_options)).index(True) + 1, winstack=[win])
                 if choice != -128:
-                    server.set_option('encryption', choice)
+                    self.server.set_option('encryption', choice)
             elif c == K.u:
                 limit = self.dialog_input_number('Upload limit for Turtle Mode in kilobytes per second',
                                                  self.stats['alt-speed-up'],
                                                  allow_negative_one=False, winstack=[win])
                 if limit != -128:
-                    server.set_option('alt-speed-up', limit)
+                    self.server.set_option('alt-speed-up', limit)
             elif c == K.r:
                 limit = self.dialog_input_number('Download limit for Turtle Mode in kilobytes per second',
                                                  self.stats['alt-speed-down'],
                                                  allow_negative_one=False, winstack=[win])
                 if limit != -128:
-                    server.set_option('alt-speed-down', limit)
+                    self.server.set_option('alt-speed-down', limit)
             elif c == K.b:
                 self.torrentname_is_progressbar = not self.torrentname_is_progressbar
             # Queue was implemmented in Transmission v2.4
-            elif c == K.w and server.get_rpc_version() >= 14:
+            elif c == K.w and self.server.get_rpc_version() >= 14:
                 queue_size = self.dialog_input_number('Download Queue size',
                                                       (0, self.stats['download-queue-size'])[self.stats['download-queue-enabled']],
                                                       allow_negative_one=False, winstack=[win])
                 if queue_size != -128:
                     if queue_size == 0:
-                        server.set_option('download-queue-enabled', False)
+                        self.server.set_option('download-queue-enabled', False)
                     elif queue_size > 0:
                         if not self.stats['download-queue-enabled']:
-                            server.set_option('download-queue-enabled', True)
-                        server.set_option('download-queue-size', queue_size)
+                            self.server.set_option('download-queue-enabled', True)
+                        self.server.set_option('download-queue-size', queue_size)
             # Queue was implemmented in Transmission v2.4
-            elif c == K.e and server.get_rpc_version() >= 14:
+            elif c == K.e and self.server.get_rpc_version() >= 14:
                 queue_size = self.dialog_input_number('Seed Queue size',
                                                       (0, self.stats['seed-queue-size'])[self.stats['seed-queue-enabled']],
                                                       allow_negative_one=False, winstack=[win])
                 if queue_size != -128:
                     if queue_size == 0:
-                        server.set_option('seed-queue-enabled', False)
+                        self.server.set_option('seed-queue-enabled', False)
                     elif queue_size > 0:
                         if not self.stats['seed-queue-enabled']:
-                            server.set_option('seed-queue-enabled', True)
-                        server.set_option('seed-queue-size', queue_size)
+                            self.server.set_option('seed-queue-enabled', True)
+                        self.server.set_option('seed-queue-size', queue_size)
 
             elif c == K.v:
                 viewer = self.dialog_input_text('File Viewer\nExample: xdg-viewer %s', self.file_viewer, winstack=[win])
@@ -4250,7 +4250,7 @@ class Interface:
                 self.update_torrent_list([win])
 
     def update_torrent_list(self, winstack=[], pattern='', search=''):
-        server.update(1)
+        self.server.update(1)
         self.draw_stats()
         if self.selected_torrent == -1:
             self.draw_torrent_list(search_keyword=pattern, search=search)
@@ -4786,7 +4786,7 @@ if __name__ == '__main__':
         history_file = cmd_args.configfile.rsplit('tremc', 1)[0] + 'tremc-history.json'
 
     try:
-        Interface()
+        Interface(server)
     except Exception:
         import traceback
         traceback.print_exc(file=sys.stderr)
