@@ -69,7 +69,17 @@ class gconfig:
 class Keys:
     TAB = 9
     LF = 10
+    ESC = 27
     SPACE = 32
+    STAR = 42
+    PLUS = 43
+    COMMA = 44
+    MINUS = 45
+    DOT = 46
+    SLASH = 47
+    LESS = 60
+    QUES = 63
+    TILDE = 126
     DEL = 127
     def __init__(self):
         for i in range(1, 27):
@@ -1035,9 +1045,9 @@ class Interface:
         self.exit_now = False
 
         self.details_keybindings = {
-            ord('?'): self.call_list_key_bindings,
+            K.QUES: self.call_list_key_bindings,
             curses.KEY_F1: self.call_list_key_bindings,
-            27: self.go_back_or_unfocus,
+            K.ESC: self.go_back_or_unfocus,
             curses.KEY_BREAK: self.go_back_or_unfocus,
             12: self.go_back_or_unfocus,
             curses.KEY_BACKSPACE: self.leave_details,
@@ -1053,9 +1063,9 @@ class Interface:
             K.U: self.torrent_upload,
             K.D: self.torrent_download,
             K.L: self.seed_ratio,
-            ord('*'): self.honors_limits,
-            ord('+'): self.bandwidth_priority_inc,
-            ord('-'): self.bandwidth_priority_dec,
+            K.STAR: self.honors_limits,
+            K.PLUS: self.bandwidth_priority_inc,
+            K.MINUS: self.bandwidth_priority_dec,
             K.J: self.move_to_next_directory_in_filelist,
             K.K: self.move_to_previous_directory_in_filelist,
             K.p: self.pause_unpause_torrent,
@@ -1100,10 +1110,10 @@ class Interface:
             K.m: self.move_torrent,
             K.M: self.copy_magnet_link,
             K.n: self.reannounce_torrent,
-            ord('/'): self.dialog_search_filelist,
-            ord('.'): self.dialog_search_filelist_regex,
-            ord(','): self.dialog_select_search_filelist,
-            ord('<'): self.dialog_select_search_filelist_regex,
+            K.SLASH: self.dialog_search_filelist,
+            K.DOT: self.dialog_search_filelist_regex,
+            K.COMMA: self.dialog_select_search_filelist,
+            K.LESS: self.dialog_select_search_filelist_regex,
             K.b: self.add_label,
             K.B: self.set_labels,
             K.l_: self.remove_labels,
@@ -1124,9 +1134,9 @@ class Interface:
             curses.KEY_SRIGHT: lambda c: self.move_queue('npage')
         }
         self.list_keybindings = {
-            ord('?'): self.call_list_key_bindings,
+            K.QUES: self.call_list_key_bindings,
             curses.KEY_F1: self.call_list_key_bindings,
-            27: self.go_back_or_unfocus,
+            K.ESC: self.go_back_or_unfocus,
             curses.KEY_BREAK: self.go_back_or_unfocus,
             12: self.go_back_or_unfocus,
             K.q: self.quit_now,
@@ -1148,10 +1158,10 @@ class Interface:
             K.t: self.turtle_mode,
             K.T: self.add_filter,
             K.I: self.edit_filters,
-            ord('~'): self.invert_filters_action,
-            ord('*'): self.honors_limits,
-            ord('+'): self.bandwidth_priority_inc,
-            ord('-'): self.bandwidth_priority_dec,
+            K.TILDE: self.invert_filters_action,
+            K.STAR: self.honors_limits,
+            K.PLUS: self.bandwidth_priority_inc,
+            K.MINUS: self.bandwidth_priority_dec,
             K.J: self.move_queue_down,
             K.K: self.move_queue_up,
             K.p: self.pause_unpause_torrent,
@@ -1187,10 +1197,10 @@ class Interface:
             K.m: self.move_torrent,
             K.M: self.copy_magnet_link,
             K.n: self.reannounce_torrent,
-            ord('/'): self.dialog_search_torrentlist,
-            ord('.'): self.dialog_search_torrentlist_regex,
-            ord(','): self.dialog_select_search_torrentlist,
-            ord('<'): self.dialog_select_search_torrentlist_regex,
+            K.SLASH: self.dialog_search_torrentlist,
+            K.DOT: self.dialog_search_torrentlist_regex,
+            K.COMMA: self.dialog_select_search_torrentlist,
+            K.LESS: self.dialog_select_search_torrentlist_regex,
             K.b: self.add_label,
             K.B: self.set_labels,
             K.l_: self.remove_labels,
@@ -3884,9 +3894,9 @@ class Interface:
                 value += chr(c)
             elif allow_zero and c == K.n0 and value != '-' and not value.startswith('0'):
                 value += chr(c)
-            elif allow_negative_one and c == ord('-') and len(value) == 0:
+            elif allow_negative_one and c == K.MINUS and len(value) == 0:
                 value += chr(c)
-            elif floating_point and c == ord('.') and '.' not in value:
+            elif floating_point and c == K.DOT and '.' not in value:
                 value += chr(c)
 
             elif cursorkeys and c != -1:
