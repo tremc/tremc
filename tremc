@@ -1367,11 +1367,11 @@ class Interface:
                 save_history(gconfig.history_file, self.histories)
                 return
 
-    def daemon_quit(self, c):
+    def daemon_quit(self):
         if self.dialog_yesno("Ask daemon to shut down?"):
             self.server.daemon_quit()
 
-    def go_back_or_unfocus(self, c):
+    def go_back_or_unfocus(self):
         if self.focus_detaillist > -1:   # unfocus and deselect file
             self.focus_detaillist = -1
             self.scrollpos_detaillist = [0] * 5
@@ -1387,17 +1387,17 @@ class Interface:
             elif self.filters[0][0]['name']:
                 self.filters[0][0]['name'] = ''  # reset filter
 
-    def leave_details(self, c):
+    def leave_details(self):
         self.server.set_torrent_details_id(-1)
         self.selected_torrent = -1
         self.details_category_focus = 0
         self.scrollpos_detaillist = [0] * 5
         self.selected_files = []
 
-    def quit_now(self, c):
+    def quit_now(self):
         self.exit_now = True
 
-    def go_back(self, c):
+    def go_back(self):
         self.server.set_torrent_details_id(-1)
         self.selected_torrent = -1
         self.details_category_focus = 0
@@ -1405,19 +1405,19 @@ class Interface:
         self.scrollpos_detaillist = [0] * 5
         self.selected_files = []
 
-    def turtle_mode(self, c):
+    def turtle_mode(self):
         self.server.toggle_turtle_mode()
 
-    def move_queue_down(self, c):
+    def move_queue_down(self):
         self.move_queue('down')
 
-    def move_queue_up(self, c):
+    def move_queue_up(self):
         self.move_queue('up')
 
-    def add_torrent_paused(self, c):
+    def add_torrent_paused(self):
         self.add_torrent(paused=True)
 
-    def add_torrent(self, c, paused=False):
+    def add_torrent(self, paused=False):
         free_space = None
         if self.server.get_rpc_version() >= 15:
             # 10^9 instead of 2^30 to be consistent with web interface
@@ -1438,14 +1438,14 @@ class Interface:
                 msg.extend(wrap(error, self.width - 4))
                 self.dialog_ok("\n".join(msg))
 
-    def enter_details(self, c):
+    def enter_details(self):
         if self.focus > -1:
             self.screen.clear()
             self.selected_torrent = self.focus
             self.server.set_torrent_details_id(self.torrents[self.focus]['id'])
             self.server.wait_for_details_update()
 
-    def show_sort_order_menu(self, c):
+    def show_sort_order_menu(self):
         if self.selected_torrent == -1:
             choice = self.dialog_menu('Sort order', self.sort_options,
                                       list(map(lambda x: x[0] == self.sort_orders[-1]['name'], self.sort_options)).index(True) + 1)
@@ -1467,7 +1467,7 @@ class Interface:
                 else:
                     self.file_sort_key = choice
 
-    def show_stats(self, c):
+    def show_stats(self):
         title = "Global statistics"
         win = None
         while True:
@@ -1588,32 +1588,32 @@ class Interface:
             return new_filter
         return None
 
-    def set_filter(self, c):
+    def set_filter(self):
         prompt = ('Show only', 'Filter all')[self.filters[0][0]['inverse']]
         new_filter = self.filter_menu(self.filters[0][0], prompt=prompt)
         if new_filter:
             self.filters = [[new_filter]]
             self.invert_filters = False
 
-    def invert_filters_action(self, c):
+    def invert_filters_action(self):
         self.invert_filters = not self.invert_filters
 
-    def add_filter(self, c):
+    def add_filter(self):
         new_filter = self.filter_menu(prompt="Add filter:")
         if new_filter:
             self.filters[0].append(new_filter)
 
-    def edit_filters(self, c):
+    def edit_filters(self):
         self.filters = self.dialog_filters()
 
-    def global_upload(self, c):
+    def global_upload(self):
         current_limit = (-1, self.stats['speed-limit-up'])[self.stats['speed-limit-up-enabled']]
         limit = self.dialog_input_number("Global upload limit in kilobytes per second", current_limit)
         if limit == -128:
             return
         self.server.set_rate_limit('up', limit)
 
-    def global_download(self, c):
+    def global_download(self):
         current_limit = (-1, self.stats['speed-limit-down'])[self.stats['speed-limit-down-enabled']]
         limit = self.dialog_input_number("Global download limit in kilobytes per second", current_limit)
         if limit == -128:
@@ -1655,13 +1655,13 @@ class Interface:
                 return
             self.server.set_rate_limit(direction, limit, ids)
 
-    def torrent_upload(self, c):
+    def torrent_upload(self):
         self.torrent_up_down_load('up')
 
-    def torrent_download(self, c):
+    def torrent_download(self):
         self.torrent_up_down_load('down')
 
-    def seed_ratio(self, c):
+    def seed_ratio(self):
         ids = self.selected_ids()
         if ids:
             focused = self.torrents[self.focus] if (self.focus > -1 and self.torrents[self.focus]['id'] in ids) \
@@ -1681,16 +1681,16 @@ class Interface:
                 limit = -1
             self.server.set_seed_ratio(float(limit), ids)
 
-    def honors_limits(self, c):
+    def honors_limits(self):
         self.server.toggle_honors_session_limits(self.selected_ids())
 
-    def bandwidth_priority_dec(self, c):
+    def bandwidth_priority_dec(self):
             self.server.decrease_bandwidth_priority(self.selected_ids())
 
-    def bandwidth_priority_inc (self, c):
+    def bandwidth_priority_inc (self):
             self.server.increase_bandwidth_priority(self.selected_ids())
 
-    def copy_magnet_link(self, c):
+    def copy_magnet_link(self):
         if self.focus > -1 and gconfig.clipboard:
             magnet = self.torrents[self.focus]['magnetLink']
             try:
@@ -1711,7 +1711,7 @@ class Interface:
                 new_position = direction
             self.server.move_queue(self.torrents[self.focus]['id'], new_position)
 
-    def pause_unpause_torrent(self, c):
+    def pause_unpause_torrent(self):
         ids = self.selected_ids()
         if ids:
             if any(self.server.get_torrent_by_id(i)['status'] == Transmission.STATUS_STOPPED for i in ids):
@@ -1719,12 +1719,12 @@ class Interface:
             else:
                 self.server.stop_torrents(ids)
 
-    def start_now_torrent(self, c):
+    def start_now_torrent(self):
         ids = self.selected_ids()
         if ids:
             self.server.start_now_torrent(ids)
 
-    def pause_unpause_all_torrent(self, c):
+    def pause_unpause_all_torrent(self):
         if len(self.torrents) > 0:
             focused_torrent = self.torrents[max(0, self.focus)]
             if focused_torrent['status'] == Transmission.STATUS_STOPPED:
@@ -1732,19 +1732,19 @@ class Interface:
             else:
                 self.server.stop_torrents([t['id'] for t in self.torrents])
 
-    def verify_torrent(self, c):
+    def verify_torrent(self):
         ids = self.selected_ids()
         ids = [i for i in ids if self.server.get_torrent_by_id(i)['status'] not in
                [Transmission.STATUS_CHECK, Transmission.STATUS_CHECK_WAIT]]
         if ids:
             self.server.verify_torrent(ids)
 
-    def reannounce_torrent(self, c):
+    def reannounce_torrent(self):
         ids = self.selected_ids()
         if ids:
             self.server.reannounce_torrent(ids)
 
-    def remove_selected_torrents(self, c):
+    def remove_selected_torrents(self):
         if not self.selected:
             return
         ids = self.selected_ids()
@@ -1754,7 +1754,7 @@ class Interface:
             if self.dialog_yesno("Remove %s?" % name + extraline, hard="WARNING: this will remove more than one torrent"):
                 self.server.remove_torrent(ids)
 
-    def remove_torrent(self, c):
+    def remove_torrent(self):
         if self.focus > -1:
             name = self.torrents[self.focus]['name'][0:self.width - 15]
             if self.dialog_yesno("Remove %s?" % name):
@@ -1765,7 +1765,7 @@ class Interface:
                 self.server.remove_torrent([self.torrents[self.focus]['id']])
                 self.focus_next_after_delete()
 
-    def remove_torrent_local_data(self, c):
+    def remove_torrent_local_data(self):
         if self.focus > -1:
             name = self.torrents[self.focus]['name'][0:self.width - 15]
             if self.dialog_yesno("Remove and delete %s?" % name, important=True):
@@ -1802,7 +1802,7 @@ class Interface:
                 msg = wrap("Couldn't add tracker: %s" % response)
                 self.dialog_ok("\n".join(msg))
 
-    def remove_tracker(self, c):
+    def remove_tracker(self):
         if self.details_category_focus == 3:
             if self.server.get_rpc_version() < 10:
                 self.dialog_ok("You need Transmission v2.10 or higher to remove trackers.")
@@ -1925,7 +1925,7 @@ class Interface:
                 self.scrollpos_detaillist[self.details_category_focus] = min(self.scrollpos_detaillist[self.details_category_focus],
                                                                              max(0, list_len - self.detaillines_per_page))
 
-    def file_priority_or_switch_details_next(self, c):
+    def file_priority_or_switch_details_next(self):
         if self.details_category_focus == 1 and \
                 (self.selected_files or self.focus_detaillist > -1):
             if self.selected_files:
@@ -1935,9 +1935,9 @@ class Interface:
                 self.server.increase_file_priority([self.file_index_map[self.focus_detaillist]])
             self.filelist_needs_refresh = True
         else:
-            self.next_details(0)
+            self.next_details()
 
-    def file_priority_or_switch_details_prev(self, c):
+    def file_priority_or_switch_details_prev(self):
         if self.details_category_focus == 1 and \
                 (self.selected_files or self.focus_detaillist > -1):
             if self.selected_files:
@@ -1947,9 +1947,9 @@ class Interface:
                 self.server.decrease_file_priority([self.file_index_map[self.focus_detaillist]])
             self.filelist_needs_refresh = True
         else:
-            self.prev_details(0)
+            self.prev_details()
 
-    def rename_torrent_selected_file(self, c):
+    def rename_torrent_selected_file(self):
         def rename_dialog(oldname):
             filename = os.path.basename(oldname)
             msg = 'Rename "%s"\nto:' % oldname
@@ -1977,7 +1977,7 @@ class Interface:
             # rename torrent folder
             rename_dialog(self.torrents[self.focus]['name'])
 
-    def add_tracker_or_select_all_files(self, c):
+    def add_tracker_or_select_all_files(self):
         # File list
         if self.details_category_focus == 1:
             self.select_unselect_file('all')
@@ -1985,16 +1985,16 @@ class Interface:
         elif self.details_category_focus == 3:
             self.add_tracker()
 
-    def visual_select_files(self, c):
+    def visual_select_files(self):
         self.select_unselect_file('visual')
 
-    def invert_selection_files(self, c):
+    def invert_selection_files(self):
         self.select_unselect_file('invert')
 
-    def select_file(self, c):
+    def select_file(self):
         self.select_unselect_file('file')
 
-    def select_files_dir(self, c):
+    def select_files_dir(self):
         self.select_unselect_file('dir')
 
     def select_unselect_file(self, action):
@@ -2066,7 +2066,7 @@ class Interface:
                 self.movement_keys(curses.KEY_UP)
                 file_id = self.file_index_map[self.focus_detaillist]
 
-    def open_torrent_file(self, c):
+    def open_torrent_file(self):
         if self.focus_detaillist >= 0 and self.details_category_focus == 1:
             details = self.server.get_torrent_details()
             stats = self.server.get_global_stats()
@@ -2111,27 +2111,27 @@ class Interface:
                 self.get_screen_size()
                 self.dialog_ok("%s:\n%s" % (" ".join(viewer_cmd), err))
 
-    def show_files_tab(self, c):
+    def show_files_tab(self):
         self.filelist_needs_refresh = True
         self.details_category_focus = 1
 
-    def show_overview_tab(self, c):
+    def show_overview_tab(self):
         self.details_category_focus = 0
 
-    def show_peers_tab(self, c):
+    def show_peers_tab(self):
         self.details_category_focus = 2
 
-    def show_trackers_tab(self, c):
+    def show_trackers_tab(self):
         self.details_category_focus = 3
 
-    def show_chunks_tab(self, c):
+    def show_chunks_tab(self):
         self.details_category_focus = 4
 
-    def profile_menu(self, c):
+    def profile_menu(self):
         if len(self.profiles) > 1:
             self.choose_profile()
 
-    def remove_labels(self, c):
+    def remove_labels(self):
         if self.server.get_rpc_version() < 16:
             return
         ids = self.selected_ids()
@@ -2141,7 +2141,7 @@ class Interface:
             if self.dialog_yesno("Remove labels from %s?" % name + extraline):
                 self.server.set_labels(ids, [])
 
-    def set_labels(self, c):
+    def set_labels(self):
         if self.server.get_rpc_version() < 16:
             return
         ids = self.selected_ids()
@@ -2153,7 +2153,7 @@ class Interface:
             if labels:
                 self.server.set_labels(ids, labels)
 
-    def add_label(self, c):
+    def add_label(self):
         if self.server.get_rpc_version() < 16:
             return
         ids = self.selected_ids()
@@ -2164,15 +2164,15 @@ class Interface:
             if label:
                 self.server.add_label(ids, label)
 
-    def call_list_key_bindings(self, c):
+    def call_list_key_bindings(self):
         self.list_key_bindings()
 
-    def toggle_compact_torrentlist(self, c):
+    def toggle_compact_torrentlist(self):
         self.tlist_item_height = self.tlist_item_height % 3 + 1
         self.recalculate_torrents_per_page()
         self.follow_list_focus()
 
-    def move_torrent(self, c):
+    def move_torrent(self):
         ids = self.selected_ids()
         if ids:
             focused, extraline = self.get_focused(ids)
@@ -2192,7 +2192,11 @@ class Interface:
         else:
             f = self.details_keybindings.get(c, None)
         if f:
-            f(c)
+            #Temporarily:
+            if f == self.movement_keys:
+                f(c)
+            else:
+                f()
         try:
             if self.selected_torrent == -1:
                 self.draw_torrent_list()
@@ -2202,15 +2206,15 @@ class Interface:
             pdebug('caught %s in handle_user_input(): %s\n' % (type(e), str(e)))
         return c
 
-    def invert_selection_torrents(self, c):
+    def invert_selection_torrents(self):
         if self.selected_torrent == -1:
             self.select_unselect_torrent(invert=True)
 
-    def select_unselect_torrents(self, c):
+    def select_unselect_torrents(self):
         if self.selected_torrent == -1:
             self.select_unselect_torrent(all_torrents=True)
 
-    def select_unselect_torrent(self, c, all_torrents=False, invert=False):
+    def select_unselect_torrent(self, all_torrents=False, invert=False):
         if all_torrents:
             if self.selected:
                 self.selected = set()
@@ -3160,7 +3164,7 @@ class Interface:
             yp += 1
         return yp
 
-    def next_details(self, c):
+    def next_details(self):
         if self.details_category_focus >= 4:
             self.details_category_focus = 0
         else:
@@ -3170,7 +3174,7 @@ class Interface:
         self.focus_detaillist = -1
         self.pad.erase()
 
-    def prev_details(self, c):
+    def prev_details(self):
         if self.details_category_focus <= 0:
             self.details_category_focus = 4
         else:
@@ -3237,7 +3241,7 @@ class Interface:
                                + "Incoming:%d " % self.torrent_details['peersFrom']['fromIncoming']
                                + "Cache:%d)" % self.torrent_details['peersFrom']['fromCache'],
                                curses.A_REVERSE)
-        elif vmode_id > -1:
+        elif self.vmode_id > -1:
             self.screen.addstr((self.height - 1), 0, "-- VISUAL --", curses.A_REVERSE)
         else:
             if self.narrow:
@@ -3747,25 +3751,25 @@ class Interface:
                 localhistory[-1] = text
             self.update_torrent_list(winstack + [win], pattern=text, search=search)
 
-    def dialog_search_torrentlist(self, c):
+    def dialog_search_torrentlist(self):
         self.dialog_input_text('Search torrent by title:',
                                on_enter=self.increment_search,
                                tab_complete='torrent_list',
                                maxwidth=60, align='right', search='pattern')
 
-    def dialog_search_torrentlist_regex(self, c):
+    def dialog_search_torrentlist_regex(self):
         self.dialog_input_text('Regex search torrent by title:',
                                on_enter=self.increment_search,
                                tab_complete='torrent_list',
                                maxwidth=60, align='right', search='regex')
 
-    def dialog_search_filelist(self, c):
+    def dialog_search_filelist(self):
         self.dialog_input_text('Search file by title:',
                                on_enter=self.increment_file_search,
                                tab_complete='file_list',
                                maxwidth=60, align='right', search='pattern')
 
-    def dialog_search_filelist_regex(self, c):
+    def dialog_search_filelist_regex(self):
         self.dialog_input_text('Regex search file by title:',
                                on_enter=self.increment_file_search,
                                tab_complete='file_list',
@@ -3777,25 +3781,25 @@ class Interface:
     def increment_search(self, pattern, inc=1, search=None):
         self.search_focus += inc
 
-    def dialog_select_search_torrentlist(self, c):
+    def dialog_select_search_torrentlist(self):
         self.dialog_input_text('Select torrents matching pattern',
                                on_enter=self.select_pattern_torrents,
                                tab_complete='torrent_list',
                                maxwidth=60, align='right', search='pattern')
 
-    def dialog_select_search_torrentlist_regex(self, c):
+    def dialog_select_search_torrentlist_regex(self):
         self.dialog_input_text('Select torrents matching regex',
                                on_enter=self.select_pattern_torrents,
                                tab_complete='torrent_list',
                                maxwidth=60, align='right', search='regex')
 
-    def dialog_select_search_filelist(self, c):
+    def dialog_select_search_filelist(self):
         self.dialog_input_text('Select files matching pattern',
                                on_enter=self.select_pattern_files,
                                tab_complete='file_list',
                                maxwidth=60, align='right', search='pattern')
 
-    def dialog_select_search_filelist_regex(self, c):
+    def dialog_select_search_filelist_regex(self):
         self.dialog_input_text('Select files matching regex',
                                on_enter=self.select_pattern_files,
                                tab_complete='file_list',
@@ -3984,7 +3988,7 @@ class Interface:
             i += 1
         return keys
 
-    def draw_options_dialog(self, c):
+    def draw_options_dialog(self):
         enc_options = [('required', '_required'), ('preferred', '_preferred'), ('tolerated', '_tolerated')]
         options = []
         options.append(('Peer _Port', "%d" % self.stats['peer-port']))
