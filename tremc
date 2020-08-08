@@ -1980,34 +1980,34 @@ class Interface:
     def add_tracker_or_select_all_files(self, c):
         # File list
         if self.details_category_focus == 1:
-            self.select_unselect_file(K.a)
+            self.select_unselect_file('all')
         # Trackers
         elif self.details_category_focus == 3:
             self.add_tracker()
 
     def visual_select_files(self, c):
-        self.select_unselect_file(K.V)
+        self.select_unselect_file('visual')
 
     def invert_selection_files(self, c):
-        self.select_unselect_file(K.i)
+        self.select_unselect_file('invert')
 
     def select_file(self, c):
-        self.select_unselect_file(K.SPACE)
+        self.select_unselect_file('file')
 
     def select_files_dir(self, c):
-        self.select_unselect_file(K.A)
+        self.select_unselect_file('dir')
 
-    def select_unselect_file(self, c):
+    def select_unselect_file(self, action):
         if self.details_category_focus == 1 and self.focus_detaillist >= 0:
             # file selection with space
-            if c == K.SPACE:
+            if action == 'file':
                 try:
                     self.selected_files.pop(self.selected_files.index(self.focus_detaillist))
                 except ValueError:
                     self.selected_files.append(self.focus_detaillist)
                 self.movement_keys(curses.KEY_DOWN)
             # (un)select directory
-            elif c == K.A:
+            elif action == 'dir':
                 file_id = self.file_index_map[self.focus_detaillist]
                 focused_dir = os.path.dirname(self.torrent_details['files'][file_id]['name'])
                 if self.selected_files.count(self.focus_detaillist):
@@ -2026,14 +2026,14 @@ class Interface:
                             self.selected_files.append(focus)
                 self.move_to_next_directory_in_filelist()
             # (un)select all files
-            elif c == K.a:
+            elif action == 'all':
                 if self.selected_files:
                     self.selected_files = []
                 else:
                     self.selected_files = list(range(0, len(self.torrent_details['files'])))
-            elif c == K.i:
+            elif action == 'invert':
                 self.selected_files = [f for f in range(0, len(self.torrent_details['files'])) if f not in self.selected_files]
-            elif c == K.V:
+            elif action == 'visual':
                 global vmode_id
                 if self.selected_files:
                     self.selected_files = []
