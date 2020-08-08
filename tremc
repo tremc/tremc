@@ -1041,7 +1041,7 @@ class Interface:
             curses.KEY_BREAK: self.go_back_or_unfocus,
             12: self.go_back_or_unfocus,
             curses.KEY_BACKSPACE: self.leave_details,
-            K.q: self.go_back_or_quit,
+            K.q: self.go_back,
             K.w_: self.quit_now,
             K.LF: self.open_torrent_file,
             K.i: self.invert_selection_files,
@@ -1054,8 +1054,8 @@ class Interface:
             K.D: self.torrent_download,
             K.L: self.seed_ratio,
             ord('*'): self.honors_limits,
-            ord('+'): self.bandwidth_priority,
-            ord('-'): self.bandwidth_priority,
+            ord('+'): self.bandwidth_priority_inc,
+            ord('-'): self.bandwidth_priority_dec,
             K.J: self.move_to_next_directory_in_filelist,
             K.K: self.move_to_previous_directory_in_filelist,
             K.p: self.pause_unpause_torrent,
@@ -1068,7 +1068,6 @@ class Interface:
             curses.KEY_DC: self.remove_tracker,
             K.R: self.remove_torrent_local_data,
             curses.KEY_SDC: self.remove_torrent_local_data,
-            K.r_: self.remove_selected_torrents,
             curses.KEY_UP: self.movement_keys,
             K.k: self.movement_keys,
             curses.KEY_DOWN: self.movement_keys,
@@ -1101,10 +1100,10 @@ class Interface:
             K.m: self.move_torrent,
             K.M: self.copy_magnet_link,
             K.n: self.reannounce_torrent,
-            ord('/'): self.search,
-            ord('.'): self.search,
-            ord(','): self.select_search,
-            ord('<'): self.select_search,
+            ord('/'): self.dialog_search_filelist,
+            ord('.'): self.dialog_search_filelist_regex,
+            ord(','): self.dialog_select_search_filelist,
+            ord('<'): self.dialog_select_search_filelist_regex,
             K.b: self.add_label,
             K.B: self.set_labels,
             K.l_: self.remove_labels,
@@ -1130,8 +1129,7 @@ class Interface:
             27: self.go_back_or_unfocus,
             curses.KEY_BREAK: self.go_back_or_unfocus,
             12: self.go_back_or_unfocus,
-            curses.KEY_BACKSPACE: self.leave_details,
-            K.q: self.go_back_or_quit,
+            K.q: self.quit_now,
             K.w_: self.quit_now,
             K.LF: self.enter_details,
             curses.KEY_RIGHT: self.enter_details,
@@ -1152,8 +1150,8 @@ class Interface:
             K.I: self.edit_filters,
             ord('~'): self.invert_filters_action,
             ord('*'): self.honors_limits,
-            ord('+'): self.bandwidth_priority,
-            ord('-'): self.bandwidth_priority,
+            ord('+'): self.bandwidth_priority_inc,
+            ord('-'): self.bandwidth_priority_dec,
             K.J: self.move_queue_down,
             K.K: self.move_queue_up,
             K.p: self.pause_unpause_torrent,
@@ -1189,10 +1187,10 @@ class Interface:
             K.m: self.move_torrent,
             K.M: self.copy_magnet_link,
             K.n: self.reannounce_torrent,
-            ord('/'): self.search,
-            ord('.'): self.search,
-            ord(','): self.select_search,
-            ord('<'): self.select_search,
+            ord('/'): self.dialog_search_torrentlist,
+            ord('.'): self.dialog_search_torrentlist_regex,
+            ord(','): self.dialog_select_search_torrentlist,
+            ord('<'): self.dialog_select_search_torrentlist_regex,
             K.b: self.add_label,
             K.B: self.set_labels,
             K.l_: self.remove_labels,
@@ -1380,26 +1378,22 @@ class Interface:
                 self.filters[0][0]['name'] = ''  # reset filter
 
     def leave_details(self, c):
-        if self.selected_torrent > -1:
-            self.server.set_torrent_details_id(-1)
-            self.selected_torrent = -1
-            self.details_category_focus = 0
-            self.scrollpos_detaillist = [0] * 5
-            self.selected_files = []
+        self.server.set_torrent_details_id(-1)
+        self.selected_torrent = -1
+        self.details_category_focus = 0
+        self.scrollpos_detaillist = [0] * 5
+        self.selected_files = []
 
     def quit_now(self, c):
         self.exit_now = True
 
-    def go_back_or_quit(self, c):
-        if self.selected_torrent == -1:
-            self.exit_now = True
-        else:  # return to list view
-            self.server.set_torrent_details_id(-1)
-            self.selected_torrent = -1
-            self.details_category_focus = 0
-            self.focus_detaillist = -1
-            self.scrollpos_detaillist = [0] * 5
-            self.selected_files = []
+    def go_back(self, c):
+        self.server.set_torrent_details_id(-1)
+        self.selected_torrent = -1
+        self.details_category_focus = 0
+        self.focus_detaillist = -1
+        self.scrollpos_detaillist = [0] * 5
+        self.selected_files = []
 
     def turtle_mode(self, c):
         self.server.toggle_turtle_mode()
@@ -1504,8 +1498,8 @@ class Interface:
                 win = self.window(height, width, message=message, title=title)
             else:
                 self.win_message(win, height, width, message)
-            c = self.wingetch(win)
-            if c in (27, K.q, K.w_):
+            key = self.wingetch(win)
+            if key in (27, K.q, K.w_):
                 return -1
             self.update_torrent_list([win])
 
@@ -1680,10 +1674,10 @@ class Interface:
     def honors_limits(self, c):
         self.server.toggle_honors_session_limits(self.selected_ids())
 
-    def bandwidth_priority(self, c):
-        if c == ord('-'):
+    def bandwidth_priority_dec(self, c):
             self.server.decrease_bandwidth_priority(self.selected_ids())
-        elif c == ord('+'):
+
+    def bandwidth_priority_inc (self, c):
             self.server.increase_bandwidth_priority(self.selected_ids())
 
     def copy_magnet_link(self, c):
@@ -1744,8 +1738,6 @@ class Interface:
         if not self.selected:
             return
         ids = self.selected_ids()
-        if self.selected_torrent > -1:
-            return
         if ids:
             focused, extraline = self.get_focused(ids)
             name = focused['name'][:self.width - 15]
@@ -3752,28 +3744,28 @@ class Interface:
             self.dialog_search_filelist(c)
 
     def dialog_search_torrentlist(self, c):
-        if c == ord('/'):
-            search = 'pattern'
-            title = 'Search'
-        elif c == ord('.'):
-            search = 'regex'
-            title = 'Regex search'
-        self.dialog_input_text(title + ' torrent by title:',
+        self.dialog_input_text('Search torrent by title:',
                                on_enter=self.increment_search,
                                tab_complete='torrent_list',
-                               maxwidth=60, align='right', search=search)
+                               maxwidth=60, align='right', search='pattern')
+
+    def dialog_search_torrentlist_regex(self, c):
+        self.dialog_input_text('Regex search torrent by title:',
+                               on_enter=self.increment_search,
+                               tab_complete='torrent_list',
+                               maxwidth=60, align='right', search='regex')
 
     def dialog_search_filelist(self, c):
-        if c == ord('/'):
-            search = 'pattern'
-            title = 'Search'
-        elif c == ord('.'):
-            search = 'regex'
-            title = 'Regex search'
-        self.dialog_input_text(title + ' file by title:',
+        self.dialog_input_text('Search file by title:',
                                on_enter=self.increment_file_search,
                                tab_complete='file_list',
-                               maxwidth=60, align='right', search=search)
+                               maxwidth=60, align='right', search='pattern')
+
+    def dialog_search_filelist_regex(self, c):
+        self.dialog_input_text('Regex search file by title:',
+                               on_enter=self.increment_file_search,
+                               tab_complete='file_list',
+                               maxwidth=60, align='right', search='regex')
 
     def increment_file_search(self, pattern, inc=1, search=None):
         self.search_focus += inc
@@ -3781,31 +3773,29 @@ class Interface:
     def increment_search(self, pattern, inc=1, search=None):
         self.search_focus += inc
 
-    def select_search(self, c):
-        if self.selected_torrent == -1:
-            self.dialog_select_search_torrentlist(c)
-        elif self.details_category_focus == 1:
-            self.dialog_select_search_filelist(c)
-
     def dialog_select_search_torrentlist(self, c):
-        if c == ord(','):
-            search = 'pattern'
-        elif c == ord('<'):
-            search = 'regex'
-        self.dialog_input_text('Select torrents matching ' + search,
+        self.dialog_input_text('Select torrents matching pattern',
                                on_enter=self.select_pattern_torrents,
                                tab_complete='torrent_list',
-                               maxwidth=60, align='right', search=search)
+                               maxwidth=60, align='right', search='pattern')
+
+    def dialog_select_search_torrentlist_regex(self, c):
+        self.dialog_input_text('Select torrents matching regex',
+                               on_enter=self.select_pattern_torrents,
+                               tab_complete='torrent_list',
+                               maxwidth=60, align='right', search='regex')
 
     def dialog_select_search_filelist(self, c):
-        if c == ord(','):
-            search = 'pattern'
-        elif c == ord('<'):
-            search = 'regex'
-        self.dialog_input_text('Select files matching ' + search,
+        self.dialog_input_text('Select files matching pattern',
                                on_enter=self.select_pattern_files,
                                tab_complete='file_list',
-                               maxwidth=60, align='right', search=search)
+                               maxwidth=60, align='right', search='pattern')
+
+    def dialog_select_search_filelist_regex(self, c):
+        self.dialog_input_text('Select files matching regex',
+                               on_enter=self.select_pattern_files,
+                               tab_complete='file_list',
+                               maxwidth=60, align='right', search='regex')
 
     def select_pattern_torrents(self, pattern, inc=1, search=None):
         if search == 'pattern':
