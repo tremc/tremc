@@ -1837,15 +1837,12 @@ class Interface:
             server.move_queue(self.torrents[self.focus]['id'], new_position)
 
     def pause_unpause_torrent(self, c):
-        if self.focus > -1:
-            if self.selected_torrent > -1:
-                t = self.torrent_details
+        ids = self.selected_ids()
+        if ids:
+            if any(server.get_torrent_by_id(i)['status'] == Transmission.STATUS_STOPPED for i in ids):
+                server.start_torrents(ids)
             else:
-                t = self.torrents[self.focus]
-            if t['status'] == Transmission.STATUS_STOPPED:
-                server.start_torrents([t['id']])
-            else:
-                server.stop_torrents([t['id']])
+                server.stop_torrents(ids)
 
     def start_now_torrent(self, c):
         ids = self.selected_ids()
