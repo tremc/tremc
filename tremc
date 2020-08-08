@@ -2087,7 +2087,6 @@ class Interface:
                     break
 
             if file_path is None:
-                self.get_screen_size()
                 self.dialog_ok("Could not find file:\n%s" % (file_name))
                 return
 
