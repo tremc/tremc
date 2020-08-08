@@ -1683,10 +1683,10 @@ class Interface:
         self.server.toggle_honors_session_limits(self.selected_ids())
 
     def bandwidth_priority_dec(self):
-            self.server.decrease_bandwidth_priority(self.selected_ids())
+        self.server.decrease_bandwidth_priority(self.selected_ids())
 
-    def bandwidth_priority_inc (self):
-            self.server.increase_bandwidth_priority(self.selected_ids())
+    def bandwidth_priority_inc(self):
+        self.server.increase_bandwidth_priority(self.selected_ids())
 
     def copy_magnet_link(self):
         if self.focus > -1 and gconfig.clipboard:
@@ -1808,7 +1808,7 @@ class Interface:
 
             t = self.torrent_details
             if (self.scrollpos_detaillist[3] >= 0
-                and self.scrollpos_detaillist[3] < len(t['trackerStats'])
+                    and self.scrollpos_detaillist[3] < len(t['trackerStats'])
                     and self.dialog_yesno("Do you want to remove this tracker?")):
 
                 tracker = t['trackerStats'][self.scrollpos_detaillist[3]]
@@ -4055,7 +4055,7 @@ class Interface:
                     self.dialog_ok('Port must be in the range of 0 - 65535')
             elif key == K.n:
                 self.server.set_option('port-forwarding-enabled',
-                                  (1, 0)[self.stats['port-forwarding-enabled']])
+                                       (1, 0)[self.stats['port-forwarding-enabled']])
             elif key == K.x:
                 self.server.set_option('pex-enabled', (1, 0)[self.stats['pex-enabled']])
             elif key == K.d:
