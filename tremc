@@ -4042,10 +4042,10 @@ class Interface:
                         win.addstr(part[1:] + ': ' + option[1])
                 line_num += 1
 
-            c = self.wingetch(win)
-            if c in (27, K.q, K.LF, K.w_):
+            key = self.wingetch(win)
+            if key in (27, K.q, K.LF, K.w_):
                 return
-            if c == K.p:
+            if key == K.p:
                 port = self.dialog_input_number("Port for incoming connections",
                                                 self.stats['peer-port'],
                                                 cursorkeys=False, winstack=[win])
@@ -4053,31 +4053,31 @@ class Interface:
                     self.server.set_option('peer-port', port)
                 elif port != -128:  # user hit ESC
                     self.dialog_ok('Port must be in the range of 0 - 65535')
-            elif c == K.n:
+            elif key == K.n:
                 self.server.set_option('port-forwarding-enabled',
                                   (1, 0)[self.stats['port-forwarding-enabled']])
-            elif c == K.x:
+            elif key == K.x:
                 self.server.set_option('pex-enabled', (1, 0)[self.stats['pex-enabled']])
-            elif c == K.d:
+            elif key == K.d:
                 self.server.set_option('dht-enabled', (1, 0)[self.stats['dht-enabled']])
-            elif c == K.l:
+            elif key == K.l:
                 self.server.set_option('lpd-enabled', (1, 0)[self.stats['lpd-enabled']])
             # uTP support was added in Transmission v2.3
-            elif c == K.m and self.server.get_rpc_version() >= 13:
+            elif key == K.m and self.server.get_rpc_version() >= 13:
                 self.server.set_option('utp-enabled', (1, 0)[self.stats['utp-enabled']])
-            elif c == K.g:
+            elif key == K.g:
                 limit = self.dialog_input_number("Maximum number of connected peers",
                                                  self.stats['peer-limit-global'],
                                                  allow_negative_one=False, winstack=[win])
                 if limit >= 0:
                     self.server.set_option('peer-limit-global', limit)
-            elif c == K.t:
+            elif key == K.t:
                 limit = self.dialog_input_number("Maximum number of connected peers per torrent",
                                                  self.stats['peer-limit-per-torrent'],
                                                  allow_negative_one=False, winstack=[win])
                 if limit >= 0:
                     self.server.set_option('peer-limit-per-torrent', limit)
-            elif c == K.s:
+            elif key == K.s:
                 limit = self.dialog_input_number('Stop seeding with upload/download ratio',
                                                  (-1, self.stats['seedRatioLimit'])[self.stats['seedRatioLimited']],
                                                  floating_point=True, winstack=[win])
@@ -4086,27 +4086,27 @@ class Interface:
                     self.server.set_option('seedRatioLimited', True)
                 elif limit < 0 and limit != -128:
                     self.server.set_option('seedRatioLimited', False)
-            elif c == K.c:
+            elif key == K.key:
                 choice = self.dialog_menu('Encryption', enc_options,
                                           list(map(lambda x: x[0] == self.stats['encryption'], enc_options)).index(True) + 1, winstack=[win])
                 if choice != -128:
                     self.server.set_option('encryption', choice)
-            elif c == K.u:
+            elif key == K.u:
                 limit = self.dialog_input_number('Upload limit for Turtle Mode in kilobytes per second',
                                                  self.stats['alt-speed-up'],
                                                  allow_negative_one=False, winstack=[win])
                 if limit != -128:
                     self.server.set_option('alt-speed-up', limit)
-            elif c == K.r:
+            elif key == K.r:
                 limit = self.dialog_input_number('Download limit for Turtle Mode in kilobytes per second',
                                                  self.stats['alt-speed-down'],
                                                  allow_negative_one=False, winstack=[win])
                 if limit != -128:
                     self.server.set_option('alt-speed-down', limit)
-            elif c == K.b:
+            elif key == K.b:
                 self.torrentname_is_progressbar = not self.torrentname_is_progressbar
             # Queue was implemmented in Transmission v2.4
-            elif c == K.w and self.server.get_rpc_version() >= 14:
+            elif key == K.w and self.server.get_rpc_version() >= 14:
                 queue_size = self.dialog_input_number('Download Queue size',
                                                       (0, self.stats['download-queue-size'])[self.stats['download-queue-enabled']],
                                                       allow_negative_one=False, winstack=[win])
@@ -4118,7 +4118,7 @@ class Interface:
                             self.server.set_option('download-queue-enabled', True)
                         self.server.set_option('download-queue-size', queue_size)
             # Queue was implemmented in Transmission v2.4
-            elif c == K.e and self.server.get_rpc_version() >= 14:
+            elif key == K.e and self.server.get_rpc_version() >= 14:
                 queue_size = self.dialog_input_number('Seed Queue size',
                                                       (0, self.stats['seed-queue-size'])[self.stats['seed-queue-enabled']],
                                                       allow_negative_one=False, winstack=[win])
@@ -4130,12 +4130,12 @@ class Interface:
                             self.server.set_option('seed-queue-enabled', True)
                         self.server.set_option('seed-queue-size', queue_size)
 
-            elif c == K.v:
+            elif key == K.v:
                 viewer = self.dialog_input_text('File Viewer\nExample: xdg-viewer %s', self.file_viewer, winstack=[win])
                 if viewer:
                     config.set('Misc', 'file_viewer', viewer.replace('%s', '%%s'))
                     self.file_viewer = viewer
-            elif c == K.SPACE:
+            elif key == K.SPACE:
                 page = page + 1
                 if page > (len(options) - 1) / pagelines:
                     page = 0
