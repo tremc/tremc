@@ -233,16 +233,15 @@ class Normalizer:
         return sum(self.values[key]) / len(self.values[key])
 
 
-session_id = 0
-
-
 class TransmissionRequest:
     """Handle communication with Transmission server."""
 
-    def __init__(self, host, port, path, method=None, tag=None, arguments=None):
+    def __init__(self, host, port, path, method=None, tag=None, arguments=None, server=None):
+        """server is not really optional"""
         self.url = create_url(host, port, path)
         self.open_request = None
         self.last_update = 0
+        self.server = server
         if method and tag:
             self.set_request_data(method, tag, arguments)
 
@@ -254,11 +253,9 @@ class TransmissionRequest:
 
     def send_request(self):
         """Ask for information from server OR submit command."""
-
-        global session_id
         try:
-            if session_id:
-                self.http_request.add_header('X-Transmission-Session-Id', session_id)
+            if self.server.session_id:
+                self.http_request.add_header('X-Transmission-Session-Id', self.server.session_id)
             self.open_request = urllib.request.urlopen(self.http_request)
         except AttributeError:
             # request data (http_request) isn't specified yet -- data will be available on next call
@@ -274,7 +271,7 @@ class TransmissionRequest:
             # extract session id and send request again
             m = re.search(r'X-Transmission-Session-Id:\s*(\w+)', msg)
             try:
-                session_id = m.group(1)
+                self.server.session_id = m.group(1)
                 self.send_request()
             except AttributeError:
                 exit_prog(str(msg) + "\n", gconfig.errors.CONNECTION_ERROR)
@@ -342,6 +339,7 @@ class Transmission:
         self.host = host
         self.port = port
         self.path = path
+        self.session_id = -1
 
         if username and password:
             password_mgr = urllib.request.HTTPPasswordMgrWithDefaultRealm()
@@ -351,7 +349,7 @@ class Transmission:
             urllib.request.install_opener(opener)
 
         # check rpc version
-        request = TransmissionRequest(host, port, path, 'session-get', self.TAG_SESSION_GET)
+        request = TransmissionRequest(host, port, path, 'session-get', self.TAG_SESSION_GET, server=self)
         request.send_request()
         response = request.get_response()
 
@@ -401,13 +399,13 @@ class Transmission:
 
         # set up request list
         self.requests = {'torrent-list':
-                         TransmissionRequest(host, port, path, 'torrent-get', self.TAG_TORRENT_LIST, {'fields': self.LIST_FIELDS}),
+                         TransmissionRequest(host, port, path, 'torrent-get', self.TAG_TORRENT_LIST, {'fields': self.LIST_FIELDS}, server=self),
                          'session-stats':
-                             TransmissionRequest(host, port, path, 'session-stats', self.TAG_SESSION_STATS, 21),
+                             TransmissionRequest(host, port, path, 'session-stats', self.TAG_SESSION_STATS, 21, server=self),
                          'session-get':
-                             TransmissionRequest(host, port, path, 'session-get', self.TAG_SESSION_GET),
+                             TransmissionRequest(host, port, path, 'session-get', self.TAG_SESSION_GET, server=self),
                          'torrent-details':
-                             TransmissionRequest(host, port, path)}
+                             TransmissionRequest(host, port, path, server=self)}
 
         self.torrent_cache = []
         self.trackers = set()
@@ -444,7 +442,7 @@ class Transmission:
 
         # make sure there are no undefined values
         self.wait_for_torrentlist_update()
-        self.requests['torrent-details'] = TransmissionRequest(self.host, self.port, self.path)
+        self.requests['torrent-details'] = TransmissionRequest(self.host, self.port, self.path, server=self)
 
     def update(self, delay, tag_waiting_for=0):
         """Maintain up-to-date data."""
@@ -599,7 +597,7 @@ class Transmission:
 
     def set_torrent_details_id(self, t_id):
         if t_id < 0:
-            self.requests['torrent-details'] = TransmissionRequest(self.host, self.port, self.path)
+            self.requests['torrent-details'] = TransmissionRequest(self.host, self.port, self.path, server=self)
         else:
             self.requests['torrent-details'].set_request_data('torrent-get', self.TAG_TORRENT_DETAILS,
                                                               {'ids': t_id, 'fields': self.DETAIL_FIELDS})
@@ -611,12 +609,12 @@ class Transmission:
         return self.geo_ips_cache
 
     def get_free_space(self):
-        request = TransmissionRequest(self.host, self.port, self.path, 'session-get', self.TAG_SESSION_GET)
+        request = TransmissionRequest(self.host, self.port, self.path, 'session-get', self.TAG_SESSION_GET, server=self)
         request.send_request()
         response = request.get_response()
         path = response['arguments']['download-dir']
 
-        request = TransmissionRequest(self.host, self.port, self.path, 'free-space', 1, {'path': path})
+        request = TransmissionRequest(self.host, self.port, self.path, 'free-space', 1, {'path': path}, server=self)
         request.send_request()
         response = request.get_response()
         if 'size-bytes' in response['arguments']:
@@ -627,7 +625,7 @@ class Transmission:
         return free  # free space in bytes
 
     def set_option(self, option_name, option_value):
-        request = TransmissionRequest(self.host, self.port, self.path, 'session-set', 1, {option_name: option_value})
+        request = TransmissionRequest(self.host, self.port, self.path, 'session-set', 1, {option_name: option_value}, server=self)
         request.send_request()
         self.wait_for_status_update()
 
@@ -650,7 +648,7 @@ class Transmission:
             data[direction + 'loadLimit'] = new_limit
             data[direction + 'loadLimited'] = limit_enabled
 
-        request = TransmissionRequest(self.host, self.port, self.path, request_type, 1, data)
+        request = TransmissionRequest(self.host, self.port, self.path, request_type, 1, data, server=self)
         request.send_request()
         self.wait_for_torrentlist_update()
 
@@ -670,7 +668,7 @@ class Transmission:
         data['ids'] = ids
         data['seedRatioLimit'] = ratio
         data['seedRatioMode'] = mode
-        request = TransmissionRequest(self.host, self.port, self.path, 'torrent-set', 1, data)
+        request = TransmissionRequest(self.host, self.port, self.path, 'torrent-set', 1, data, server=self)
         request.send_request()
         self.wait_for_torrentlist_update()
 
@@ -678,7 +676,7 @@ class Transmission:
         if torrent_ids:
             new_honors = not all([self.get_torrent_by_id(t)['honorsSessionLimits'] for t in torrent_ids])
             request = TransmissionRequest(self.host, self.port, self.path, 'torrent-set', 1,
-                                          {'ids': torrent_ids, 'honorsSessionLimits': new_honors})
+                                          {'ids': torrent_ids, 'honorsSessionLimits': new_honors}, server=self)
             request.send_request()
             self.wait_for_torrentlist_update()
 
@@ -687,7 +685,7 @@ class Transmission:
             current = min([self.get_torrent_by_id(t)['bandwidthPriority'] for t in torrent_ids])
             if current < 1:
                 request = TransmissionRequest(self.host, self.port, self.path, 'torrent-set', 1,
-                                              {'ids': torrent_ids, 'bandwidthPriority': current + 1})
+                                              {'ids': torrent_ids, 'bandwidthPriority': current + 1}, server=self)
                 request.send_request()
                 self.wait_for_torrentlist_update()
 
@@ -696,7 +694,7 @@ class Transmission:
             current = max([self.get_torrent_by_id(t)['bandwidthPriority'] for t in torrent_ids])
             if current > -1:
                 request = TransmissionRequest(self.host, self.port, self.path, 'torrent-set', 1,
-                                              {'ids': torrent_ids, 'bandwidthPriority': current - 1})
+                                              {'ids': torrent_ids, 'bandwidthPriority': current - 1}, server=self)
                 request.send_request()
                 self.wait_for_torrentlist_update()
 
@@ -710,7 +708,7 @@ class Transmission:
         else:
             raise ValueError("Is not up/down/top/bottom/<number>: %s" % new_position)
 
-        request = TransmissionRequest(self.host, self.port, self.path, method_name, 1, args)
+        request = TransmissionRequest(self.host, self.port, self.path, method_name, 1, args, server=self)
         request.send_request()
         self.wait_for_torrentlist_update()
 
@@ -727,55 +725,55 @@ class Transmission:
         except IOError:
             args['filename'] = location
 
-        request = TransmissionRequest(self.host, self.port, self.path, 'torrent-add', 1, args)
+        request = TransmissionRequest(self.host, self.port, self.path, 'torrent-add', 1, args, server=self)
         request.send_request()
         response = request.get_response()
         return response['result'] if response['result'] != 'success' else ''
 
     def daemon_quit(self):
-        request = TransmissionRequest(self.host, self.port, self.path, 'session-close', self.TAG_SESSION_CLOSE)
+        request = TransmissionRequest(self.host, self.port, self.path, 'session-close', self.TAG_SESSION_CLOSE, server=self)
         request.send_request()
         self.wait_for_update(self.TAG_SESSION_CLOSE)
 
     def stop_torrents(self, ids):
-        request = TransmissionRequest(self.host, self.port, self.path, 'torrent-stop', 1, {'ids': ids})
+        request = TransmissionRequest(self.host, self.port, self.path, 'torrent-stop', 1, {'ids': ids}, server=self)
         request.send_request()
         self.wait_for_torrentlist_update()
 
     def start_torrents(self, ids):
-        request = TransmissionRequest(self.host, self.port, self.path, 'torrent-start', 1, {'ids': ids})
+        request = TransmissionRequest(self.host, self.port, self.path, 'torrent-start', 1, {'ids': ids}, server=self)
         request.send_request()
         self.wait_for_torrentlist_update()
 
     def start_now_torrent(self, ids):
-        request = TransmissionRequest(self.host, self.port, self.path, 'torrent-start-now', 1, {'ids': ids})
+        request = TransmissionRequest(self.host, self.port, self.path, 'torrent-start-now', 1, {'ids': ids}, server=self)
         request.send_request()
         self.wait_for_torrentlist_update()
 
     def verify_torrent(self, ids):
-        request = TransmissionRequest(self.host, self.port, self.path, 'torrent-verify', 1, {'ids': ids})
+        request = TransmissionRequest(self.host, self.port, self.path, 'torrent-verify', 1, {'ids': ids}, server=self)
         request.send_request()
         self.wait_for_torrentlist_update()
 
     def reannounce_torrent(self, ids):
-        request = TransmissionRequest(self.host, self.port, self.path, 'torrent-reannounce', 1, {'ids': ids})
+        request = TransmissionRequest(self.host, self.port, self.path, 'torrent-reannounce', 1, {'ids': ids}, server=self)
         request.send_request()
         self.wait_for_torrentlist_update()
 
     def move_torrent(self, torrent_id, new_location):
         request = TransmissionRequest(self.host, self.port, self.path, 'torrent-set-location', 1,
-                                      {'ids': torrent_id, 'location': new_location, 'move': True})
+                                      {'ids': torrent_id, 'location': new_location, 'move': True}, server=self)
         request.send_request()
         self.wait_for_torrentlist_update()
 
     def remove_torrent(self, ids, data=False):
-        request = TransmissionRequest(self.host, self.port, self.path, 'torrent-remove', 1, {'ids': ids, 'delete-local-data': data})
+        request = TransmissionRequest(self.host, self.port, self.path, 'torrent-remove', 1, {'ids': ids, 'delete-local-data': data}, server=self)
         request.send_request()
         self.wait_for_torrentlist_update()
 
     def rename_torrent_file(self, t_id, path, newname):
         request = TransmissionRequest(self.host, self.port, self.path, 'torrent-rename-path', 1,
-                                      {'ids': [t_id], 'path': path, 'name': newname})
+                                      {'ids': [t_id], 'path': path, 'name': newname}, server=self)
         request.send_request()
         response = request.get_response()
         return response['result']
@@ -785,7 +783,7 @@ class Transmission:
             'ids': ids,
             'labels': labels
         }
-        request = TransmissionRequest(self.host, self.port, self.path, 'torrent-set', 1, data)
+        request = TransmissionRequest(self.host, self.port, self.path, 'torrent-set', 1, data, server=self)
         request.send_request()
         response = request.get_response()
         return response['result'] if response['result'] != 'success' else ''
@@ -799,7 +797,7 @@ class Transmission:
                     'ids': [i],
                     'labels': t['labels'] + [label]
                 }
-                request = TransmissionRequest(self.host, self.port, self.path, 'torrent-set', 1, data)
+                request = TransmissionRequest(self.host, self.port, self.path, 'torrent-set', 1, data, server=self)
                 request.send_request()
                 response = request.get_response()
                 if ret == '':
@@ -811,7 +809,7 @@ class Transmission:
             'ids': [t_id],
             'trackerAdd': [tracker]
         }
-        request = TransmissionRequest(self.host, self.port, self.path, 'torrent-set', 1, data)
+        request = TransmissionRequest(self.host, self.port, self.path, 'torrent-set', 1, data, server=self)
         request.send_request()
         response = request.get_response()
         return response['result'] if response['result'] != 'success' else ''
@@ -819,7 +817,7 @@ class Transmission:
     def remove_torrent_tracker(self, t_id, tracker):
         data = {'ids': [t_id],
                 'trackerRemove': [tracker]}
-        request = TransmissionRequest(self.host, self.port, self.path, 'torrent-set', 1, data)
+        request = TransmissionRequest(self.host, self.port, self.path, 'torrent-set', 1, data, server=self)
         request.send_request()
         response = request.get_response()
         self.wait_for_torrentlist_update()
@@ -865,7 +863,7 @@ class Transmission:
         else:
             request_data['files-wanted'] = file_nums
             request_data['priority-' + priority] = file_nums
-        request = TransmissionRequest(self.host, self.port, self.path, 'torrent-set', 1, request_data)
+        request = TransmissionRequest(self.host, self.port, self.path, 'torrent-set', 1, request_data, server=self)
         request.send_request()
         self.wait_for_details_update()
 
@@ -975,7 +973,7 @@ class Transmission:
         return ' ' if torrent['honorsSessionLimits'] else '*'
 
     def get_stats(self):
-        request = TransmissionRequest(self.host, self.port, self.path, 'session-stats', 1)
+        request = TransmissionRequest(self.host, self.port, self.path, 'session-stats', 1, server=self)
         request.send_request()
         response = request.get_response()
         return response['arguments']
