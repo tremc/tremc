@@ -3220,13 +3220,13 @@ class Interface:
         return focus, scrollpos
 
     def draw_stats(self):
-        self.screen.insstr(self.height - 1, 0, ' '.center(self.width), curses.A_REVERSE)
+        self.screen.addstr(self.height - 1, 0, ' '.center(self.width), curses.A_REVERSE)
         self.draw_torrents_stats()
         self.draw_global_rates()
 
     def draw_torrents_stats(self):
         if self.selected_torrent > -1 and self.details_category_focus == 2:
-            self.screen.insstr((self.height - 1), 0,
+            self.screen.addstr((self.height - 1), 0,
                                "%d peer%s connected (" % (self.torrent_details['peersConnected'],
                                                           ('s', '')[self.torrent_details['peersConnected'] == 1]) +
                                "Trackers:%d " % self.torrent_details['peersFrom']['fromTracker']
@@ -3336,13 +3336,13 @@ class Interface:
         self.screen.addstr(limits['dn_limit'], curses.A_REVERSE)
         self.screen.addch(' ', curses.A_REVERSE)
         self.screen.addch(curses.ACS_UARROW, curses.A_REVERSE)
-        self.screen.insstr(limits['up_limit'], curses.A_REVERSE)
-        self.screen.insstr(scale_bytes(self.stats['uploadSpeed']).rjust(self.rateUpload_width),
+        self.screen.addstr(scale_bytes(self.stats['uploadSpeed']).rjust(self.rateUpload_width),
                            curses.color_pair(self.colors.ind('upload_rate'))
                            + curses.A_REVERSE + curses.A_BOLD)
+        self.screen.addstr(limits['up_limit'], curses.A_REVERSE)
 
     def draw_title_bar(self):
-        self.screen.insstr(0, 0, ' '.center(self.width), curses.A_REVERSE)
+        self.screen.addstr(0, 0, ' '.center(self.width), curses.A_REVERSE)
         w = self.draw_connection_status()
         self.draw_quick_help(self.width - w - 2)
 
@@ -3383,7 +3383,7 @@ class Interface:
             t = "%s:%s" % (x[0], x[1])
             if len(line) + len(t) + 1 <= maxwidth:
                 line = line + ' ' + t
-        self.screen.insstr(0, self.width - len(line), line, curses.A_REVERSE)
+        self.screen.addstr(0, self.width - len(line), line, curses.A_REVERSE)
 
     def list_key_bindings(self):
         title = 'Help Menu'
