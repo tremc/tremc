@@ -339,7 +339,7 @@ class Transmission:
         self.host = host
         self.port = port
         self.path = path
-        self.session_id = -1
+        self.session_id = 0
 
         if username and password:
             password_mgr = urllib.request.HTTPPasswordMgrWithDefaultRealm()
