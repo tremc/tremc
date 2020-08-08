@@ -1003,7 +1003,7 @@ class Interface:
         self.filters[0][0]['tracker'] = ''
         self.filters[0][0]['location'] = ''
         self.invert_filters = False
-        self.histories = self.load_history(history_file)
+        self.histories = load_history(gconfig.history_file)
         self.tlist_item_height = config.getint('Misc', 'lines_per_torrent')
         self.torrentname_is_progressbar = config.getboolean('Misc', 'torrentname_is_progressbar')
         self.file_viewer = config.get('Misc', 'file_viewer')
@@ -1231,32 +1231,6 @@ class Interface:
         else:
             self.restore_screen()
 
-    def load_history(self, filename):
-        if filename:
-            try:
-                history = json.load(open(filename, "r"))
-                assert isinstance(history, dict)
-            except Exception:
-                history = {}
-        else:
-            history = {}
-        for i in ['label', 'location', 'tracker']:
-            if i not in history:
-                history[i] = []
-        return history
-
-    def save_history(self, filename, history):
-        if filename:
-            try:
-                oldhistory = json.load(open(history_file, "r"))
-            except Exception:
-                oldhistory = {}
-            if oldhistory != history:
-                try:
-                    json.dump(history, open(history_file, "w"))
-                except Exception:
-                    pass
-
     def apply_profile(self, profile):
         self.sort_orders = [s.copy() for s in profile['sort']]
         # copy filter array from profile
@@ -1382,7 +1356,7 @@ class Interface:
                     self.server.set_torrent_details_id(self.torrents[self.focus]['id'])
                     self.server.wait_for_details_update()
             if self.exit_now:
-                self.save_history(history_file, self.histories)
+                save_history(gconfig.history_file, self.histories)
                 return
 
     def daemon_quit(self, c):
@@ -4264,6 +4238,34 @@ class Interface:
 # End of class Interface
 
 
+def load_history(filename):
+    if filename:
+        try:
+            history = json.load(open(filename, "r"))
+            assert isinstance(history, dict)
+        except Exception:
+            history = {}
+    else:
+        history = {}
+    for i in ['label', 'location', 'tracker']:
+        if i not in history:
+            history[i] = []
+    return history
+
+
+def save_history(filename, history):
+    if filename:
+        try:
+            oldhistory = json.load(open(filename, "r"))
+        except Exception:
+            oldhistory = {}
+        if oldhistory != history:
+            try:
+                json.dump(history, open(filename, "w"))
+            except Exception:
+                pass
+
+
 def reverse_dns(cache, address):
     try:
         cache[address] = socket.gethostbyaddr(address)[0]
@@ -4779,11 +4781,11 @@ if __name__ == '__main__':
                           config.get('Connection', 'username'),
                           config.get('Connection', 'password'))
 
-    history_file = ''
+    gconfig.history_file = ''
     if 'tremc' in os.path.dirname(cmd_args.configfile):
-        history_file = os.path.join(os.path.dirname(cmd_args.configfile), 'history.json')
+        gconfig.history_file = os.path.join(os.path.dirname(cmd_args.configfile), 'history.json')
     elif 'tremc' in os.path.basename(cmd_args.configfile):
-        history_file = cmd_args.configfile.rsplit('tremc', 1)[0] + 'tremc-history.json'
+        gconfig.history_file = cmd_args.configfile.rsplit('tremc', 1)[0] + 'tremc-history.json'
 
     try:
         Interface(server)
