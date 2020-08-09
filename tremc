@@ -4118,7 +4118,7 @@ class Interface:
                     self.server.set_option('seedRatioLimited', True)
                 elif limit < 0 and limit != -128:
                     self.server.set_option('seedRatioLimited', False)
-            elif key == K.key:
+            elif key == K.c:
                 choice = self.dialog_menu('Encryption', enc_options,
                                           list(map(lambda x: x[0] == self.stats['encryption'], enc_options)).index(True) + 1, winstack=[win])
                 if choice != -128:
