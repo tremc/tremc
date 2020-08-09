@@ -1311,8 +1311,6 @@ class Interface:
             curses.endwin()
             self.screen.refresh()
             self.height, self.width = self.screen.getmaxyx()
-            self.height -= 3
-            self.width -= 30
             # Tracker list breaks if width smaller than 73
             if not gconfig.PERMISSIVE and (self.width < 40 or self.height < 16):
                 self.screen.erase()
