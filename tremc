@@ -69,30 +69,30 @@ class GConfig:
     def __init__(self):
         default_config_path = xdg_config_home('tremc/settings.cfg')
         parser = argparse.ArgumentParser(description="%(prog)s " + self.VERSION,
-                                          usage="(prog)s [options] [torrent] -- transmission-remote-args ...",
-                                          epilog="Positional arguments are passed to transmission-remote. Use -- to separate from %(prog)s arguments")
+                                         usage="(prog)s [options] [torrent] -- transmission-remote-args ...",
+                                         epilog="Positional arguments are passed to transmission-remote. Use -- to separate from %(prog)s arguments")
         parser.add_argument("-v", "--version", action="version", version="%(prog)s " + self.VERSION,
-                          help="Show version number and supported Transmission versions.")
+                            help="Show version number and supported Transmission versions.")
         parser.add_argument("-c", "--connect", action="store", dest="connection", default="",
-                          help="Point to the server using pattern [username:password@]host[:port]/[path]")
+                            help="Point to the server using pattern [username:password@]host[:port]/[path]")
         parser.add_argument("-s", "--ssl", action="store_true", dest="ssl", default=False,
-                          help="Connect to Transmission using SSL.")
+                            help="Connect to Transmission using SSL.")
         parser.add_argument("-f", "--config", action="store", dest="configfile", default=default_config_path,
-                          help="Path to configuration file.")
+                            help="Path to configuration file.")
         parser.add_argument("--create-config", action="store_true", default=False,
-                          help="Create configuration file CONFIGFILE with default values.")
+                            help="Create configuration file CONFIGFILE with default values.")
         parser.add_argument("-n", "--netrc", action="store_true", dest="use_netrc", default=False,
-                          help="Get authentication info from your ~/.netrc file.")
+                            help="Get authentication info from your ~/.netrc file.")
         parser.add_argument("-X", "--skip-version-check", "--permissive", action="store_true", dest="PERMISSIVE", default=False,
-                          help="Proceed even if the running transmission daemon seems incompatible, or the terminal is too small.")
+                            help="Proceed even if the running transmission daemon seems incompatible, or the terminal is too small.")
         parser.add_argument("-p", "--profile", action="store", dest="profile",
-                          help="Select profile to use.")
+                            help="Select profile to use.")
         parser.add_argument("-r", "--reverse-dns", action="store_true", dest="rdns", default=False,
-                          help="Toggle reverse DNS peers addresses.")
+                            help="Toggle reverse DNS peers addresses.")
         parser.add_argument("-d", "--debug", action="store_true", dest="DEBUG", default=False,
-                          help="Enable debugging messages.")
+                            help="Enable debugging messages.")
         parser.add_argument('transmissionremote_args', nargs='*', metavar='A',
-                          help="Torrent files to add using transmission-remote")
+                            help="Torrent files to add using transmission-remote")
         cmd_args = parser.parse_args()
 
         for i in vars(cmd_args).keys():
