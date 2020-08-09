@@ -3253,21 +3253,25 @@ class Interface:
         return focus, scrollpos
 
     def draw_stats(self):
-        self.screen.addstr(self.height - 1, 0, ' '.center(self.width), curses.A_REVERSE)
+        try:
+            self.screen.addstr(self.height - 1, 0, ' '.center(self.width), curses.A_REVERSE)
+        except curses.error:
+            # curses can print to the last char (bottom right corner), but it raises an exception.
+            pass
         self.draw_torrents_stats()
         self.draw_global_rates()
 
     def draw_torrents_stats(self):
         if self.selected_torrent > -1 and self.details_category_focus == 2:
             self.screen.addstr((self.height - 1), 0,
-                               "%d peer%s connected (" % (self.torrent_details['peersConnected'],
+                               ("%d peer%s connected (" % (self.torrent_details['peersConnected'],
                                                           ('s', '')[self.torrent_details['peersConnected'] == 1]) +
                                "Trackers:%d " % self.torrent_details['peersFrom']['fromTracker']
                                + "DHT:%d " % self.torrent_details['peersFrom']['fromDht']
                                + "LTEP:%d " % self.torrent_details['peersFrom']['fromLtep']
                                + "PEX:%d " % self.torrent_details['peersFrom']['fromPex']
                                + "Incoming:%d " % self.torrent_details['peersFrom']['fromIncoming']
-                               + "Cache:%d)" % self.torrent_details['peersFrom']['fromCache'],
+                               + "Cache:%d)" % self.torrent_details['peersFrom']['fromCache'])[:self.width-1],
                                curses.A_REVERSE)
         elif self.vmode_id > -1:
             self.screen.addstr((self.height - 1), 0, "-- VISUAL --", curses.A_REVERSE)
@@ -3357,9 +3361,12 @@ class Interface:
         limits_width = len(limits['dn_limit']) + len(limits['up_limit'])
 
         if self.stats['alt-speed-enabled']:
-            self.screen.move(self.height - 1, self.width - rates_width - limits_width - len('Turtle mode '))
-            self.screen.addstr('Turtle mode', curses.A_REVERSE + curses.A_BOLD)
-            self.screen.addch(' ', curses.A_REVERSE)
+            if self.narrow:
+                self.screen.move(self.height - 1, self.width - rates_width - limits_width - 1)
+                self.screen.addch(curses.ACS_TTEE, curses.A_REVERSE + curses.A_BOLD)
+            else:
+                self.screen.move(self.height - 1, self.width - rates_width - limits_width - len('Turtle mode '))
+                self.screen.addstr('Turtle mode ', curses.A_REVERSE + curses.A_BOLD)
 
         self.screen.move(self.height - 1, self.width - rates_width - limits_width)
         self.screen.addch(curses.ACS_DARROW, curses.A_REVERSE)
@@ -3372,7 +3379,11 @@ class Interface:
         self.screen.addstr(scale_bytes(self.stats['uploadSpeed']).rjust(self.rateUpload_width),
                            curses.color_pair(self.colors.ind('upload_rate'))
                            + curses.A_BOLD)
-        self.screen.addstr(limits['up_limit'], curses.A_REVERSE)
+        try:
+            self.screen.addstr(limits['up_limit'], curses.A_REVERSE)
+        except curses.error:
+            # curses can print to the last char (bottom right corner), but it raises an exception.
+            pass
 
     def draw_title_bar(self):
         self.screen.addstr(0, 0, ' '.center(self.width), curses.A_REVERSE)
