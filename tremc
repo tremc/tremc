@@ -20,7 +20,7 @@ import datetime
 import re
 import base64
 import socket
-from optparse import OptionParser
+import argparse
 import sys
 import os
 import signal
@@ -42,8 +42,8 @@ import enum
 locale.setlocale(locale.LC_ALL, '')
 
 # Global constants and constant configuration
-class gconfig:
-    VERSION = '0.9.2'
+class GConfig:
+    VERSION = '0.0.1'
 
     TRNSM_VERSION_MIN = '1.90'
     TRNSM_VERSION_MAX = '3.0.0'
@@ -65,6 +65,57 @@ class gconfig:
         CONFIGFILE_ERROR = 3
 
     FILTERS_WITH_PARAM = ['tracker', 'regex', 'location', 'label']
+
+    def __init__(self):
+        default_config_path = xdg_config_home('tremc/settings.cfg')
+        parser = argparse.ArgumentParser(description="%(prog)s " + self.VERSION,
+                                          usage="(prog)s [options] [torrent] -- transmission-remote-args ...",
+                                          epilog="Positional arguments are passed to transmission-remote. Use -- to separate from %(prog)s arguments")
+        parser.add_argument("-v", "--version", action="version", version="%(prog)s " + self.VERSION,
+                          help="Show version number and supported Transmission versions.")
+        parser.add_argument("-c", "--connect", action="store", dest="connection", default="",
+                          help="Point to the server using pattern [username:password@]host[:port]/[path]")
+        parser.add_argument("-s", "--ssl", action="store_true", dest="ssl", default=False,
+                          help="Connect to Transmission using SSL.")
+        parser.add_argument("-f", "--config", action="store", dest="configfile", default=default_config_path,
+                          help="Path to configuration file.")
+        parser.add_argument("--create-config", action="store_true", default=False,
+                          help="Create configuration file CONFIGFILE with default values.")
+        parser.add_argument("-n", "--netrc", action="store_true", dest="use_netrc", default=False,
+                          help="Get authentication info from your ~/.netrc file.")
+        parser.add_argument("-X", "--skip-version-check", "--permissive", action="store_true", dest="PERMISSIVE", default=False,
+                          help="Proceed even if the running transmission daemon seems incompatible, or the terminal is too small.")
+        parser.add_argument("-p", "--profile", action="store", dest="profile",
+                          help="Select profile to use.")
+        parser.add_argument("-r", "--reverse-dns", action="store_true", dest="rdns", default=False,
+                          help="Toggle reverse DNS peers addresses.")
+        parser.add_argument("-d", "--debug", action="store_true", dest="DEBUG", default=False,
+                          help="Enable debugging messages.")
+        parser.add_argument('transmissionremote_args', nargs='*', metavar='A',
+                          help="Torrent files to add using transmission-remote")
+        cmd_args = parser.parse_args()
+
+        for i in vars(cmd_args).keys():
+            setattr(self, i, vars(cmd_args)[i])
+
+        if not self.create_config and not os.path.isfile(self.configfile) and '/' not in self.configfile:
+            if os.path.isfile(xdg_config_home('tremc/' + self.configfile)):
+                self.configfile = xdg_config_home('tremc/' + self.configfile)
+            elif os.path.isfile(xdg_config_home('tremc/' + self.configfile + '.cfg')):
+                self.configfile = xdg_config_home('tremc/' + self.configfile + '.cfg')
+        self.configfile = self.configfile
+        config.read(self.configfile)
+        self.history_file = ''
+        if 'tremc' in os.path.dirname(self.configfile):
+            self.history_file = os.path.join(os.path.dirname(self.configfile), 'history.json')
+        elif 'tremc' in os.path.basename(self.configfile):
+            self.history_file = self.configfile.rsplit('tremc', 1)[0] + 'tremc-history.json'
+
+        self.rdns = self.rdns ^ config.getboolean('Misc', 'rdns', fallback=False)
+        if self.create_config:
+            create_config(self.configfile, self.connection)
+
+
 
 class Keys:
     TAB = 9
@@ -90,24 +141,6 @@ class Keys:
             setattr(self, 'n' + str(i), ord('0') + i)
 
 K = Keys()
-
-try:
-    import IPy
-    gconfig.ipy = True  # extract ipv4 from ipv6 addresses
-except ImportError:
-    pass
-
-try:
-    import pyperclip
-    gconfig.clipboard = True
-except ImportError:
-    pass
-
-if gconfig.ipy:
-    IPV6_RANGE_6TO4 = IPy.IP('2002::/16')
-    IPV6_RANGE_TEREDO = IPy.IP('2001::/32')
-    IPV4_ONES = 0xffffffff
-
 
 def country_code_by_addr_vany(geo_ip, geo_ip6, addr):
     if gconfig.geoip2:
@@ -364,7 +397,7 @@ class Transmission:
         min_msg = "Please install Transmission version " + gconfig.TRNSM_VERSION_MIN + " or higher.\n"
         try:
             if response['arguments']['rpc-version'] < gconfig.RPC_VERSION_MIN:
-                if cmd_args.SKIPVERSIONCHECK:
+                if gconfig.PERMISSIVE:
                     pdebug(version_error + skip_msg)
                 else:
                     exit_prog(version_error + min_msg)
@@ -373,7 +406,7 @@ class Transmission:
 
         # rpc version too new?
         if response['arguments']['rpc-version'] > gconfig.RPC_VERSION_MAX:
-            if cmd_args.SKIPVERSIONCHECK:
+            if gconfig.PERMISSIVE:
                 pdebug(version_error + skip_msg)
             else:
                 exit_prog(version_error + "Please install Transmission version " + gconfig.TRNSM_VERSION_MAX + " or lower.\n")
@@ -415,14 +448,13 @@ class Transmission:
         self.torrent_details_cache = dict()
         self.peer_progress_cache = dict()
         self.hosts_cache = dict()
-        self.rdns = config.getboolean('Misc', 'rdns', fallback=False) ^ bool(cmd_args.rdns)
-        if self.rdns:
+        if gconfig.rdns:
             # Only import threading if needed. It was optional until python 3.7
             try:
                 import threading
                 self.threading = threading
             except Exception:
-                self.rdns = False
+                gconfig.rdns = False
 
         self.geo_ips_cache = dict()
         if gconfig.geoip1:
@@ -561,7 +593,7 @@ class Transmission:
             this_torrent['peers'][index].update(this_peer)
 
             # resolve and locate peer's ip
-            if self.rdns and ip not in self.hosts_cache:
+            if gconfig.rdns and ip not in self.hosts_cache:
                 self.threading.Thread(target=reverse_dns, args=(self.hosts_cache, ip)).start()
             if gconfig.geoip and ip not in self.geo_ips_cache:
                 self.geo_ips_cache[ip] = country_code_by_addr_vany(self.geo_ip, self.geo_ip6, ip)
@@ -1016,10 +1048,9 @@ class Interface:
         self.file_viewer = config.get('Misc', 'file_viewer')
         self.file_open_in_terminal = config.getboolean('Misc', 'file_open_in_terminal')
         self.profiles = parse_config_profiles(config, [x[0] for x in self.sort_options])
-        if cmd_args.profile in self.profiles:
-            self.apply_profile(self.profiles[cmd_args.profile])
+        if gconfig.profile in self.profiles:
+            self.apply_profile(self.profiles[gconfig.profile])
 
-        self.rdns = config.getboolean('Misc', 'rdns', fallback=False) ^ bool(cmd_args.rdns)
         self.torrents = self.server.get_torrent_list(self.sort_orders)
         self.stats = self.server.get_global_stats()
         self.torrent_details = []
@@ -1278,8 +1309,10 @@ class Interface:
             curses.endwin()
             self.screen.refresh()
             self.height, self.width = self.screen.getmaxyx()
+            self.height -= 3
+            self.width -= 30
             # Tracker list breaks if width smaller than 73
-            if not cmd_args.SKIPVERSIONCHECK and (self.width < 40 or self.height < 16):
+            if not gconfig.PERMISSIVE and (self.width < 40 or self.height < 16):
                 self.screen.erase()
                 self.screen.addstr(0, 0, "Terminal too small", curses.A_REVERSE + curses.A_BOLD)
                 self.screen.addstr(1, 0, "Resize terminal or")
@@ -2947,7 +2980,7 @@ class Interface:
             + 'Address'.ljust(address_width + port_width + 1)
         if gconfig.geoip:
             column_names += 'Country'
-        if self.rdns:
+        if gconfig.rdns:
             column_names += ' Host'
 
         self.pad.addnstr(ypos, 0, column_names.ljust(self.width), self.width, curses.A_UNDERLINE)
@@ -2957,7 +2990,7 @@ class Interface:
         hosts = self.server.get_hosts()
         geo_ips = self.server.get_geo_ips()
         for _, peer in enumerate(peers):
-            if self.rdns:
+            if gconfig.rdns:
                 if peer['address'] in hosts:
                     host_name = hosts[peer['address']]
                 else:
@@ -3007,7 +3040,7 @@ class Interface:
                     self.pad.addstr("  %2s   " % geo_ips[peer['address']])
             # Host
             if self.width >= 55 + clientname_width + address_width + port_width + 3 + 10:
-                if self.rdns:
+                if gconfig.rdns:
                     self.pad.addnstr(host_name, self.width - self.pad.getyx()[1], curses.A_DIM)
             ypos += 1
 
@@ -4526,11 +4559,10 @@ def read_netrc(file=os.environ['HOME'] + '/.netrc', hostname=None):
 
 
 # create initial config file
-def create_config(option, opt_str, value, parser):
-    configfile = parser.values.configfile
+def create_config(configfile, connection):
     config.read(configfile)
-    if parser.values.connection:
-        host, port, path, username, password = explode_connection_string(parser.values.connection)
+    if connection:
+        host, port, path, username, password = explode_connection_string(connection)
         config.set('Connection', 'host', host)
         config.set('Connection', 'port', str(port))
         config.set('Connection', 'path', path)
@@ -4650,40 +4682,23 @@ def xdg_config_home(*args):
 
 if __name__ == '__main__':
     # command line parameters
-    default_config_path = xdg_config_home('tremc/settings.cfg')
-    parser = OptionParser(usage="%prog [options] [-- transmission-remote options]",
-                          description="%%prog %s" % gconfig.VERSION)
-    parser.add_option("-v", "--version", action="callback", callback=show_version,
-                      help="Show version number and supported Transmission versions.")
-    parser.add_option("-c", "--connect", action="store", dest="connection", default="",
-                      help="Point to the server using pattern [username:password@]host[:port]/[path]")
-    parser.add_option("-s", "--ssl", action="store_true", dest="ssl", default=False,
-                      help="Connect to Transmission using SSL.")
-    parser.add_option("-f", "--config", action="store", dest="configfile", default=default_config_path,
-                      help="Path to configuration file.")
-    parser.add_option("--create-config", action="callback", callback=create_config,
-                      help="Create configuration file CONFIGFILE with default values.")
-    parser.add_option("-n", "--netrc", action="store_true", dest="use_netrc", default=False,
-                      help="Get authentication info from your ~/.netrc file.")
-    parser.add_option("-X", "--skip-version-check", "--permissive", action="store_true", dest="SKIPVERSIONCHECK", default=False,
-                      help="Proceed even if the running transmission daemon seems incompatible, or the terminal is too small.")
-    parser.add_option("-p", "--profile", action="store", dest="profile",
-                      help="Select profile to use.")
-    parser.add_option("-d", "--reverse-dns", action="store_true", dest="rdns",
-                      help="Toggle reverse DNS peers addresses.")
-    parser.add_option("--debug", action="store_true", dest="DEBUG", default=False,
-                      help="Everything passed to the debug() function will be added to the file debug.log.")
-    (cmd_args, transmissionremote_args) = parser.parse_args()
+    gconfig = GConfig()
+    try:
+        import IPy
+        gconfig.ipy = True  # extract ipv4 from ipv6 addresses
+    except ImportError:
+        pass
 
-    gconfig.DEBUG = cmd_args.DEBUG
+    try:
+        import pyperclip
+        gconfig.clipboard = True
+    except ImportError:
+        pass
 
-    # read config from config file
-    if not os.path.isfile(cmd_args.configfile) and '/' not in cmd_args.configfile:
-        if os.path.isfile(xdg_config_home('tremc/' + cmd_args.configfile)):
-            cmd_args.configfile = xdg_config_home('tremc/' + cmd_args.configfile)
-        elif os.path.isfile(xdg_config_home('tremc/' + cmd_args.configfile + '.cfg')):
-            cmd_args.configfile = xdg_config_home('tremc/' + cmd_args.configfile + '.cfg')
-    config.read(cmd_args.configfile)
+    if gconfig.ipy:
+        IPV6_RANGE_6TO4 = IPy.IP('2002::/16')
+        IPV6_RANGE_TEREDO = IPy.IP('2001::/32')
+        IPV4_ONES = 0xffffffff
 
     un_pw = os.environ.get("TR_AUTH")
     if un_pw:
@@ -4692,22 +4707,22 @@ if __name__ == '__main__':
         config.set('Connection', 'username', username)
         config.set('Connection', 'password', password)
     # command line connection data can override config file
-    if cmd_args.connection:
-        host, port, path, username, password = explode_connection_string(cmd_args.connection)
+    if gconfig.connection:
+        host, port, path, username, password = explode_connection_string(gconfig.connection)
         config.set('Connection', 'host', host)
         config.set('Connection', 'port', str(port))
         config.set('Connection', 'path', path)
         config.set('Connection', 'username', username)
         config.set('Connection', 'password', password)
-    if cmd_args.use_netrc:
+    if gconfig.use_netrc:
         username, password = read_netrc(hostname=config.get('Connection', 'host'))
         config.set('Connection', 'username', username)
         config.set('Connection', 'password', password)
-    if cmd_args.ssl:
+    if gconfig.ssl:
         config.set('Connection', 'ssl', 'True')
 
     # forward arguments after '--' to transmission-remote
-    if transmissionremote_args:
+    if gconfig.transmissionremote_args:
         cmd = ['transmission-remote', '%s:%s' %
                (config.get('Connection', 'host'), config.get('Connection', 'port'))]
 
@@ -4721,10 +4736,10 @@ if __name__ == '__main__':
             cmd.extend(['--authenv'])
 
         # one argument and it doesn't start with '-' --> treat it like it's a torrent link/url
-        if len(transmissionremote_args) == 1 and not transmissionremote_args[0].startswith('-'):
-            cmd.extend(['-a', transmissionremote_args[0]])
+        if len(gconfig.transmissionremote_args) == 1 and not gconfig.transmissionremote_args[0].startswith('-'):
+            cmd.extend(['-a', gconfig.transmissionremote_args[0]])
         else:
-            cmd.extend(transmissionremote_args)
+            cmd.extend(gconfig.transmissionremote_args)
 
         pdebug("EXECUTING:\n%s\nRESPONSE:" % ' '.join(cmd))
 
@@ -4773,12 +4788,6 @@ if __name__ == '__main__':
                           config.get('Connection', 'path'),
                           config.get('Connection', 'username'),
                           config.get('Connection', 'password'))
-
-    gconfig.history_file = ''
-    if 'tremc' in os.path.dirname(cmd_args.configfile):
-        gconfig.history_file = os.path.join(os.path.dirname(cmd_args.configfile), 'history.json')
-    elif 'tremc' in os.path.basename(cmd_args.configfile):
-        gconfig.history_file = cmd_args.configfile.rsplit('tremc', 1)[0] + 'tremc-history.json'
 
     try:
         Interface(server)
