@@ -54,10 +54,6 @@ class GConfig:
     DEBUG = False
     ENCODING = locale.getpreferredencoding() or 'UTF-8'
 
-    # optional features provided by non-standard modules
-    ipy = False
-    clipboard = False
-
     # error codes
     class errors(enum.IntEnum):
         CONNECTION_ERROR = 1
@@ -115,6 +111,48 @@ class GConfig:
         if self.create_config:
             create_config(self.configfile, self.connection)
 
+        try:
+            import IPy
+            self.ipy = True  # extract ipv4 from ipv6 addresses
+            self.IPV6_RANGE_6TO4 = IPy.IP('2002::/16')
+            self.IPV6_RANGE_TEREDO = IPy.IP('2001::/32')
+            self.IPV4_ONES = 0xffffffff
+        except ImportError:
+            self.ipy = False
+        try:
+            import pyperclip
+            self.clipboard = True
+        except ImportError:
+            self.clipboard = False
+
+        self.sort_options = [
+            ('name', '_Name'), ('addedDate', '_Age'), ('percentDone', '_Progress'),
+            ('seeders', '_Seeds'), ('leechers', 'Lee_ches'), ('sizeWhenDone', 'Si_ze'),
+            ('status', 'S_tatus'), ('uploadedEver', 'Up_loaded'),
+            ('rateUpload', '_Upload Speed'), ('rateDownload', '_Download Speed'),
+            ('uploadRatio', '_Ratio'), ('peersConnected', 'P_eers'),
+            ('downloadDir', 'L_ocation'), ('mainTrackerDomain', 'Trac_ker')]
+        self.file_sort_options = [
+            ('name', '_Name'), ('progress', '_Progress'),
+            ('length', 'Si_ze'), ('bytesCompleted', '_Downloaded'),
+            ('none', '_Torrent order'),
+            ('reverse', 'Re_verse')
+        ]
+        self.filters = [[{}]]
+        self.filters[0][0]['name'] = config.get('Filtering', 'filter', fallback='')
+        self.filters[0][0]['inverse'] = config.getboolean('Filtering', 'invert', fallback=False)
+        self.sort_orders = parse_sort_str(config.get('Sorting', 'order', fallback=''), [x[0] for x in self.sort_options])
+        self.file_sort_key = 'name'
+        self.file_sort_reverse = False
+        self.filters[0][0]['regex'] = ''
+        self.filters[0][0]['tracker'] = ''
+        self.filters[0][0]['location'] = ''
+        self.histories = load_history(self.history_file)
+        self.tlist_item_height = config.getint('Misc', 'lines_per_torrent')
+        self.torrentname_is_progressbar = config.getboolean('Misc', 'torrentname_is_progressbar')
+        self.file_viewer = config.get('Misc', 'file_viewer')
+        self.file_open_in_terminal = config.getboolean('Misc', 'file_open_in_terminal')
+        self.profiles = parse_config_profiles(config, [x[0] for x in self.sort_options])
 
 
 class Keys:
@@ -154,10 +192,10 @@ def country_code_by_addr_vany(geo_ip, geo_ip6, addr):
         return '?'
     if gconfig.ipy:
         ip = IPy.IP(addr)
-        if ip in IPV6_RANGE_6TO4:
-            addr = str(IPy.IP(ip.int() >> 80 & IPV4_ONES))
+        if ip in gconfig.IPV6_RANGE_6TO4:
+            addr = str(IPy.IP(ip.int() >> 80 & gconfig.IPV4_ONES))
             return geo_ip.country_code_by_addr(addr)
-        if ip in IPV6_RANGE_TEREDO:
+        if ip in gconfig.IPV6_RANGE_TEREDO:
             addr = str(IPy.IP(ip.int() & IPV4_ONES ^ IPV4_ONES))
             return geo_ip.country_code_by_addr(addr)
     if hasattr(geo_ip6, 'country_code_by_addr_v6'):
@@ -1021,39 +1059,10 @@ class Interface:
 
     def __init__(self, server):
         self.server = server
-        self.sort_options = [
-            ('name', '_Name'), ('addedDate', '_Age'), ('percentDone', '_Progress'),
-            ('seeders', '_Seeds'), ('leechers', 'Lee_ches'), ('sizeWhenDone', 'Si_ze'),
-            ('status', 'S_tatus'), ('uploadedEver', 'Up_loaded'),
-            ('rateUpload', '_Upload Speed'), ('rateDownload', '_Download Speed'),
-            ('uploadRatio', '_Ratio'), ('peersConnected', 'P_eers'),
-            ('downloadDir', 'L_ocation'), ('mainTrackerDomain', 'Trac_ker')]
-        self.file_sort_options = [
-            ('name', '_Name'), ('progress', '_Progress'),
-            ('length', 'Si_ze'), ('bytesCompleted', '_Downloaded'),
-            ('none', '_Torrent order'),
-            ('reverse', 'Re_verse')
-        ]
-        self.filters = [[{}]]
-        self.filters[0][0]['name'] = config.get('Filtering', 'filter', fallback='')
-        self.filters[0][0]['inverse'] = config.getboolean('Filtering', 'invert', fallback=False)
-        self.sort_orders = parse_sort_str(config.get('Sorting', 'order', fallback=''), [x[0] for x in self.sort_options])
-        self.file_sort_key = 'name'
-        self.file_sort_reverse = False
-        self.filters[0][0]['regex'] = ''
-        self.filters[0][0]['tracker'] = ''
-        self.filters[0][0]['location'] = ''
-        self.invert_filters = False
-        self.histories = load_history(gconfig.history_file)
-        self.tlist_item_height = config.getint('Misc', 'lines_per_torrent')
-        self.torrentname_is_progressbar = config.getboolean('Misc', 'torrentname_is_progressbar')
-        self.file_viewer = config.get('Misc', 'file_viewer')
-        self.file_open_in_terminal = config.getboolean('Misc', 'file_open_in_terminal')
-        self.profiles = parse_config_profiles(config, [x[0] for x in self.sort_options])
-        if gconfig.profile in self.profiles:
-            self.apply_profile(self.profiles[gconfig.profile])
+        if gconfig.profile in gconfig.profiles:
+            self.apply_profile(gconfig.profiles[gconfig.profile])
 
-        self.torrents = self.server.get_torrent_list(self.sort_orders)
+        self.torrents = self.server.get_torrent_list(gconfig.sort_orders)
         self.stats = self.server.get_global_stats()
         self.torrent_details = []
         self.selected_torrent = -1  # changes to >-1 when focus >-1 & user hits return
@@ -1074,6 +1083,7 @@ class Interface:
         self.max_overview_scroll = 0
         self.exit_now = False
         self.vmode_id = -1
+        self.invert_filters = False
 
         self.details_keybindings = {
             K.QUES: self.call_list_key_bindings,
@@ -1254,9 +1264,9 @@ class Interface:
 
         # queue was implemmented in transmission 2.4
         if self.server.get_rpc_version() >= 14:
-            self.sort_options.append(('queuePosition', '_Queue Position'))
+            gconfig.sort_options.append(('queuePosition', '_Queue Position'))
 
-        self.sort_options.append(('reverse', 'Re_verse'))
+        gconfig.sort_options.append(('reverse', 'Re_verse'))
 
         self.filelist_needs_refresh = False
         self.sorted_files = None
@@ -1271,16 +1281,16 @@ class Interface:
             self.restore_screen()
 
     def apply_profile(self, profile):
-        self.sort_orders = [s.copy() for s in profile['sort']]
+        gconfig.sort_orders = [s.copy() for s in profile['sort']]
         # copy filter array from profile
-        self.filters = [[f.copy() for f in l] for l in profile['filter']]
+        gconfig.filters = [[f.copy() for f in l] for l in profile['filter']]
         self.invert_filters = False
 
     def profile_selected(self, p):
         if p in range(K.n0, K.n9 + 1):
             p = chr(p)
-        if p in self.profiles:
-            self.apply_profile(self.profiles[p])
+        if p in gconfig.profiles:
+            self.apply_profile(gconfig.profiles[p])
 
     def init_screen(self):
         os.environ['ESCDELAY'] = '0'  # make escape usable
@@ -1326,7 +1336,7 @@ class Interface:
 
     def manage_layout(self):
         self.recalculate_torrents_per_page()
-        self.pad_height = max((len(self.torrents) + 1) * self.tlist_item_height, self.height)
+        self.pad_height = max((len(self.torrents) + 1) * gconfig.tlist_item_height, self.height)
         self.pad = curses.newpad(self.pad_height, self.width)
         self.detaillines_per_page = self.height - 8
         self.narrow = self.width < 73
@@ -1340,8 +1350,8 @@ class Interface:
                 self.torrent_title_width -= self.rateDownload_width + 2
 
         elif self.torrents:
-            self.visible_torrents_start = self.scrollpos / self.tlist_item_height
-            self.visible_torrents = self.torrents[int(self.visible_torrents_start): int(self.scrollpos / self.tlist_item_height + self.torrents_per_page + 1)]
+            self.visible_torrents_start = self.scrollpos / gconfig.tlist_item_height
+            self.visible_torrents = self.torrents[int(self.visible_torrents_start): int(self.scrollpos / gconfig.tlist_item_height + self.torrents_per_page + 1)]
             self.rateDownload_width = self.get_rateDownload_width(self.visible_torrents)
             self.rateUpload_width = self.get_rateUpload_width(self.visible_torrents)
             self.torrent_title_width = self.width - self.rateUpload_width - 2
@@ -1368,7 +1378,7 @@ class Interface:
 
     def recalculate_torrents_per_page(self):
         self.mainview_height = self.height - 2
-        self.torrents_per_page = self.mainview_height // self.tlist_item_height
+        self.torrents_per_page = self.mainview_height // gconfig.tlist_item_height
 
     def run(self):
         self.draw_title_bar()
@@ -1395,7 +1405,7 @@ class Interface:
                     self.server.set_torrent_details_id(self.torrents[self.focus]['id'])
                     self.server.wait_for_details_update()
             if self.exit_now:
-                save_history(gconfig.history_file, self.histories)
+                save_history(gconfig.history_file, gconfig.histories)
                 return
 
     def daemon_quit(self):
@@ -1415,8 +1425,8 @@ class Interface:
             if self.focus > -1:
                 self.scrollpos = 0    # unfocus main list
                 self.focus = -1
-            elif self.filters[0][0]['name']:
-                self.filters[0][0]['name'] = ''  # reset filter
+            elif gconfig.filters[0][0]['name']:
+                gconfig.filters[0][0]['name'] = ''  # reset filter
 
     def leave_details(self):
         self.server.set_torrent_details_id(-1)
@@ -1478,25 +1488,25 @@ class Interface:
 
     def show_sort_order_menu(self):
         if self.selected_torrent == -1:
-            choice = self.dialog_menu('Sort order', self.sort_options,
-                                      list(map(lambda x: x[0] == self.sort_orders[-1]['name'], self.sort_options)).index(True) + 1)
+            choice = self.dialog_menu('Sort order', gconfig.sort_options,
+                                      list(map(lambda x: x[0] == gconfig.sort_orders[-1]['name'], gconfig.sort_options)).index(True) + 1)
             if choice != -128:
                 if choice == 'reverse':
-                    self.sort_orders[-1]['reverse'] = not self.sort_orders[-1]['reverse']
+                    gconfig.sort_orders[-1]['reverse'] = not gconfig.sort_orders[-1]['reverse']
                 else:
-                    self.sort_orders.append({'name': choice, 'reverse': False})
-                    while len(self.sort_orders) > 2:
-                        self.sort_orders.pop(0)
+                    gconfig.sort_orders.append({'name': choice, 'reverse': False})
+                    while len(gconfig.sort_orders) > 2:
+                        gconfig.sort_orders.pop(0)
         elif self.details_category_focus == 1:
-            choice = self.dialog_menu('Sort order', self.file_sort_options)
+            choice = self.dialog_menu('Sort order', gconfig.file_sort_options)
             if choice != -128:
-                if choice != self.file_sort_key:
+                if choice != gconfig.file_sort_key:
                     self.focus_detaillist = -1
                     self.filelist_needs_refresh = True
                 if choice == 'reverse':
-                    self.file_sort_reverse = not self.file_sort_reverse
+                    gconfig.file_sort_reverse = not gconfig.file_sort_reverse
                 else:
-                    self.file_sort_key = choice
+                    gconfig.file_sort_key = choice
 
     def show_stats(self):
         title = "Global statistics"
@@ -1547,15 +1557,15 @@ class Interface:
     def choose_profile(self):
         profiles = []
         keys = set({})
-        for p in self.profiles:
+        for p in gconfig.profiles:
             if p[0] in keys:
                 profiles.append((p, p))
             else:
                 keys.add(p[0])
                 profiles.append((p, '_' + p))
         c = self.dialog_menu('Choose profile', profiles, 0)
-        if c in self.profiles:
-            self.apply_profile(self.profiles[c])
+        if c in gconfig.profiles:
+            self.apply_profile(gconfig.profiles[c])
 
     def filter_menu(self, oldfilter={'name': '', 'inverse': False}, prompt="", winstack=[]):
         new_filter = oldfilter.copy()
@@ -1620,10 +1630,10 @@ class Interface:
         return None
 
     def set_filter(self):
-        prompt = ('Show only', 'Filter all')[self.filters[0][0]['inverse']]
-        new_filter = self.filter_menu(self.filters[0][0], prompt=prompt)
+        prompt = ('Show only', 'Filter all')[gconfig.filters[0][0]['inverse']]
+        new_filter = self.filter_menu(gconfig.filters[0][0], prompt=prompt)
         if new_filter:
-            self.filters = [[new_filter]]
+            gconfig.filters = [[new_filter]]
             self.invert_filters = False
 
     def invert_filters_action(self):
@@ -1632,10 +1642,10 @@ class Interface:
     def add_filter(self):
         new_filter = self.filter_menu(prompt="Add filter:")
         if new_filter:
-            self.filters[0].append(new_filter)
+            gconfig.filters[0].append(new_filter)
 
     def edit_filters(self):
-        self.filters = self.dialog_filters()
+        gconfig.filters = self.dialog_filters()
 
     def global_upload(self):
         current_limit = (-1, self.stats['speed-limit-up'])[self.stats['speed-limit-up-enabled']]
@@ -1823,7 +1833,7 @@ class Interface:
             self.dialog_ok("You need Transmission v2.10 or higher to add trackers.")
             return
 
-        tracker = self.dialog_input_text('Add tracker URL:', history=self.histories['tracker'], history_max=10,
+        tracker = self.dialog_input_text('Add tracker URL:', history=gconfig.histories['tracker'], history_max=10,
                                          fixed_history=list(self.server.trackers))
         if tracker:
             t = self.torrent_details
@@ -1854,20 +1864,20 @@ class Interface:
     def movement_keys(self, c):
         if self.selected_torrent == -1 and len(self.torrents) > 0:
             if c in (curses.KEY_UP, K.k, K.p_):
-                self.focus, self.scrollpos = self.move_up(self.focus, self.scrollpos, self.tlist_item_height)
+                self.focus, self.scrollpos = self.move_up(self.focus, self.scrollpos, gconfig.tlist_item_height)
             elif c in (curses.KEY_DOWN, K.j, K.n_):
-                self.focus, self.scrollpos = self.move_down(self.focus, self.scrollpos, self.tlist_item_height,
+                self.focus, self.scrollpos = self.move_down(self.focus, self.scrollpos, gconfig.tlist_item_height,
                                                             self.torrents_per_page, len(self.torrents))
             elif c in (curses.KEY_PPAGE, K.b_):
-                self.focus, self.scrollpos = self.move_page_up(self.focus, self.scrollpos, self.tlist_item_height,
+                self.focus, self.scrollpos = self.move_page_up(self.focus, self.scrollpos, gconfig.tlist_item_height,
                                                                self.torrents_per_page)
             elif c in (curses.KEY_NPAGE, K.f_):
-                self.focus, self.scrollpos = self.move_page_down(self.focus, self.scrollpos, self.tlist_item_height,
+                self.focus, self.scrollpos = self.move_page_down(self.focus, self.scrollpos, gconfig.tlist_item_height,
                                                                  self.torrents_per_page, len(self.torrents))
             elif c in (curses.KEY_HOME, K.g):
                 self.focus, self.scrollpos = self.move_to_top()
             elif c in (curses.KEY_END, K.G):
-                self.focus, self.scrollpos = self.move_to_end(self.tlist_item_height, self.torrents_per_page, len(self.torrents))
+                self.focus, self.scrollpos = self.move_to_end(gconfig.tlist_item_height, self.torrents_per_page, len(self.torrents))
             self.focused_id = self.torrents[self.focus]['id']
         elif self.selected_torrent > -1:
             # overview
@@ -2124,10 +2134,10 @@ class Interface:
                 return
 
             viewer_cmd = []
-            for argstr in self.file_viewer.split(" "):
+            for argstr in gconfig.file_viewer.split(" "):
                 viewer_cmd.append(argstr.replace('%s', file_path))
             try:
-                if self.file_open_in_terminal:
+                if gconfig.file_open_in_terminal:
                     self.restore_screen()
                     call(viewer_cmd)
                     self.get_screen_size()
@@ -2156,7 +2166,7 @@ class Interface:
         self.details_category_focus = 4
 
     def profile_menu(self):
-        if len(self.profiles) > 1:
+        if len(gconfig.profiles) > 1:
             self.choose_profile()
 
     def remove_labels(self):
@@ -2188,7 +2198,7 @@ class Interface:
         if ids:
             focused, extraline = self.get_focused(ids)
             msg = ('Label to add to "%s"' % focused['name']) + extraline
-            label = self.dialog_input_text(msg, '', history=self.histories['label'], history_max=10, fixed_history=list(self.server.labels))
+            label = self.dialog_input_text(msg, '', history=gconfig.histories['label'], history_max=10, fixed_history=list(self.server.labels))
             if label:
                 self.server.add_label(ids, label)
 
@@ -2196,7 +2206,7 @@ class Interface:
         self.list_key_bindings()
 
     def toggle_compact_torrentlist(self):
-        self.tlist_item_height = self.tlist_item_height % 3 + 1
+        gconfig.tlist_item_height = gconfig.tlist_item_height % 3 + 1
         self.recalculate_torrents_per_page()
         self.follow_list_focus()
 
@@ -2207,7 +2217,7 @@ class Interface:
             location = homedir2tilde(self.torrents[self.focus]['downloadDir'])
             msg = ('Move "%s"' % focused['name']) + extraline + '\nfrom %s to' % location
             path = self.dialog_input_text(msg, location, tab_complete='dirs',
-                                          history=self.histories['location'], history_max=10, fixed_history=list(self.server.locations))
+                                          history=gconfig.histories['location'], history_max=10, fixed_history=list(self.server.locations))
             if path:
                 self.server.move_torrent(ids, tilde2homedir(path))
 
@@ -2290,7 +2300,7 @@ class Interface:
         return True  # Unknown filter does not filter anything
 
     def filter_torrent_list(self):
-        self.torrents = [t for t in self.torrents if any(all(self.filter_torrent(t, f) for f in fs) for fs in self.filters) != self.invert_filters]
+        self.torrents = [t for t in self.torrents if any(all(self.filter_torrent(t, f) for f in fs) for fs in gconfig.filters) != self.invert_filters]
         # Also filter selected:
         self.selected.intersection_update({t['id'] for t in self.torrents})
 
@@ -2313,17 +2323,17 @@ class Interface:
                     break
 
         # make sure the focus is not above the visible area
-        while self.focus < (self.scrollpos / self.tlist_item_height):
-            self.scrollpos -= self.tlist_item_height
+        while self.focus < (self.scrollpos / gconfig.tlist_item_height):
+            self.scrollpos -= gconfig.tlist_item_height
         # make sure the focus is not below the visible area
-        while self.focus > (self.scrollpos / self.tlist_item_height) + self.torrents_per_page - 1:
-            self.scrollpos += self.tlist_item_height
+        while self.focus > (self.scrollpos / gconfig.tlist_item_height) + self.torrents_per_page - 1:
+            self.scrollpos += gconfig.tlist_item_height
         # keep min and max bounds
-        self.scrollpos = min(self.scrollpos, (len(self.torrents) - self.torrents_per_page) * self.tlist_item_height)
+        self.scrollpos = min(self.scrollpos, (len(self.torrents) - self.torrents_per_page) * gconfig.tlist_item_height)
         self.scrollpos = max(0, self.scrollpos)
 
     def draw_torrent_list(self, search_keyword='', search=''):
-        self.torrents = self.server.get_torrent_list(self.sort_orders)
+        self.torrents = self.server.get_torrent_list(gconfig.sort_orders)
         self.filter_torrent_list()
 
         if search_keyword and search:
@@ -2356,7 +2366,7 @@ class Interface:
         for i in range(len(self.visible_torrents)):
             ypos += self.draw_torrentlist_item(self.visible_torrents[i],
                                                (i == self.focus - self.visible_torrents_start),
-                                               self.tlist_item_height == 1,
+                                               gconfig.tlist_item_height == 1,
                                                ypos)
 
         self.pad.refresh(0, 0, 1, 0, self.mainview_height, self.width - 1)
@@ -2380,7 +2390,7 @@ class Interface:
             self.draw_ratio(torrent, y, False)
             self.draw_torrentlist_status(torrent, focused, y)
 
-            return self.tlist_item_height  # number of lines that were used for drawing the list item
+            return gconfig.tlist_item_height  # number of lines that were used for drawing the list item
         # Draw ratio in place of upload rate if upload rate = 0
         if not torrent['rateUpload']:
             self.draw_ratio(torrent, y - 1, selected)
@@ -2477,7 +2487,7 @@ class Interface:
             tag += curses.A_BOLD
             tag_done += curses.A_BOLD
 
-        if self.torrentname_is_progressbar:
+        if gconfig.torrentname_is_progressbar:
             bar_width = int(float(width) * (float(percentDone) / 100))
             # Estimate widths, which works for anything ASCII
             bar_complete = title[:bar_width]
@@ -2857,12 +2867,12 @@ class Interface:
         if self.filelist_needs_refresh:
             self.filelist_needs_refresh = False
             self.file_index_map = {}
-            if self.file_sort_key in ['name', 'length', 'bytesCompleted']:
-                self.sorted_files = sorted(self.torrent_details['files'], key=lambda x: x[self.file_sort_key], reverse=self.file_sort_reverse)
-            elif self.file_sort_key == 'progress':
-                self.sorted_files = sorted(self.torrent_details['files'], key=lambda x: x['bytesCompleted'] / x['length'], reverse=self.file_sort_reverse)
+            if gconfig.file_sort_key in ['name', 'length', 'bytesCompleted']:
+                self.sorted_files = sorted(self.torrent_details['files'], key=lambda x: x[gconfig.file_sort_key], reverse=gconfig.file_sort_reverse)
+            elif gconfig.file_sort_key == 'progress':
+                self.sorted_files = sorted(self.torrent_details['files'], key=lambda x: x['bytesCompleted'] / x['length'], reverse=gconfig.file_sort_reverse)
             else:
-                if self.file_sort_reverse:
+                if gconfig.file_sort_reverse:
                     self.sorted_files = list(reversed(self.torrent_details['files']))
                 else:
                     self.sorted_files = self.torrent_details['files'][:]
@@ -3298,25 +3308,25 @@ class Interface:
             self.screen.addstr("%d) " % paused, curses.A_REVERSE)
 
             if self.selected_torrent == -1:
-                if self.filters[0][0]['name']:
+                if gconfig.filters[0][0]['name']:
                     self.screen.addstr(strings[4], curses.A_REVERSE)
-                    if not self.narrow and self.filters[0][0]['name'] in gconfig.FILTERS_WITH_PARAM:
-                        filter_param = ('=', '!=')[self.filters[0][0]['inverse']] + self.filters[0][0][self.filters[0][0]['name']][-16:]
+                    if not self.narrow and gconfig.filters[0][0]['name'] in gconfig.FILTERS_WITH_PARAM:
+                        filter_param = ('=', '!=')[gconfig.filters[0][0]['inverse']] + gconfig.filters[0][0][gconfig.filters[0][0]['name']][-16:]
                         not_str = ''
                     else:
                         filter_param = ''
-                        not_str = ('', strings[5])[self.filters[0][0]['inverse']]
-                    self.screen.addstr(not_str + self.filters[0][0]['name'] + filter_param,
-                                       curses.color_pair(self.colors.ind('filter_status' if len(self.filters[0]) <= 1 else 'multi_filter_status')) +
+                        not_str = ('', strings[5])[gconfig.filters[0][0]['inverse']]
+                    self.screen.addstr(not_str + gconfig.filters[0][0]['name'] + filter_param,
+                                       curses.color_pair(self.colors.ind('filter_status' if len(gconfig.filters[0]) <= 1 else 'multi_filter_status')) +
                                        + (curses.A_REVERSE if not self.invert_filters else 0))
 
                 # show last sort order (if terminal size permits it)
-                if self.sort_orders and self.width - self.screen.getyx()[1] > 20:
+                if gconfig.sort_orders and self.width - self.screen.getyx()[1] > 20:
                     self.screen.addstr(strings[6], curses.A_REVERSE)
-                    name = [name[1] for name in self.sort_options if name[0] == self.sort_orders[-1]['name']][0]
+                    name = [name[1] for name in gconfig.sort_options if name[0] == gconfig.sort_orders[-1]['name']][0]
                     name = name.replace('_', '').lower()
                     curses_tags = curses.color_pair(self.colors.ind('filter_status')) + curses.A_REVERSE
-                    if self.sort_orders[-1]['reverse']:
+                    if gconfig.sort_orders[-1]['reverse']:
                         self.screen.addch(curses.ACS_DARROW, curses_tags)
                     else:
                         self.screen.addch(curses.ACS_UARROW, curses_tags)
@@ -3330,12 +3340,12 @@ class Interface:
 
             else:
                 if self.details_category_focus == 1:
-                    if self.file_sort_key and self.width - self.screen.getyx()[1] > 20:
+                    if gconfig.file_sort_key and self.width - self.screen.getyx()[1] > 20:
                         self.screen.addstr(strings[6], curses.A_REVERSE)
-                        name = [name[1] for name in self.file_sort_options if name[0] == self.file_sort_key][0]
+                        name = [name[1] for name in gconfig.file_sort_options if name[0] == gconfig.file_sort_key][0]
                         name = name.replace('_', '').lower()
                         curses_tags = curses.color_pair(self.colors.ind('filter_status')) + curses.A_REVERSE
-                        if self.file_sort_reverse:
+                        if gconfig.file_sort_reverse:
                             self.screen.addch(curses.ACS_DARROW, curses_tags)
                         else:
                             self.screen.addch(curses.ACS_UARROW, curses_tags)
@@ -3467,7 +3477,7 @@ class Interface:
             message += "            J/K  Jump to next/previous directory\n"
         # Torrent list
         if self.selected_torrent == -1:
-            if self.profiles:
+            if gconfig.profiles:
                 message += "           0..9  Select profile\n" + \
                     "              e  Profile menu\n"
             message += "              /  Search in torrent list\n" + \
@@ -4054,11 +4064,11 @@ class Interface:
         if self.server.get_rpc_version() >= 14:
             options.append(('Do_wnload Queue Size', "%s" % ('disabled', self.stats['download-queue-size'])[self.stats['download-queue-enabled']]))
             options.append(('S_eed Queue Size', "%s" % ('disabled', self.stats['seed-queue-size'])[self.stats['seed-queue-enabled']]))
-        options.append(('Title is Progress _Bar', ('no', 'yes')[self.torrentname_is_progressbar]))
-        options.append(('File _Viewer', "%s" % self.file_viewer))
+        options.append(('Title is Progress _Bar', ('no', 'yes')[gconfig.torrentname_is_progressbar]))
+        options.append(('File _Viewer', "%s" % gconfig.file_viewer))
 
         max_len = max([sum([len(re.sub('_', '', x)) for x in y[0]]) for y in options])
-        width = min(max(len(self.file_viewer) + 6, 15) + max_len, self.width)
+        width = min(max(len(gconfig.file_viewer) + 6, 15) + max_len, self.width)
         height = len(options) + 2
         paging = False
         if self.height < height:
@@ -4153,7 +4163,7 @@ class Interface:
                 if limit != -128:
                     self.server.set_option('alt-speed-down', limit)
             elif key == K.b:
-                self.torrentname_is_progressbar = not self.torrentname_is_progressbar
+                gconfig.torrentname_is_progressbar = not gconfig.torrentname_is_progressbar
             # Queue was implemmented in Transmission v2.4
             elif key == K.w and self.server.get_rpc_version() >= 14:
                 queue_size = self.dialog_input_number('Download Queue size',
@@ -4180,10 +4190,10 @@ class Interface:
                         self.server.set_option('seed-queue-size', queue_size)
 
             elif key == K.v:
-                viewer = self.dialog_input_text('File Viewer\nExample: xdg-viewer %s', self.file_viewer, winstack=[win])
+                viewer = self.dialog_input_text('File Viewer\nExample: xdg-viewer %s', gconfig.file_viewer, winstack=[win])
                 if viewer:
                     config.set('Misc', 'file_viewer', viewer.replace('%s', '%%s'))
-                    self.file_viewer = viewer
+                    gconfig.file_viewer = viewer
             elif key == K.SPACE:
                 page = page + 1
                 if page > (len(options) - 1) / pagelines:
@@ -4192,7 +4202,7 @@ class Interface:
             self.update_torrent_list([win])
 
     def dialog_filters(self):
-        filters = [[f.copy() for f in l] for l in self.filters]
+        filters = [[f.copy() for f in l] for l in gconfig.filters]
         filters.append([])
         changed = True
         current = [0, 0]
@@ -4226,7 +4236,7 @@ class Interface:
                 win.chgat(1 + current[0], commas[current[1]] + 4, commas[current[1] + 1] - commas[current[1]] - 2, curses.A_UNDERLINE)
             c = self.wingetch(win)
             if c in (27, K.q, K.w_):
-                return self.filters
+                return gconfig.filters
             if c == K.LF:
                 filters = [f for f in filters if f != []]
                 return [[{'name': '', 'inverse': False}]] if filters == [] else filters
@@ -4658,7 +4668,7 @@ def parse_single_filter_str(s):
         else:
             f['inverse'] = False
         f['name'] = s[i]
-        if s[i] in gconfig.FILTERS_WITH_PARAM:
+        if s[i] in GConfig.FILTERS_WITH_PARAM:
             f[s[i]] = s[i + 1]
         ret.append(f)
     return ret
@@ -4699,23 +4709,6 @@ def xdg_config_home(*args):
 if __name__ == '__main__':
     # command line parameters
     gconfig = GConfig()
-    try:
-        import IPy
-        gconfig.ipy = True  # extract ipv4 from ipv6 addresses
-    except ImportError:
-        pass
-
-    try:
-        import pyperclip
-        gconfig.clipboard = True
-    except ImportError:
-        pass
-
-    if gconfig.ipy:
-        IPV6_RANGE_6TO4 = IPy.IP('2002::/16')
-        IPV6_RANGE_TEREDO = IPy.IP('2001::/32')
-        IPV4_ONES = 0xffffffff
-
     un_pw = os.environ.get("TR_AUTH")
     if un_pw:
         username = un_pw.split(":")[0]
@@ -4758,7 +4751,6 @@ if __name__ == '__main__':
             cmd.extend(gconfig.transmissionremote_args)
 
         pdebug("EXECUTING:\n%s\nRESPONSE:" % ' '.join(cmd))
-
         try:
             retcode = call(cmd)
         except OSError as msg:
