@@ -1426,7 +1426,7 @@ class Interface:
                 self.scrollpos = 0    # unfocus main list
                 self.focus = -1
             elif gconfig.filters[0][0]['name']:
-                gconfig.filters[0][0]['name'] = ''  # reset filter
+                gconfig.filters =  [[{'name': '', 'inverse': False}]]  # reset filter
 
     def leave_details(self):
         self.server.set_torrent_details_id(-1)
