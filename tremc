@@ -1140,7 +1140,6 @@ class Interface:
             K.e: self.show_peers_tab,
             K.c: self.show_chunks_tab,
             K.f: self.show_files_tab,
-            K.C: self.toggle_compact_torrentlist,
             K.h: self.file_priority_or_switch_details_prev,
             K.l: self.file_priority_or_switch_details_next,
             curses.KEY_RIGHT: self.file_priority_or_switch_details_next,
@@ -1177,9 +1176,9 @@ class Interface:
         self.list_keybindings = {
             K.QUES: self.call_list_key_bindings,
             curses.KEY_F1: self.call_list_key_bindings,
-            K.ESC: self.go_back_or_unfocus,
-            curses.KEY_BREAK: self.go_back_or_unfocus,
-            12: self.go_back_or_unfocus,
+            K.ESC: self.unfocus_torrent,
+            curses.KEY_BREAK: self.unfocus_torrent,
+            12: self.unfocus_torrent,
             K.q: self.quit_now,
             K.w_: self.quit_now,
             K.LF: self.enter_details,
@@ -1417,11 +1416,12 @@ class Interface:
             self.focus_detaillist = -1
             self.scrollpos_detaillist = [0] * 5
             self.selected_files = []
-        elif self.selected_torrent > -1:  # return from details
+        else:  # return from details
             self.details_category_focus = 0
             self.selected_torrent = -1
             self.selected_files = []
-        else:
+
+    def unfocus_torrent(self):
             if self.focus > -1:
                 self.scrollpos = 0    # unfocus main list
                 self.focus = -1
