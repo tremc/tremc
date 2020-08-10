@@ -37,7 +37,14 @@ import urllib.error
 import urllib.parse
 import configparser
 import enum
-
+try:
+    import IPy
+except ImportError:
+    pass
+try:
+    import pyperclip
+except ImportError:
+    pass
 
 locale.setlocale(locale.LC_ALL, '')
 
@@ -112,18 +119,13 @@ class GConfig:
             create_config(self.configfile, self.connection)
 
         try:
-            import IPy
             self.ipy = True  # extract ipv4 from ipv6 addresses
             self.IPV6_RANGE_6TO4 = IPy.IP('2002::/16')
             self.IPV6_RANGE_TEREDO = IPy.IP('2001::/32')
             self.IPV4_ONES = 0xffffffff
-        except ImportError:
+        except NameError:
             self.ipy = False
-        try:
-            import pyperclip
-            self.clipboard = True
-        except ImportError:
-            self.clipboard = False
+        self.clipboard = 'pyperclip' in sys.modules
 
         self.sort_options = [
             ('name', '_Name'), ('addedDate', '_Age'), ('percentDone', '_Progress'),
@@ -196,7 +198,7 @@ def country_code_by_addr_vany(geo_ip, geo_ip6, addr):
             addr = str(IPy.IP(ip.int() >> 80 & gconfig.IPV4_ONES))
             return geo_ip.country_code_by_addr(addr)
         if ip in gconfig.IPV6_RANGE_TEREDO:
-            addr = str(IPy.IP(ip.int() & IPV4_ONES ^ IPV4_ONES))
+            addr = str(IPy.IP(ip.int() & gconfig.IPV4_ONES ^ gconfig.IPV4_ONES))
             return geo_ip.country_code_by_addr(addr)
     if hasattr(geo_ip6, 'country_code_by_addr_v6'):
         return geo_ip6.country_code_by_addr_v6(addr)
@@ -488,13 +490,6 @@ class Transmission:
         self.torrent_details_cache = dict()
         self.peer_progress_cache = dict()
         self.hosts_cache = dict()
-        if gconfig.rdns:
-            # Only import threading if needed. It was optional until python 3.7
-            try:
-                import threading
-                self.threading = threading
-            except Exception:
-                gconfig.rdns = False
 
         self.geo_ips_cache = dict()
         if gconfig.geoip1:
@@ -634,7 +629,7 @@ class Transmission:
 
             # resolve and locate peer's ip
             if gconfig.rdns and ip not in self.hosts_cache:
-                self.threading.Thread(target=reverse_dns, args=(self.hosts_cache, ip)).start()
+                threading.Thread(target=reverse_dns, args=(self.hosts_cache, ip)).start()
             if gconfig.geoip and ip not in self.geo_ips_cache:
                 self.geo_ips_cache[ip] = country_code_by_addr_vany(self.geo_ip, self.geo_ip6, ip)
 
@@ -4721,6 +4716,13 @@ if __name__ == '__main__':
         except OSError as msg:
             exit_prog("Could not execute the above command: %s\n" % msg.strerror, 128)
         exit_prog('', retcode)
+
+    if gconfig.rdns:
+        # Only import threading if needed. It was optional until python 3.7
+        try:
+            import threading
+        except ImportError:
+            gconfig.rdns = False
 
     gconfig.geoip1 = False
     gconfig.geoip2 = False
