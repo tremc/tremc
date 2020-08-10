@@ -1364,11 +1364,11 @@ class Interface:
             self.selected_files = []
 
     def unfocus_torrent(self):
-            if self.focus > -1:
-                self.scrollpos = 0    # unfocus main list
-                self.focus = -1
-            elif gconfig.filters[0][0]['name']:
-                gconfig.filters =  [[{'name': '', 'inverse': False}]]  # reset filter
+        if self.focus > -1:
+            self.scrollpos = 0    # unfocus main list
+            self.focus = -1
+        elif gconfig.filters[0][0]['name']:
+            gconfig.filters = [[{'name': '', 'inverse': False}]]  # reset filter
 
     def leave_details(self):
         self.server.set_torrent_details_id(-1)
@@ -1441,15 +1441,15 @@ class Interface:
                         gconfig.sort_orders.pop(0)
 
     def show_file_sort_order_menu(self):
-            choice = self.dialog_menu('Sort order', gconfig.file_sort_options)
-            if choice != -128:
-                if choice != gconfig.file_sort_key:
-                    self.focus_detaillist = -1
-                    self.filelist_needs_refresh = True
-                if choice == 'reverse':
-                    gconfig.file_sort_reverse = not gconfig.file_sort_reverse
-                else:
-                    gconfig.file_sort_key = choice
+        choice = self.dialog_menu('Sort order', gconfig.file_sort_options)
+        if choice != -128:
+            if choice != gconfig.file_sort_key:
+                self.focus_detaillist = -1
+                self.filelist_needs_refresh = True
+            if choice == 'reverse':
+                gconfig.file_sort_reverse = not gconfig.file_sort_reverse
+            else:
+                gconfig.file_sort_key = choice
 
     def show_stats(self):
         title = "Global statistics"
@@ -3235,13 +3235,13 @@ class Interface:
         if self.selected_torrent > -1 and self.details_category_focus == 2:
             self.screen.addstr((self.height - 1), 0,
                                ("%d peer%s connected (" % (self.torrent_details['peersConnected'],
-                                                          ('s', '')[self.torrent_details['peersConnected'] == 1]) +
-                               "Trackers:%d " % self.torrent_details['peersFrom']['fromTracker']
-                               + "DHT:%d " % self.torrent_details['peersFrom']['fromDht']
-                               + "LTEP:%d " % self.torrent_details['peersFrom']['fromLtep']
-                               + "PEX:%d " % self.torrent_details['peersFrom']['fromPex']
-                               + "Incoming:%d " % self.torrent_details['peersFrom']['fromIncoming']
-                               + "Cache:%d)" % self.torrent_details['peersFrom']['fromCache'])[:self.width-1],
+                                                           ('s', '')[self.torrent_details['peersConnected'] == 1]) +
+                                "Trackers:%d " % self.torrent_details['peersFrom']['fromTracker']
+                                + "DHT:%d " % self.torrent_details['peersFrom']['fromDht']
+                                + "LTEP:%d " % self.torrent_details['peersFrom']['fromLtep']
+                                + "PEX:%d " % self.torrent_details['peersFrom']['fromPex']
+                                + "Incoming:%d " % self.torrent_details['peersFrom']['fromIncoming']
+                                + "Cache:%d)" % self.torrent_details['peersFrom']['fromCache'])[:self.width-1],
                                curses.A_REVERSE)
         elif self.vmode_id > -1:
             self.screen.addstr((self.height - 1), 0, "-- VISUAL --", curses.A_REVERSE)
