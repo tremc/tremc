@@ -1085,54 +1085,76 @@ class Interface:
         self.vmode_id = -1
         self.invert_filters = False
 
-        self.details_keybindings = {
-            K.QUES: self.call_list_key_bindings,
-            curses.KEY_F1: self.call_list_key_bindings,
-            K.ESC: self.go_back_or_unfocus,
-            curses.KEY_BREAK: self.go_back_or_unfocus,
-            12: self.go_back_or_unfocus,
-            curses.KEY_BACKSPACE: self.leave_details,
-            K.q: self.go_back,
-            K.w_: self.quit_now,
-            K.LF: self.open_torrent_file,
-            K.i: self.invert_selection_files,
-            K.s: self.show_sort_order_menu,
+        self.common_keybindings = {
+            K.QUES: self.list_key_bindings,
+            curses.KEY_F1: self.list_key_bindings,
             K.S: self.show_stats,
+            K.M: self.copy_magnet_link,
+            K.w_: self.quit_now,
+            K.X: self.daemon_quit,
+            K.B: self.set_labels,
+            K.b: self.add_label,
+            K.l_: self.remove_labels,
             K.F: self.rename_torrent_selected_file,
-            K.u: self.global_upload,
-            K.d: self.global_download,
-            K.U: self.torrent_upload,
-            K.D: self.torrent_download,
-            K.L: self.seed_ratio,
-            K.STAR: self.honors_limits,
-            K.PLUS: self.bandwidth_priority_inc,
-            K.MINUS: self.bandwidth_priority_dec,
-            K.J: self.move_to_next_directory_in_filelist,
-            K.K: self.move_to_previous_directory_in_filelist,
+            K.N: self.start_now_torrent,
             K.p: self.pause_unpause_torrent,
             K.P: self.pause_unpause_all_torrent,
-            K.N: self.start_now_torrent,
+            K.n: self.reannounce_torrent,
             K.v: self.verify_torrent,
             K.y: self.verify_torrent,
+            K.MINUS: self.bandwidth_priority_dec,
+            K.PLUS: self.bandwidth_priority_inc,
+            K.STAR: self.honors_limits,
+            K.d: self.global_download,
+            K.u: self.global_upload,
+            K.D: self.torrent_download,
+            K.U: self.torrent_upload,
+            K.L: self.seed_ratio,
+            K.m: self.move_torrent,
+            K.n0: self.profile_selected,
+            K.n1: self.profile_selected,
+            K.n2: self.profile_selected,
+            K.n3: self.profile_selected,
+            K.n4: self.profile_selected,
+            K.n5: self.profile_selected,
+            K.n6: self.profile_selected,
+            K.n7: self.profile_selected,
+            K.n8: self.profile_selected,
+            K.n9: self.profile_selected,
+            curses.KEY_SDC: self.remove_torrent_local_data,
+            K.R: self.remove_torrent_local_data,
+            curses.KEY_SEND: lambda c: self.move_queue('bottom'),
+            curses.KEY_SHOME: lambda c: self.move_queue('top'),
+            curses.KEY_SLEFT: lambda c: self.move_queue('ppage'),
+            curses.KEY_SRIGHT: lambda c: self.move_queue('npage'),
+            curses.KEY_UP: self.line_up,
+            K.k: self.line_up,
+            K.p_: self.line_up,
+            curses.KEY_DOWN: self.line_down,
+            K.j: self.line_down,
+            K.n_: self.line_down,
+            curses.KEY_PPAGE: self.page_up,
+            K.b_: self.page_up,
+            curses.KEY_NPAGE: self.page_down,
+            K.f_: self.page_down,
+            curses.KEY_HOME: self.go_home,
+            K.g: self.go_home,
+            curses.KEY_END: self.go_end,
+            K.G: self.go_end,
+        }
+        self.details_keybindings = {
+            K.ESC: self.go_back_or_unfocus,
+            curses.KEY_BREAK: self.go_back_or_unfocus,
+            K.q: self.go_back,
+            12: self.go_back_or_unfocus,
+            curses.KEY_BACKSPACE: self.leave_details,
+            K.LF: self.open_torrent_file,
+            K.i: self.invert_selection_files,
+            K.J: self.move_to_next_directory_in_filelist,
+            K.K: self.move_to_previous_directory_in_filelist,
             K.V: self.visual_select_files,
             K.r: self.remove_tracker,
             curses.KEY_DC: self.remove_tracker,
-            K.R: self.remove_torrent_local_data,
-            curses.KEY_SDC: self.remove_torrent_local_data,
-            curses.KEY_UP: self.line_up,
-            K.k: self.line_up,
-            curses.KEY_DOWN: self.line_down,
-            K.j: self.line_down,
-            curses.KEY_PPAGE: self.page_up,
-            curses.KEY_NPAGE: self.page_down,
-            curses.KEY_HOME: self.go_home,
-            curses.KEY_END: self.go_end,
-            K.g: self.go_home,
-            K.G: self.go_end,
-            K.f_: self.page_down,
-            K.b_: self.page_up,
-            K.n_: self.line_down,
-            K.p_: self.line_up,
             K.TAB: self.next_details,
             curses.KEY_BTAB: self.prev_details,
             K.o: self.show_overview_tab,
@@ -1147,118 +1169,43 @@ class Interface:
             K.SPACE: self.select_file,
             K.a: self.add_tracker_or_select_all_files,
             K.A: self.select_files_dir,
-            K.m: self.move_torrent,
-            K.M: self.copy_magnet_link,
-            K.n: self.reannounce_torrent,
             K.SLASH: self.dialog_search_filelist,
             K.DOT: self.dialog_search_filelist_regex,
             K.COMMA: self.dialog_select_search_filelist,
             K.LESS: self.dialog_select_search_filelist_regex,
-            K.b: self.add_label,
-            K.B: self.set_labels,
-            K.l_: self.remove_labels,
-            K.n0: self.profile_selected,
-            K.n1: self.profile_selected,
-            K.n2: self.profile_selected,
-            K.n3: self.profile_selected,
-            K.n4: self.profile_selected,
-            K.n5: self.profile_selected,
-            K.n6: self.profile_selected,
-            K.n7: self.profile_selected,
-            K.n8: self.profile_selected,
-            K.n9: self.profile_selected,
-            K.X: self.daemon_quit,
-            curses.KEY_SEND: lambda c: self.move_queue('bottom'),
-            curses.KEY_SHOME: lambda c: self.move_queue('top'),
-            curses.KEY_SLEFT: lambda c: self.move_queue('ppage'),
-            curses.KEY_SRIGHT: lambda c: self.move_queue('npage')
+            K.s: self.show_file_sort_order_menu,
         }
         self.list_keybindings = {
-            K.QUES: self.call_list_key_bindings,
-            curses.KEY_F1: self.call_list_key_bindings,
+            K.q: self.quit_now,
             K.ESC: self.unfocus_torrent,
             curses.KEY_BREAK: self.unfocus_torrent,
             12: self.unfocus_torrent,
-            K.q: self.quit_now,
-            K.w_: self.quit_now,
             K.LF: self.enter_details,
             curses.KEY_RIGHT: self.enter_details,
             K.o: self.draw_options_dialog,
             K.l: self.enter_details,
             K.i: self.invert_selection_torrents,
-            K.s: self.show_sort_order_menu,
-            K.S: self.show_stats,
+            K.s: self.show_torrent_sort_order_menu,
             K.f: self.set_filter,
-            K.F: self.rename_torrent_selected_file,
-            K.u: self.global_upload,
-            K.d: self.global_download,
-            K.U: self.torrent_upload,
-            K.D: self.torrent_download,
-            K.L: self.seed_ratio,
             K.t: self.turtle_mode,
             K.T: self.add_filter,
             K.I: self.edit_filters,
             K.TILDE: self.invert_filters_action,
-            K.STAR: self.honors_limits,
-            K.PLUS: self.bandwidth_priority_inc,
-            K.MINUS: self.bandwidth_priority_dec,
             K.J: self.move_queue_down,
             K.K: self.move_queue_up,
-            K.p: self.pause_unpause_torrent,
-            K.P: self.pause_unpause_all_torrent,
-            K.N: self.start_now_torrent,
-            K.v: self.verify_torrent,
-            K.y: self.verify_torrent,
             K.r: self.remove_torrent,
             curses.KEY_DC: self.remove_torrent,
-            K.R: self.remove_torrent_local_data,
-            curses.KEY_SDC: self.remove_torrent_local_data,
             K.r_: self.remove_selected_torrents,
-            curses.KEY_UP: self.line_up,
-            K.k: self.line_up,
-            curses.KEY_DOWN: self.line_down,
-            K.j: self.line_down,
-            curses.KEY_PPAGE: self.page_up,
-            curses.KEY_NPAGE: self.page_down,
-            curses.KEY_HOME: self.go_home,
-            curses.KEY_END: self.go_end,
-            K.g: self.go_home,
-            K.G: self.go_end,
-            K.f_: self.page_down,
-            K.b_: self.page_up,
-            K.n_: self.line_down,
-            K.p_: self.line_up,
             K.e: self.profile_menu,
             K.C: self.toggle_compact_torrentlist,
             K.SPACE: self.select_unselect_torrent,
             K.a_: self.add_torrent_paused,
             K.a: self.add_torrent,
             K.A: self.select_unselect_torrents,
-            K.m: self.move_torrent,
-            K.M: self.copy_magnet_link,
-            K.n: self.reannounce_torrent,
             K.SLASH: self.dialog_search_torrentlist,
             K.DOT: self.dialog_search_torrentlist_regex,
             K.COMMA: self.dialog_select_search_torrentlist,
             K.LESS: self.dialog_select_search_torrentlist_regex,
-            K.b: self.add_label,
-            K.B: self.set_labels,
-            K.l_: self.remove_labels,
-            K.n0: self.profile_selected,
-            K.n1: self.profile_selected,
-            K.n2: self.profile_selected,
-            K.n3: self.profile_selected,
-            K.n4: self.profile_selected,
-            K.n5: self.profile_selected,
-            K.n6: self.profile_selected,
-            K.n7: self.profile_selected,
-            K.n8: self.profile_selected,
-            K.n9: self.profile_selected,
-            K.X: self.daemon_quit,
-            curses.KEY_SEND: lambda c: self.move_queue('bottom'),
-            curses.KEY_SHOME: lambda c: self.move_queue('top'),
-            curses.KEY_SLEFT: lambda c: self.move_queue('ppage'),
-            curses.KEY_SRIGHT: lambda c: self.move_queue('npage')
         }
 
         # queue was implemmented in transmission 2.4
@@ -1486,7 +1433,7 @@ class Interface:
             self.server.set_torrent_details_id(self.torrents[self.focus]['id'])
             self.server.wait_for_details_update()
 
-    def show_sort_order_menu(self):
+    def show_torrent_sort_order_menu(self):
         if self.selected_torrent == -1:
             choice = self.dialog_menu('Sort order', gconfig.sort_options,
                                       list(map(lambda x: x[0] == gconfig.sort_orders[-1]['name'], gconfig.sort_options)).index(True) + 1)
@@ -1497,7 +1444,8 @@ class Interface:
                     gconfig.sort_orders.append({'name': choice, 'reverse': False})
                     while len(gconfig.sort_orders) > 2:
                         gconfig.sort_orders.pop(0)
-        elif self.details_category_focus == 1:
+
+    def show_file_sort_order_menu(self):
             choice = self.dialog_menu('Sort order', gconfig.file_sort_options)
             if choice != -128:
                 if choice != gconfig.file_sort_key:
@@ -2220,9 +2168,6 @@ class Interface:
             if label:
                 self.server.add_label(ids, label)
 
-    def call_list_key_bindings(self):
-        self.list_key_bindings()
-
     def toggle_compact_torrentlist(self):
         gconfig.tlist_item_height = gconfig.tlist_item_height % 3 + 1
         self.recalculate_torrents_per_page()
@@ -2243,7 +2188,9 @@ class Interface:
         c = self.screen.getch()
         if c == -1:
             return -1
-        if self.selected_torrent == -1:
+        if c in self.common_keybindings:
+            f = self.common_keybindings[c]
+        elif self.selected_torrent == -1:
             f = self.list_keybindings.get(c, None)
         else:
             f = self.details_keybindings.get(c, None)
