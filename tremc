@@ -1140,7 +1140,7 @@ class Interface:
         self.details_keybindings = {
             K.ESC: self.go_back_or_unfocus,
             curses.KEY_BREAK: self.go_back_or_unfocus,
-            K.q: self.go_back,
+            K.q: self.leave_details,
             12: self.go_back_or_unfocus,
             curses.KEY_BACKSPACE: self.leave_details,
             K.LF: self.open_torrent_file,
@@ -1379,14 +1379,6 @@ class Interface:
 
     def quit_now(self):
         self.exit_now = True
-
-    def go_back(self):
-        self.server.set_torrent_details_id(-1)
-        self.selected_torrent = -1
-        self.details_category_focus = 0
-        self.focus_detaillist = -1
-        self.scrollpos_detaillist = [0] * 5
-        self.selected_files = []
 
     def turtle_mode(self):
         self.server.toggle_turtle_mode()
