@@ -7,7 +7,7 @@ A console client for the BitTorrent client
 
 ## Requirements
 
-Python 3.0
+Python 3.2
 
 ### Optional Modules
 
