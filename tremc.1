@@ -1,4 +1,4 @@
-.TH tremc 1 "08 October 2016" "" "tremc"
+.TH tremc 1 "11 August 2020" "" "tremc"
 
 .SH NAME
 tremc \- a console client for the Transmission BitTorrent
@@ -13,6 +13,15 @@ client
 .SH DESCRIPTION
 .B tremc
 is a curses interface for the Transmission BitTorrent daemon.
+.br
+If a filename or an URL, is given on the command line it is passed (preceeded
+by -a) to transmission-remote, so that the torrent is added. 
+.br
+If -- followed by any options appears on the command line, the following
+options are passed to transmission-remote, together with server and
+authentication information.
+.br
+Othewise, the main curses interface opens.
 
 .SH OPTIONS
 .B
@@ -40,13 +49,29 @@ Create configuration file with default values.
 \fINOTE:\fR A config file won't be created unless you provide this option at
 least once. After that, it is rewritten whenever tremc exits.
 .IP "-f \fICONFIGFILE\fB --config=\fICONFIGFILE\fR"
-Set path to configuration file.
+Set path to configuration file. if not creating a config file, and CONFIGFILE
+does not exist (and contains no slashes), the config directory is also
+searched for CONFIGFILE or CONFIGFILE.cfg.
 .br
 Default: ~/.config/tremc/settings.cfg
 .B
 .IP "-n --netrc"
 Get authentication info from ~/.netrc.
 .B
+.IP "-X, --skip-version-check, --permissive"
+Proceed even if the running transmission daemon seems incompatible, or the terminal is too small.
+.B
+.IP "-p PROFILE --profile PROFILE"
+Select profile to use.
+.B
+.IP "-r --reverse-dns"
+Toggle display of reverse DNS of peers addresses.
+.br
+Defalt: off, but may be set in the config file.
+.B
+.IP "-d --debug"
+Enable debugging messages to stdout.
+
 .IP "-- \fIOPTIONS\fR"
 Use the known server connection to pass \fIOPTIONS\fR on to
 \fBtransmission-remote\fR.
@@ -54,10 +79,10 @@ Use the known server connection to pass \fIOPTIONS\fR on to
 
 .SH FILES
 .IP ~/.config/tremc/settings.cfg
-.br
-tremc overwrites the configuration file on exit.
-.br
-Keep that in mind if you edit it manually.
+\#.br
+\#tremc overwrites the configuration file on exit.
+\#.br
+\#Keep that in mind if you edit it manually.
 
 .SH SEE ALSO
 .BR transmission-create (1),
