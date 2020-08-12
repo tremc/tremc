@@ -41,6 +41,47 @@ If you don't like the default configuration file path
 
 `$ tremc -f ~/.tremc --create-config`
 
+### Command line options
+* **`--version`**
+Show version number and exit
+
+* **`-h --help`**
+Show usage information and a list of options
+
+* **`-s --ssl`**
+Use SSL to connect to the server.
+
+  Default: don't use SSL
+
+* **`--create-config`**
+Create configuration file with default values.
+
+  *NOTE:* A config file won't be created unless you provide this option at
+least once. After that, it is rewritten whenever tremc exits.
+* **`-f CONFIGFILE --config=CONFIGFILE`**
+Set path to configuration file. if not creating a config file, and CONFIGFILE
+does not exist (and contains no slashes), the config directory is also
+searched for CONFIGFILE or CONFIGFILE.cfg.
+
+  Default: ~/.config/tremc/settings.cfg
+
+* **`-n --netrc`**
+Get authentication info from ~/.netrc.
+
+* **`-X, --skip-version-check, --permissive`**
+Proceed even if the running transmission daemon seems incompatible, or the terminal is too small.
+
+* **`-p PROFILE --profile PROFILE`**
+Select profile to use.
+
+* **`-r --reverse-dns`**
+Toggle display of reverse DNS of peers addresses.
+
+  Default: off, but may be set in the config file.
+
+* **`-d --debug`**
+Enable debugging messages to stdout.
+
 ### Main user interface
 
 `tremc` has two display modes: torrents list view and torrent details view.
@@ -147,6 +188,56 @@ An action marked with + acts on:
 * ^a	: Add torrent (in paused mode) dialog
 * /		: Search for torrents matching pattern
 * .		: Search for torrents matching regular expression
+
+### Dialog windows
+Various dialog windows can be opened While using the program. At any time, ^w quits the program.
+
+In all text input dialogs, edit text with Left, Right, Home, End, Backspace, Del.
+* Information windows (session statistics, key bindings):
+  * Escape closes the windows
+  * Space shows next page if there is more to display.
+* Confirmation windows
+
+  Press y/n to accept or cancel. Left/Right/Tab/Shift-Tab move highlight, Enter accepts highlighted choice.
+* Options window
+
+  Select option to modify by pressing the highlighted letter. Esc to close window.
+* Numeric input
+* Search window: Enter pattern or regular expression to search. Search happens while typing. If none found, the input line shows this by changing color. Keys:
+  * Esc closes the window.
+  * Tab completes typed pattern by searched items (files/torrents).
+  * Up/Down cycle through history.
+  * Enter moves focus to next match.
+  * ^r moves focus to previous match.
+* Selection window: Enter pattern or regular expression to search. Then
+  * Esc closes the window without modifying selection.
+  * Tab completes typed pattern by searched items (files/torrents).
+  * Up/Down cycle through history.
+  * Enter selects matching files/torrents.
+  * ^r adds matching files/torrents to selection.
+* Sort menu
+
+  Select sorting key by pressing the highlighted letter, or moving the selection with Up/Down and pressing Enter.
+
+  Selecting reverse reverses the current sorting order.
+
+  Pressing Esc leaves sort order unchanged.
+* Filter menu
+  Select sorting key by pressing the highlighted letter, or moving the selection with Up/Down and pressing Enter. Pressing the capital letter or pressing Backspace after highlighting the desired option select reversed filter (satisfied if the condition is not met).
+
+  Some filters open further window to enter or select the filter parameter.
+
+  Selecting reverse reverses the current sorting order.
+
+  Pressing Esc leaves filter unchanged.
+* Filters lists edit
+
+  Filtering is done by a list of sublists of filters. For an item to satisfy the list, it has to satisfies all filters in at least one sublist (DNF).
+
+  Move the cursor by using the arrow keys, d to remove marked filter, f to edit marked filter (including empty one).
+
+  Enter to accept modified list, Esc to leave window without modifying list of filters.
+
 
 ## Configuration file
 By default the configuration file is called settings.cfg in the XDG configuration directory for `tremc`. With default XDG configuration, this will be `~/.config/tremc/settings.cfg`.
