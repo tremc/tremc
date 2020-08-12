@@ -1269,7 +1269,7 @@ class Interface:
                 self.screen.addstr(1, 0, "Resize terminal or")
                 self.screen.addstr(2, 0, "Press 'q' to  quit")
                 c = self.screen.getch()
-                if c in (27, K.q, K.w_):
+                if c in (K.ESC, K.q, K.w_):
                     exit_prog()
             else:
                 break
@@ -1485,7 +1485,7 @@ class Interface:
             else:
                 self.win_message(win, height, width, message)
             key = self.wingetch(win)
-            if key in (27, K.q, K.w_):
+            if key in (K.ESC, K.q, K.w_):
                 return -1
             self.update_torrent_list([win])
 
@@ -3569,7 +3569,7 @@ class Interface:
         win = self.window(height, width, message=message)
         while True:
             c = self.wingetch(win)
-            if c in (27, K.q, K.w_):
+            if c in (K.ESC, K.q, K.w_):
                 return -1
             self.update_torrent_list([win])
 
@@ -3611,7 +3611,7 @@ class Interface:
                     return True
                 if c in (K.n, K.LF, K.SPACE):
                     return False
-                if c in (27, curses.KEY_BREAK, K.w_):
+                if c in (K.ESC, curses.KEY_BREAK, K.w_):
                     return 0
             else:
                 if c == K.y:
@@ -3626,7 +3626,7 @@ class Interface:
                     choice = False
                 elif c in (K.LF, K.SPACE):
                     return choice
-                if c in (27, curses.KEY_BREAK, K.w_):
+                if c in (K.ESC, curses.KEY_BREAK, K.w_):
                     return 0
             self.update_torrent_list([win])
 
@@ -3680,7 +3680,7 @@ class Interface:
                     history_pos = (history_pos + 1) % len(localhistory)
                     text = localhistory[history_pos]
                     index = len(text)
-            if c in (27, curses.KEY_BREAK, K.w_):
+            if c in (K.ESC, curses.KEY_BREAK, K.w_):
                 hide_cursor()
                 return ''
             if index < len(text) and (c in (curses.KEY_RIGHT, K.f_)):
@@ -3874,7 +3874,7 @@ class Interface:
             win.addstr(height - 2, 2, value.ljust(width - 4), curses.color_pair(self.colors.ind('dialog')))
             win.move(height - 2, len(value) + 2)
             c = self.wingetch(win)
-            if c in (27, K.q, curses.KEY_BREAK, K.w_):
+            if c in (K.ESC, K.q, curses.KEY_BREAK, K.w_):
                 hide_cursor()
                 return -128
             if c == K.LF:
@@ -3955,7 +3955,7 @@ class Interface:
 
             if 47 < c < 123 and chr(c).lower() in keymap:
                 return (options[keymap[chr(c).lower()]][0], chr(c).isupper(), win) if extended else options[keymap[chr(c).lower()]][0]
-            if c in (K.q, 27, K.w_):
+            if c in (K.q, K.ESC, K.w_):
                 return (-128, False, win) if extended else -128
             if c == K.LF:
                 return (options[focus - 1][0], False, win) if extended else options[focus - 1][0]
@@ -4054,7 +4054,7 @@ class Interface:
                 line_num += 1
 
             key = self.wingetch(win)
-            if key in (27, K.q, K.LF, K.w_):
+            if key in (K.ESC, K.q, K.LF, K.w_):
                 return
             if key == K.p:
                 port = self.dialog_input_number("Port for incoming connections",
@@ -4187,7 +4187,7 @@ class Interface:
                     y += 1
                 win.chgat(1 + current[0], commas[current[1]] + 4, commas[current[1] + 1] - commas[current[1]] - 2, curses.A_UNDERLINE)
             c = self.wingetch(win)
-            if c in (27, K.q, K.w_):
+            if c in (K.ESC, K.q, K.w_):
                 return gconfig.filters
             if c == K.LF:
                 filters = [f for f in filters if f != []]
