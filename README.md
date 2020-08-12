@@ -60,7 +60,9 @@ In list view and the files tab, a set of items may also be selected.
   * Home, g 		: move to top
   * End, G	 		: move to bottom
 
-In list view, files tab and trackers tab, the focused item is moved, and the display scrolled to keep the focused item viewable. In the other tabs, only the display is scrolled if there is more than one screen to display.
+  In list view, files tab and trackers tab, the focused item is moved, and the display scrolled to keep the focused item viewable.
+
+  In the other tabs, only the display is scrolled if there is more than one screen to display.
 
 * ?, F1	: Display help window
 * ^w	: Quit `tremc` immediately
@@ -152,18 +154,62 @@ By default the configuration file is called settings.cfg in the XDG configuratio
 The configuration file is in .ini format (section names in square brackets, key = value, comments start with # or ;).
 
 The following sections are read:
-* [Connection] : keys are username, password, host, port, path, ssl (boolean).
-* [Sorting] : The key 'order' determines torrents sort order. Possible values are: name, addedDate, percentDone, seeders, leechers, sizeWhenDone, status, uploadedEver, rateUpload, rateDownload, uploadRatio, peersConnected, downloadDir, mainTrackerDomain.
-* [Filtering] : Keys are invert (boolean) and filter with possible values: uploading, downloading, active, paused, seeding, incomplete, verifying, private, isolated, tracker, regex, location, selected, honors, label. The filters tracker, regex, location, label need a parameter, so cannot be set in this way.
-* [Misc] : Keys are
+
+* [Connection]
+
+  Keys are username, password, host, port, path, ssl (boolean).
+* [Sorting]
+
+  The key 'order' determines torrents sort order. Possible values are: name, addedDate, percentDone, seeders, leechers, sizeWhenDone, status, uploadedEver, rateUpload, rateDownload, uploadRatio, peersConnected, downloadDir, mainTrackerDomain.
+* [Filtering]
+
+  Keys are invert (boolean) and filter with possible values: uploading, downloading, active, paused, seeding, incomplete, verifying, private, isolated, tracker, regex, location, selected, honors, label. The filters tracker, regex, location, label need a parameter, so cannot be set in this way.
+* [Misc]
+
+  Keys are
   * lines_per_torrent, value between 1 and 3.
   * torrentname_is_progressbar (boolean)
-  * file_viewer, name of program to run for viewing a file. The string %%s is replaced by the file name.
-  * file_open_in_terminal (boolean)
+  * file_viewer, name of program to run for viewing a file.
+
+    The string %%s is replaced by the file name.
+  * file_open_in_terminal (boolean).
   * rdns (boolean), the value True enables showing the reverse DNS of connected peers.
   * geoip2_database - The location of the Python-GeoIP2 database file. If this key does not exist, or does not point to a file, the database is also searched for in some commonly used locations.
 * [Colors]
+
+  Allows for setting (some of) the interface colors.
+
+  The format of a color is 'fg:color,bg:color', where each color is one of the
+  eight curses colors, or default.
+
+  Allowed elements are title_seed, title_download, title_idle, title_verify, title_paused, title_error,
+  download_rate, upload_rate, eta+ratio, filter_status, multi_filter_status, dialog, dialog_important,
+  file_prio_high, file_prio_normal, file_prio_low, file_prio_off.
+
+  Note that what the colors mean actually depends on the terminal. In some
+  cases 'white' is darker then the white that the terminal displays, and
+  similarly, 'black' is lighter. Setting 'default' selects the respective
+  background or foreground coloe of the terminal.
+
+  The top and bottom status lines (filter_status, multi_filter_status) and the dialog window
+  (dialog, dialog_important) are displayed using inverse mode, so the fg and bg
+  are exchanged.
 * [Profiles]
+
+  The key is profile<name>. The value is `<filters>#=<sort>`
+
+  <sort> is the name of the torrent sort order, preceded by : for reversed
+  order.
+
+  <filters> is `<filters.1> #& ... #& <filters.n>` (the separators are space, hash, ampersand space
+
+  Each <filters.i> is of the format `<filter.1>#=<param.1>#=...#=<filter.k>#=<param.k>`
+
+  <filter.j> is the name of a torrent filter, preceded by : for inverted. <param.j>
+  is the parameter of the filter if needed, it is ignored otherwise. <param.j> may be empty, but the separators must appear.
+
+  A torrent satisfies a list of filters if for at least one of the <filters.i>, it satisfies each <filter.j>.
+  sati
 
 
 ## Calling transmission-remote
