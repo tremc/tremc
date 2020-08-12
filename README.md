@@ -217,13 +217,13 @@ In all text input dialogs, edit text with Left, Right, Home, End, Backspace, Del
   * ^r adds matching files/torrents to selection.
 * Sort menu
 
-  Select sorting key by pressing the highlighted letter, or moving the selection with Up/Down and pressing Enter.
+  Select sorting key by pressing the highlighted letter, or moving the selection with Up/Down and pressing Enter. Pressing the capital letter or pressing Backspace after highlighting the desired option select reversed filter (satisfied if the condition is not met).
 
   Selecting reverse reverses the current sorting order.
 
   Pressing Esc leaves sort order unchanged.
 * Filter menu
-  Select sorting key by pressing the highlighted letter, or moving the selection with Up/Down and pressing Enter. Pressing the capital letter or pressing Backspace after highlighting the desired option select reversed filter (satisfied if the condition is not met).
+  Select filter by pressing the highlighted letter, or moving the selection with Up/Down and pressing Enter. Pressing the capital letter or pressing Backspace after highlighting the desired option select reversed filter (satisfied if the condition is not met).
 
   Some filters open further window to enter or select the filter parameter.
 

@@ -1422,18 +1422,19 @@ class Interface:
 
     def show_torrent_sort_order_menu(self):
         if self.selected_torrent == -1:
-            choice = self.dialog_menu('Sort order', gconfig.sort_options,
-                                      list(map(lambda x: x[0] == gconfig.sort_orders[-1]['name'], gconfig.sort_options)).index(True) + 1)
+            choice, inverse, _ = self.dialog_menu('Sort order', gconfig.sort_options,
+                                      list(map(lambda x: x[0] == gconfig.sort_orders[-1]['name'], gconfig.sort_options)).index(True) + 1,
+                                      extended=True)
             if choice != -128:
                 if choice == 'reverse':
                     gconfig.sort_orders[-1]['reverse'] = not gconfig.sort_orders[-1]['reverse']
                 else:
-                    gconfig.sort_orders.append({'name': choice, 'reverse': False})
+                    gconfig.sort_orders.append({'name': choice, 'reverse': inverse})
                     while len(gconfig.sort_orders) > 2:
                         gconfig.sort_orders.pop(0)
 
     def show_file_sort_order_menu(self):
-        choice = self.dialog_menu('Sort order', gconfig.file_sort_options)
+        choice, inverse, _ = self.dialog_menu('Sort order', gconfig.file_sort_options, extended=True)
         if choice != -128:
             if choice != gconfig.file_sort_key:
                 self.focus_detaillist = -1
@@ -1442,6 +1443,7 @@ class Interface:
                 gconfig.file_sort_reverse = not gconfig.file_sort_reverse
             else:
                 gconfig.file_sort_key = choice
+                gconfig.file_sort_reverse = inverse
 
     def show_stats(self):
         title = "Global statistics"
