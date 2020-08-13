@@ -1281,7 +1281,7 @@ class Interface:
                 self.screen.addstr(1, 0, "Resize terminal or")
                 self.screen.addstr(2, 0, "Press 'q' to  quit")
                 c = self.screen.getch()
-                if c in (K.ESC, K.q, K.w_):
+                if c in gconfig.esc_keys_w:
                     exit_prog()
             else:
                 break
@@ -1499,7 +1499,7 @@ class Interface:
             else:
                 self.win_message(win, height, width, message)
             key = self.wingetch(win)
-            if key in (K.ESC, K.q, K.w_):
+            if key in gconfig.esc_keys_w:
                 return -1
             self.update_torrent_list([win])
 
@@ -3580,7 +3580,7 @@ class Interface:
         win = self.window(height, width, message=message)
         while True:
             c = self.wingetch(win)
-            if c in (K.ESC, K.q, K.w_):
+            if c in gconfig.esc_keys_w:
                 return -1
             self.update_torrent_list([win])
 
@@ -3622,7 +3622,7 @@ class Interface:
                     return True
                 if c in (K.n, K.LF, K.SPACE):
                     return False
-                if c in (K.ESC, curses.KEY_BREAK, K.w_):
+                if c in gconfig.esc_keys_w_no_ascii:
                     return 0
             else:
                 if c == K.y:
@@ -3637,7 +3637,7 @@ class Interface:
                     choice = False
                 elif c in (K.LF, K.SPACE):
                     return choice
-                if c in (K.ESC, curses.KEY_BREAK, K.w_):
+                if c in gconfig.esc_keys_w_no_ascii:
                     return 0
             self.update_torrent_list([win])
 
@@ -3691,7 +3691,7 @@ class Interface:
                     history_pos = (history_pos + 1) % len(localhistory)
                     text = localhistory[history_pos]
                     index = len(text)
-            if c in (K.ESC, curses.KEY_BREAK, K.w_):
+            if c in gconfig.esc_keys_w_no_ascii:
                 hide_cursor()
                 return ''
             if index < len(text) and (c in (curses.KEY_RIGHT, K.f_)):
@@ -3885,7 +3885,7 @@ class Interface:
             win.addstr(height - 2, 2, value.ljust(width - 4), curses.color_pair(self.colors.ind('dialog')))
             win.move(height - 2, len(value) + 2)
             c = self.wingetch(win)
-            if c in (K.ESC, K.q, curses.KEY_BREAK, K.w_):
+            if c in gconfig.esc_keys_w:
                 hide_cursor()
                 return -128
             if c == K.LF:
@@ -3966,7 +3966,7 @@ class Interface:
 
             if 47 < c < 123 and chr(c).lower() in keymap:
                 return (options[keymap[chr(c).lower()]][0], chr(c).isupper(), win) if extended else options[keymap[chr(c).lower()]][0]
-            if c in (K.q, K.ESC, K.w_):
+            if c in gconfig.esc_keys_w:
                 return (-128, False, win) if extended else -128
             if c == K.LF:
                 return (options[focus - 1][0], False, win) if extended else options[focus - 1][0]
@@ -4063,7 +4063,7 @@ class Interface:
                 line_num += 1
 
             key = self.wingetch(win)
-            if key in (K.ESC, K.q, K.LF, K.w_):
+            if key in gconfig.esc_keys_w_enter:
                 return
             if key == K.p:
                 port = self.dialog_input_number("Port for incoming connections",
@@ -4196,7 +4196,7 @@ class Interface:
                 line_num += 1
 
             key = self.wingetch(win)
-            if key in (K.ESC, K.q, K.LF, K.w_):
+            if key in gconfig.esc_keys_w_enter:
                 return
             elif key == K.b:
                 gconfig.torrentname_is_progressbar = not gconfig.torrentname_is_progressbar
@@ -4246,7 +4246,7 @@ class Interface:
                     y += 1
                 win.chgat(1 + current[0], commas[current[1]] + 4, commas[current[1] + 1] - commas[current[1]] - 2, curses.A_UNDERLINE)
             c = self.wingetch(win)
-            if c in (K.ESC, K.q, K.w_):
+            if c in gconfig.esc_keys_w:
                 return gconfig.filters
             if c == K.LF:
                 filters = [f for f in filters if f != []]
@@ -4703,32 +4703,45 @@ def parse_config_profiles(config, orders):
     return ret
 
 
+def get_key(K, key):
+    k = getattr(K, key, None)
+    if k is None:
+        k = getattr(curses, 'KEY_'+key, None)
+    return k
+
+
 def parse_config_key(interface, config, gconfig, common_keys, details_keys, list_keys):
     if 'CommonKeys' in config:
         for i in config['CommonKeys']:
             if i in gconfig.keys and config['CommonKeys'][i] in gconfig.actions:
-                k = getattr(K, i, None)
-                if k is None:
-                    k = getattr(curses, 'KEY_'+i, None)
+                k = get_key(K, i)
                 common_keys[k] = getattr(interface, 'action_'+config['CommonKeys'][i])
     if 'DetailsKeys' in config:
         for i in config['DetailsKeys']:
             if i in gconfig.keys and config['DetailsKeys'][i] in gconfig.actions:
-                k = getattr(K, i, None)
-                if k is None:
-                    k = getattr(curses, 'KEY_'+i, None)
+                k = get_key(K, i)
                 details_keys[k] = getattr(interface, 'action_'+config['DetailsKeys'][i])
                 if k in common_keys:
                     del common_keys[k]
     if 'ListKeys' in config:
         for i in config['ListKeys']:
             if i in gconfig.keys and config['ListKeys'][i] in gconfig.actions:
-                k = getattr(K, i, None)
-                if k is None:
-                    k = getattr(curses, 'KEY_'+i, None)
+                k = get_key(K, i)
                 details_keys[k] = getattr(interface, 'action_'+config['ListKeys'][i])
                 if k in common_keys:
                     del common_keys[k]
+    if 'cancel' in config['Misc']:
+        gconfig.esc_keys = tuple()
+        for i in config['Misc']['Esc'].split(','):
+            k = get_key(K, i)
+            if k:
+                gconfig.esc_keys += (k,)
+    else:
+        gconfig.esc_keys = (K.ESC, K.q, curses.KEY_BREAK)
+    gconfig.esc_keys_no_ascii = (x for x in gconfig.esc_keys if x not in ranage(32,127))
+    gconfig.esc_keys_w = gconfig.esc_keys + (K.w_,)
+    gconfig.esc_keys_w_enter = gconfig.esc_keys_w + (K.LF,)
+    gconfig.esc_keys_w_no_ascii = (x for x in gconfig.esc_keys_w if x not in ranage(32,127))
 
 
 def show_version(option, opt_str, value, parser):
