@@ -48,6 +48,7 @@ Create configuration file with default values.
 .br
 \fINOTE:\fR A config file won't be created unless you provide this option at
 least once. After that, it is rewritten whenever tremc exits.
+.B
 .IP "-f \fICONFIGFILE\fB --config=\fICONFIGFILE\fR"
 Set path to configuration file. if not creating a config file, and CONFIGFILE
 does not exist (and contains no slashes), the config directory is also
@@ -69,8 +70,8 @@ Toggle display of reverse DNS of peers addresses.
 .br
 Default: off, but may be set in the config file.
 .B
-.IP "-d --debug"
-Enable debugging messages to stdout.
+.IP "-d [\fILOGIFLE\fB] --debug [\fILOGIFLE\fB]\fR"
+Enable debugging messages to stderr, or to LOGFILE if provided.
 
 .IP "-- \fIOPTIONS\fR"
 Use the known server connection to pass \fIOPTIONS\fR on to

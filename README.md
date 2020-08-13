@@ -79,8 +79,8 @@ Toggle display of reverse DNS of peers addresses.
 
   Default: off, but may be set in the config file.
 
-* **`-d --debug`**
-Enable debugging messages to stdout.
+* **`-d [LOGFILE] --debug [LOGFILE]`**
+Enable debugging messages to stderr, or to LOGFILE if provided.
 
 ### Main user interface
 

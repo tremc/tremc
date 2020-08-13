@@ -92,7 +92,7 @@ class GConfig:
                             help="Select profile to use.")
         parser.add_argument("-r", "--reverse-dns", action="store_true", dest="rdns", default=False,
                             help="Toggle reverse DNS peers addresses.")
-        parser.add_argument("-d", "--debug", action="store_true", dest="DEBUG", default=False,
+        parser.add_argument("-d", "--debug", action="store", dest="DEBUG", nargs='?', default=True,
                             help="Enable debugging messages.")
         parser.add_argument('transmissionremote_args', nargs='*', metavar='A',
                             help="Torrent files to add using transmission-remote")
@@ -100,6 +100,14 @@ class GConfig:
 
         for i in vars(cmd_args).keys():
             setattr(self, i, vars(cmd_args)[i])
+
+        self.debug_file = sys.stderr
+        if self.DEBUG:
+            if isinstance(self.DEBUG, str):
+                try:
+                    self.debug_file = open(self.DEBUG, "a", buffering=1)
+                except OSError:
+                    pass
 
         if not self.create_config and not os.path.isfile(self.configfile) and '/' not in self.configfile:
             if os.path.isfile(xdg_config_home('tremc/' + self.configfile)):
@@ -211,7 +219,7 @@ def country_code_by_addr_vany(geo_ip, geo_ip6, addr):
 
 def pdebug(*argv):
     if gconfig.DEBUG:
-        print(time.time() - gconfig.STARTTIME, ": ", *argv, file=sys.stderr, flush=True)
+        print(time.time() - gconfig.STARTTIME, ": ", *argv, file=gconfig.debug_file, flush=True)
 
 
 # define config defaults
@@ -3362,8 +3370,6 @@ class Interface:
             status = "V.%s@%s:%s" % (self.server.version, self.server.host, self.server.port)
         else:
             status = "Transmission %s@%s:%s" % (self.server.version, self.server.host, self.server.port)
-        if gconfig.DEBUG:
-            status = "%d x %d " % (self.width, self.height) + status
         self.screen.addstr(0, 0, status, curses.A_REVERSE)
         return len(status)
 
