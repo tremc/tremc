@@ -1099,6 +1099,7 @@ class Interface:
             K.M: self.action_copy_magnet_link,
             K.w_: self.action_quit_now,
             K.X: self.action_daemon_quit,
+            K.O: self.action_draw_options_dialog,
             K.B: self.action_set_labels,
             K.b: self.action_add_label,
             K.l_: self.action_remove_labels,
@@ -1187,7 +1188,7 @@ class Interface:
             curses.KEY_BREAK: self.action_unfocus_torrent,
             K.LF: self.action_enter_details,
             curses.KEY_RIGHT: self.action_enter_details,
-            K.o: self.action_draw_options_dialog,
+            K.o: self.action_draw_server_options_dialog,
             K.l: self.action_enter_details,
             K.i: self.action_invert_selection_torrents,
             K.s: self.action_show_torrent_sort_order_menu,
@@ -4006,7 +4007,7 @@ class Interface:
             i += 1
         return keys
 
-    def action_draw_options_dialog(self):
+    def action_draw_server_options_dialog(self):
         enc_options = [('required', '_required'), ('preferred', '_preferred'), ('tolerated', '_tolerated')]
         options = []
         options.append(('Peer _Port', "%d" % self.stats['peer-port']))
@@ -4027,8 +4028,6 @@ class Interface:
         if self.server.get_rpc_version() >= 14:
             options.append(('Do_wnload Queue Size', "%s" % ('disabled', self.stats['download-queue-size'])[self.stats['download-queue-enabled']]))
             options.append(('S_eed Queue Size', "%s" % ('disabled', self.stats['seed-queue-size'])[self.stats['seed-queue-enabled']]))
-        options.append(('Title is Progress _Bar', ('no', 'yes')[gconfig.torrentname_is_progressbar]))
-        options.append(('File _Viewer', "%s" % gconfig.file_viewer))
 
         max_len = max([sum([len(re.sub('_', '', x)) for x in y[0]]) for y in options])
         width = min(max(len(gconfig.file_viewer) + 6, 15) + max_len, self.width)
@@ -4040,7 +4039,7 @@ class Interface:
         pagelines = height - 2
         page = 0
         old_page = -1
-        win = self.window(height, width, '', "Global Options")
+        win = self.window(height, width, '', "Server Options")
         if paging:
             if width > 35:
                 win.addstr(height - 1, 1, "More...")
@@ -4125,8 +4124,6 @@ class Interface:
                                                  allow_negative_one=False, winstack=[win])
                 if limit != -128:
                     self.server.set_option('alt-speed-down', limit)
-            elif key == K.b:
-                gconfig.torrentname_is_progressbar = not gconfig.torrentname_is_progressbar
             # Queue was implemmented in Transmission v2.4
             elif key == K.w and self.server.get_rpc_version() >= 14:
                 queue_size = self.dialog_input_number('Download Queue size',
@@ -4139,7 +4136,6 @@ class Interface:
                         if not self.stats['download-queue-enabled']:
                             self.server.set_option('download-queue-enabled', True)
                         self.server.set_option('download-queue-size', queue_size)
-            # Queue was implemmented in Transmission v2.4
             elif key == K.e and self.server.get_rpc_version() >= 14:
                 queue_size = self.dialog_input_number('Seed Queue size',
                                                       (0, self.stats['seed-queue-size'])[self.stats['seed-queue-enabled']],
@@ -4151,7 +4147,60 @@ class Interface:
                         if not self.stats['seed-queue-enabled']:
                             self.server.set_option('seed-queue-enabled', True)
                         self.server.set_option('seed-queue-size', queue_size)
+            elif key == K.SPACE:
+                page = page + 1
+                if page > (len(options) - 1) / pagelines:
+                    page = 0
 
+            self.update_torrent_list([win])
+
+    def action_draw_options_dialog(self):
+        options = []
+        options.append(('Version', gconfig.VERSION))
+        options.append(('Terminal size', "%d x %d " % (self.width, self.height)))
+        options.append(('Title is Progress _Bar', ('no', 'yes')[gconfig.torrentname_is_progressbar]))
+        options.append(('File _Viewer', "%s" % gconfig.file_viewer))
+
+        max_len = max([sum([len(re.sub('_', '', x)) for x in y[0]]) for y in options])
+        width = min(max(len(gconfig.file_viewer) + 6, 15) + max_len, self.width)
+        height = len(options) + 2
+        paging = False
+        if self.height < height:
+            height = self.height
+            paging = True
+        pagelines = height - 2
+        page = 0
+        old_page = -1
+        win = self.window(height, width, '', "Global Options")
+        if paging:
+            if width > 35:
+                win.addstr(height - 1, 1, "More...")
+            else:
+                win.addstr(height - 1, 1, "+")
+
+        while True:
+            if page != old_page:
+                for i in range(1, height - 1):
+                    win.addstr(i, 2, ' ' * (width - 3), 0)
+            linestart, lineend = page * pagelines, (page + 1) * pagelines
+            line_num = 1
+            for option in options:
+                parts = re.split('_', option[0])
+                parts_len = sum([len(x) for x in parts])
+
+                if linestart < line_num <= lineend:
+                    win.addstr(line_num - linestart, max_len - parts_len + 2, parts.pop(0))
+                    if parts:
+                        win.addstr(parts[0][0], curses.A_UNDERLINE)
+                        win.addstr(parts[0][1:])
+                    win.addstr(': ' + option[1])
+                line_num += 1
+
+            key = self.wingetch(win)
+            if key in (K.ESC, K.q, K.LF, K.w_):
+                return
+            elif key == K.b:
+                gconfig.torrentname_is_progressbar = not gconfig.torrentname_is_progressbar
             elif key == K.v:
                 viewer = self.dialog_input_text('File Viewer\nExample: xdg-viewer %s', gconfig.file_viewer, winstack=[win])
                 if viewer:
