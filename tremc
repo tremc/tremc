@@ -156,6 +156,10 @@ class GConfig:
         self.file_open_in_terminal = config.getboolean('Misc', 'file_open_in_terminal')
         self.profiles = parse_config_profiles(config, [x[0] for x in self.sort_options])
 
+        self.actions = [x[7:] for x in dir(Interface) if x[:7] == 'action_']
+        self.keys = [x for x in dir(K) if x[0] != '_'] + \
+                    [x[4:] for x in dir(curses) if x[:4] == 'KEY_']
+
 
 class Keys:
     TAB = 9
@@ -1209,6 +1213,7 @@ class Interface:
 
         self.filelist_needs_refresh = False
         self.sorted_files = None
+        parse_config_key(self, config, gconfig, self.common_keybindings, self.details_keybindings, self.list_keybindings)
 
         try:
             self.init_screen()
@@ -4642,6 +4647,34 @@ def parse_config_profiles(config, orders):
                     ret[name]['sort'] = parse_sort_str(s[1], orders)
                     ret[name]['filter'] = parse_filter_str(s[0])
     return ret
+
+
+def parse_config_key(interface, config, gconfig, common_keys, details_keys, list_keys):
+    if 'CommonKeys' in config:
+        for i in config['CommonKeys']:
+            if i in gconfig.keys and config['CommonKeys'][i] in gconfig.actions:
+                k = getattr(K, i, None)
+                if k is None:
+                    k = getattr(curses, 'KEY_'+i, None)
+                common_keys[k] = getattr(interface, 'action_'+config['CommonKeys'][i])
+    if 'DetailsKeys' in config:
+        for i in config['DetailsKeys']:
+            if i in gconfig.keys and config['DetailsKeys'][i] in gconfig.actions:
+                k = getattr(K, i, None)
+                if k is None:
+                    k = getattr(curses, 'KEY_'+i, None)
+                details_keys[k] = getattr(interface, 'action_'+config['DetailsKeys'][i])
+                if k in common_keys:
+                    del common_keys[k]
+    if 'ListKeys' in config:
+        for i in config['ListKeys']:
+            if i in gconfig.keys and config['ListKeys'][i] in gconfig.actions:
+                k = getattr(K, i, None)
+                if k is None:
+                    k = getattr(curses, 'KEY_'+i, None)
+                details_keys[k] = getattr(interface, 'action_'+config['ListKeys'][i])
+                if k in common_keys:
+                    del common_keys[k]
 
 
 def show_version(option, opt_str, value, parser):
