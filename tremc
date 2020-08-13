@@ -3207,17 +3207,16 @@ class Interface:
         return focus, scrollpos
 
     def move_page_up(self, focus, scrollpos, step_size, elements_per_page):
-        for _ in range(elements_per_page - 1):
-            focus, scrollpos = self.move_up(focus, scrollpos, step_size)
-        if focus < 0:
-            focus = 0
+        focus = max(0, focus - elements_per_page + 1)
+        scrollpos = max(0, scrollpos - (elements_per_page - 1) * step_size)
         return focus, scrollpos
 
     def move_page_down(self, focus, scrollpos, step_size, elements_per_page, list_height):
-        if focus < 0:
-            focus = 0
-        for _ in range(elements_per_page - 1):
-            focus, scrollpos = self.move_down(focus, scrollpos, step_size, elements_per_page, list_height)
+        focus += (elements_per_page - 1)
+        scrollpos += (elements_per_page - 1) * step_size
+        if focus >= list_height:
+            scrollpos -=  (focus - list_height + 1) * step_size
+            focus = list_height - 1
         return focus, scrollpos
 
     def move_to_top(self):
