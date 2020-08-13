@@ -1081,126 +1081,126 @@ class Interface:
         self.invert_filters = False
 
         self.common_keybindings = {
-            K.QUES: self.list_key_bindings,
-            curses.KEY_F1: self.list_key_bindings,
-            K.S: self.show_stats,
-            K.M: self.copy_magnet_link,
-            K.w_: self.quit_now,
-            K.X: self.daemon_quit,
-            K.B: self.set_labels,
-            K.b: self.add_label,
-            K.l_: self.remove_labels,
-            K.F: self.rename_torrent_selected_file,
-            K.N: self.start_now_torrent,
-            K.p: self.pause_unpause_torrent,
-            K.P: self.pause_unpause_all_torrent,
-            K.n: self.reannounce_torrent,
-            K.v: self.verify_torrent,
-            K.y: self.verify_torrent,
-            K.MINUS: self.bandwidth_priority_dec,
-            K.PLUS: self.bandwidth_priority_inc,
-            K.STAR: self.honors_limits,
-            K.d: self.global_download,
-            K.u: self.global_upload,
-            K.D: self.torrent_download,
-            K.U: self.torrent_upload,
-            K.L: self.seed_ratio,
-            K.m: self.move_torrent,
-            K.n0: self.profile_selected,
-            K.n1: self.profile_selected,
-            K.n2: self.profile_selected,
-            K.n3: self.profile_selected,
-            K.n4: self.profile_selected,
-            K.n5: self.profile_selected,
-            K.n6: self.profile_selected,
-            K.n7: self.profile_selected,
-            K.n8: self.profile_selected,
-            K.n9: self.profile_selected,
-            curses.KEY_SDC: self.remove_torrent_local_data,
-            K.R: self.remove_torrent_local_data,
+            K.QUES: self.action_list_key_bindings,
+            curses.KEY_F1: self.action_list_key_bindings,
+            K.S: self.action_show_stats,
+            K.M: self.action_copy_magnet_link,
+            K.w_: self.action_quit_now,
+            K.X: self.action_daemon_quit,
+            K.B: self.action_set_labels,
+            K.b: self.action_add_label,
+            K.l_: self.action_remove_labels,
+            K.F: self.action_rename_torrent_selected_file,
+            K.N: self.action_start_now_torrent,
+            K.p: self.action_pause_unpause_torrent,
+            K.P: self.action_pause_unpause_all_torrent,
+            K.n: self.action_reannounce_torrent,
+            K.v: self.action_verify_torrent,
+            K.y: self.action_verify_torrent,
+            K.MINUS: self.action_bandwidth_priority_dec,
+            K.PLUS: self.action_bandwidth_priority_inc,
+            K.STAR: self.action_honors_limits,
+            K.d: self.action_global_download,
+            K.u: self.action_global_upload,
+            K.D: self.action_torrent_download,
+            K.U: self.action_torrent_upload,
+            K.L: self.action_seed_ratio,
+            K.m: self.action_move_torrent,
+            K.n0: self.action_profile_selected,
+            K.n1: self.action_profile_selected,
+            K.n2: self.action_profile_selected,
+            K.n3: self.action_profile_selected,
+            K.n4: self.action_profile_selected,
+            K.n5: self.action_profile_selected,
+            K.n6: self.action_profile_selected,
+            K.n7: self.action_profile_selected,
+            K.n8: self.action_profile_selected,
+            K.n9: self.action_profile_selected,
+            curses.KEY_SDC: self.action_remove_torrent_local_data,
+            K.R: self.action_remove_torrent_local_data,
             curses.KEY_SEND: lambda: self.move_queue('bottom'),
             curses.KEY_SHOME: lambda: self.move_queue('top'),
             curses.KEY_SLEFT: lambda: self.move_queue('ppage'),
             curses.KEY_SRIGHT: lambda: self.move_queue('npage'),
-            curses.KEY_UP: self.line_up,
-            K.k: self.line_up,
-            K.p_: self.line_up,
-            curses.KEY_DOWN: self.line_down,
-            K.j: self.line_down,
-            K.n_: self.line_down,
-            curses.KEY_PPAGE: self.page_up,
-            K.b_: self.page_up,
-            curses.KEY_NPAGE: self.page_down,
-            K.f_: self.page_down,
-            curses.KEY_HOME: self.go_home,
-            K.g: self.go_home,
-            curses.KEY_END: self.go_end,
-            K.G: self.go_end,
+            curses.KEY_UP: self.action_line_up,
+            K.k: self.action_line_up,
+            K.p_: self.action_line_up,
+            curses.KEY_DOWN: self.action_line_down,
+            K.j: self.action_line_down,
+            K.n_: self.action_line_down,
+            curses.KEY_PPAGE: self.action_page_up,
+            K.b_: self.action_page_up,
+            curses.KEY_NPAGE: self.action_page_down,
+            K.f_: self.action_page_down,
+            curses.KEY_HOME: self.action_go_home,
+            K.g: self.action_go_home,
+            curses.KEY_END: self.action_go_end,
+            K.G: self.action_go_end,
         }
         self.details_keybindings = {
-            K.ESC: self.go_back_or_unfocus,
-            curses.KEY_BREAK: self.go_back_or_unfocus,
-            K.q: self.leave_details,
-            12: self.go_back_or_unfocus,
-            curses.KEY_BACKSPACE: self.leave_details,
-            K.LF: self.open_torrent_file,
-            K.i: self.invert_selection_files,
-            K.J: self.move_to_next_directory_in_filelist,
-            K.K: self.move_to_previous_directory_in_filelist,
-            K.V: self.visual_select_files,
-            K.r: self.remove_tracker,
-            curses.KEY_DC: self.remove_tracker,
-            K.TAB: self.next_details,
-            curses.KEY_BTAB: self.prev_details,
-            K.o: self.show_overview_tab,
-            K.t: self.show_trackers_tab,
-            K.e: self.show_peers_tab,
-            K.c: self.show_chunks_tab,
-            K.f: self.show_files_tab,
-            K.h: self.file_priority_or_switch_details_prev,
-            K.l: self.file_priority_or_switch_details_next,
-            curses.KEY_RIGHT: self.file_priority_or_switch_details_next,
-            curses.KEY_LEFT: self.file_priority_or_switch_details_prev,
-            K.SPACE: self.select_file,
-            K.a: self.add_tracker_or_select_all_files,
-            K.A: self.select_files_dir,
-            K.SLASH: self.dialog_search_filelist,
-            K.DOT: self.dialog_search_filelist_regex,
-            K.COMMA: self.dialog_select_search_filelist,
-            K.LESS: self.dialog_select_search_filelist_regex,
-            K.s: self.show_file_sort_order_menu,
+            K.ESC: self.action_go_back_or_unfocus,
+            curses.KEY_BREAK: self.action_go_back_or_unfocus,
+            K.q: self.action_leave_details,
+            12: self.action_go_back_or_unfocus,
+            curses.KEY_BACKSPACE: self.action_leave_details,
+            K.LF: self.action_open_torrent_file,
+            K.i: self.action_invert_selection_files,
+            K.J: self.action_move_to_next_directory_in_filelist,
+            K.K: self.action_move_to_previous_directory_in_filelist,
+            K.V: self.action_visual_select_files,
+            K.r: self.action_remove_tracker,
+            curses.KEY_DC: self.action_remove_tracker,
+            K.TAB: self.action_next_details,
+            curses.KEY_BTAB: self.action_prev_details,
+            K.o: self.action_show_overview_tab,
+            K.t: self.action_show_trackers_tab,
+            K.e: self.action_show_peers_tab,
+            K.c: self.action_show_chunks_tab,
+            K.f: self.action_show_files_tab,
+            K.h: self.action_file_priority_or_switch_details_prev,
+            K.l: self.action_file_priority_or_switch_details_next,
+            curses.KEY_RIGHT: self.action_file_priority_or_switch_details_next,
+            curses.KEY_LEFT: self.action_file_priority_or_switch_details_prev,
+            K.SPACE: self.action_select_file,
+            K.a: self.action_add_tracker_or_select_all_files,
+            K.A: self.action_select_files_dir,
+            K.SLASH: self.action_dialog_search_filelist,
+            K.DOT: self.action_dialog_search_filelist_regex,
+            K.COMMA: self.action_dialog_select_search_filelist,
+            K.LESS: self.action_dialog_select_search_filelist_regex,
+            K.s: self.action_show_file_sort_order_menu,
         }
         self.list_keybindings = {
-            K.q: self.quit_now,
-            K.ESC: self.unfocus_torrent,
-            curses.KEY_BREAK: self.unfocus_torrent,
-            12: self.unfocus_torrent,
-            K.LF: self.enter_details,
-            curses.KEY_RIGHT: self.enter_details,
-            K.o: self.draw_options_dialog,
-            K.l: self.enter_details,
-            K.i: self.invert_selection_torrents,
-            K.s: self.show_torrent_sort_order_menu,
-            K.f: self.set_filter,
-            K.t: self.turtle_mode,
-            K.T: self.add_filter,
-            K.I: self.edit_filters,
-            K.TILDE: self.invert_filters_action,
-            K.J: self.move_queue_down,
-            K.K: self.move_queue_up,
-            K.r: self.remove_torrent,
-            curses.KEY_DC: self.remove_torrent,
-            K.r_: self.remove_selected_torrents,
-            K.e: self.profile_menu,
-            K.C: self.toggle_compact_torrentlist,
-            K.SPACE: self.select_unselect_torrent,
-            K.a_: self.add_torrent_paused,
-            K.a: self.add_torrent,
-            K.A: self.select_unselect_torrents,
-            K.SLASH: self.dialog_search_torrentlist,
-            K.DOT: self.dialog_search_torrentlist_regex,
-            K.COMMA: self.dialog_select_search_torrentlist,
-            K.LESS: self.dialog_select_search_torrentlist_regex,
+            K.q: self.action_quit_now,
+            K.ESC: self.action_unfocus_torrent,
+            curses.KEY_BREAK: self.action_unfocus_torrent,
+            12: self.action_unfocus_torrent,
+            K.LF: self.action_enter_details,
+            curses.KEY_RIGHT: self.action_enter_details,
+            K.o: self.action_draw_options_dialog,
+            K.l: self.action_enter_details,
+            K.i: self.action_invert_selection_torrents,
+            K.s: self.action_show_torrent_sort_order_menu,
+            K.f: self.action_set_filter,
+            K.t: self.action_turtle_mode,
+            K.T: self.action_add_filter,
+            K.I: self.action_edit_filters,
+            K.TILDE: self.action_invert_filters_action,
+            K.J: self.action_move_queue_down,
+            K.K: self.action_move_queue_up,
+            K.r: self.action_remove_torrent,
+            curses.KEY_DC: self.action_remove_torrent,
+            K.r_: self.action_remove_selected_torrents,
+            K.e: self.action_profile_menu,
+            K.C: self.action_toggle_compact_torrentlist,
+            K.SPACE: self.action_select_unselect_torrent,
+            K.a_: self.action_add_torrent_paused,
+            K.a: self.action_add_torrent,
+            K.A: self.action_select_unselect_torrents,
+            K.SLASH: self.action_dialog_search_torrentlist,
+            K.DOT: self.action_dialog_search_torrentlist_regex,
+            K.COMMA: self.action_dialog_select_search_torrentlist,
+            K.LESS: self.action_dialog_select_search_torrentlist_regex,
         }
 
         # queue was implemmented in transmission 2.4
@@ -1227,7 +1227,7 @@ class Interface:
         gconfig.filters = [[f.copy() for f in l] for l in profile['filter']]
         self.invert_filters = False
 
-    def profile_selected(self, p):
+    def action_profile_selected(self, p):
         if p in range(K.n0, K.n9 + 1):
             p = chr(p)
         if p in gconfig.profiles:
@@ -1349,11 +1349,11 @@ class Interface:
                 save_history(gconfig.history_file, gconfig.histories)
                 return
 
-    def daemon_quit(self):
+    def action_daemon_quit(self):
         if self.dialog_yesno("Ask daemon to shut down?"):
             self.server.daemon_quit()
 
-    def go_back_or_unfocus(self):
+    def action_go_back_or_unfocus(self):
         if self.focus_detaillist > -1:   # unfocus and deselect file
             self.focus_detaillist = -1
             self.scrollpos_detaillist = [0] * 5
@@ -1363,36 +1363,36 @@ class Interface:
             self.selected_torrent = -1
             self.selected_files = []
 
-    def unfocus_torrent(self):
+    def action_unfocus_torrent(self):
         if self.focus > -1:
             self.scrollpos = 0    # unfocus main list
             self.focus = -1
         elif gconfig.filters[0][0]['name']:
             gconfig.filters = [[{'name': '', 'inverse': False}]]  # reset filter
 
-    def leave_details(self):
+    def action_leave_details(self):
         self.server.set_torrent_details_id(-1)
         self.selected_torrent = -1
         self.details_category_focus = 0
         self.scrollpos_detaillist = [0] * 5
         self.selected_files = []
 
-    def quit_now(self):
+    def action_quit_now(self):
         self.exit_now = True
 
-    def turtle_mode(self):
+    def action_turtle_mode(self):
         self.server.toggle_turtle_mode()
 
-    def move_queue_down(self):
+    def action_move_queue_down(self):
         self.move_queue('down')
 
-    def move_queue_up(self):
+    def action_move_queue_up(self):
         self.move_queue('up')
 
-    def add_torrent_paused(self):
-        self.add_torrent(paused=True)
+    def action_add_torrent_paused(self):
+        self.action_add_torrent(paused=True)
 
-    def add_torrent(self, paused=False):
+    def action_add_torrent(self, paused=False):
         free_space = None
         if self.server.get_rpc_version() >= 15:
             # 10^9 instead of 2^30 to be consistent with web interface
@@ -1413,14 +1413,14 @@ class Interface:
                 msg.extend(wrap(error, self.width - 4))
                 self.dialog_ok("\n".join(msg))
 
-    def enter_details(self):
+    def action_enter_details(self):
         if self.focus > -1:
             self.screen.clear()
             self.selected_torrent = self.focus
             self.server.set_torrent_details_id(self.torrents[self.focus]['id'])
             self.server.wait_for_details_update()
 
-    def show_torrent_sort_order_menu(self):
+    def action_show_torrent_sort_order_menu(self):
         if self.selected_torrent == -1:
             choice, inverse, _ = self.dialog_menu('Sort order', gconfig.sort_options,
                                       list(map(lambda x: x[0] == gconfig.sort_orders[-1]['name'], gconfig.sort_options)).index(True) + 1,
@@ -1433,7 +1433,7 @@ class Interface:
                     while len(gconfig.sort_orders) > 2:
                         gconfig.sort_orders.pop(0)
 
-    def show_file_sort_order_menu(self):
+    def action_show_file_sort_order_menu(self):
         choice, inverse, _ = self.dialog_menu('Sort order', gconfig.file_sort_options, extended=True)
         if choice != -128:
             if choice != gconfig.file_sort_key:
@@ -1445,7 +1445,7 @@ class Interface:
                 gconfig.file_sort_key = choice
                 gconfig.file_sort_reverse = inverse
 
-    def show_stats(self):
+    def action_show_stats(self):
         title = "Global statistics"
         win = None
         while True:
@@ -1566,32 +1566,32 @@ class Interface:
             return new_filter
         return None
 
-    def set_filter(self):
+    def action_set_filter(self):
         prompt = ('Show only', 'Filter all')[gconfig.filters[0][0]['inverse']]
         new_filter = self.filter_menu(gconfig.filters[0][0], prompt=prompt)
         if new_filter:
             gconfig.filters = [[new_filter]]
             self.invert_filters = False
 
-    def invert_filters_action(self):
+    def action_invert_filters_action(self):
         self.invert_filters = not self.invert_filters
 
-    def add_filter(self):
+    def action_add_filter(self):
         new_filter = self.filter_menu(prompt="Add filter:")
         if new_filter:
             gconfig.filters[0].append(new_filter)
 
-    def edit_filters(self):
+    def action_edit_filters(self):
         gconfig.filters = self.dialog_filters()
 
-    def global_upload(self):
+    def action_global_upload(self):
         current_limit = (-1, self.stats['speed-limit-up'])[self.stats['speed-limit-up-enabled']]
         limit = self.dialog_input_number("Global upload limit in kilobytes per second", current_limit)
         if limit == -128:
             return
         self.server.set_rate_limit('up', limit)
 
-    def global_download(self):
+    def action_global_download(self):
         current_limit = (-1, self.stats['speed-limit-down'])[self.stats['speed-limit-down-enabled']]
         limit = self.dialog_input_number("Global download limit in kilobytes per second", current_limit)
         if limit == -128:
@@ -1633,13 +1633,13 @@ class Interface:
                 return
             self.server.set_rate_limit(direction, limit, ids)
 
-    def torrent_upload(self):
+    def action_torrent_upload(self):
         self.torrent_up_down_load('up')
 
-    def torrent_download(self):
+    def action_torrent_download(self):
         self.torrent_up_down_load('down')
 
-    def seed_ratio(self):
+    def action_seed_ratio(self):
         ids = self.selected_ids()
         if ids:
             focused = self.torrents[self.focus] if (self.focus > -1 and self.torrents[self.focus]['id'] in ids) \
@@ -1659,16 +1659,16 @@ class Interface:
                 limit = -1
             self.server.set_seed_ratio(float(limit), ids)
 
-    def honors_limits(self):
+    def action_honors_limits(self):
         self.server.toggle_honors_session_limits(self.selected_ids())
 
-    def bandwidth_priority_dec(self):
+    def action_bandwidth_priority_dec(self):
         self.server.decrease_bandwidth_priority(self.selected_ids())
 
-    def bandwidth_priority_inc(self):
+    def action_bandwidth_priority_inc(self):
         self.server.increase_bandwidth_priority(self.selected_ids())
 
-    def copy_magnet_link(self):
+    def action_copy_magnet_link(self):
         if self.focus > -1 and gconfig.clipboard:
             magnet = self.torrents[self.focus]['magnetLink']
             try:
@@ -1689,7 +1689,7 @@ class Interface:
                 new_position = direction
             self.server.move_queue(self.torrents[self.focus]['id'], new_position)
 
-    def pause_unpause_torrent(self):
+    def action_pause_unpause_torrent(self):
         ids = self.selected_ids()
         if ids:
             if any(self.server.get_torrent_by_id(i)['status'] == Transmission.STATUS_STOPPED for i in ids):
@@ -1697,12 +1697,12 @@ class Interface:
             else:
                 self.server.stop_torrents(ids)
 
-    def start_now_torrent(self):
+    def action_start_now_torrent(self):
         ids = self.selected_ids()
         if ids:
             self.server.start_now_torrent(ids)
 
-    def pause_unpause_all_torrent(self):
+    def action_pause_unpause_all_torrent(self):
         if len(self.torrents) > 0:
             focused_torrent = self.torrents[max(0, self.focus)]
             if focused_torrent['status'] == Transmission.STATUS_STOPPED:
@@ -1710,19 +1710,19 @@ class Interface:
             else:
                 self.server.stop_torrents([t['id'] for t in self.torrents])
 
-    def verify_torrent(self):
+    def action_verify_torrent(self):
         ids = self.selected_ids()
         ids = [i for i in ids if self.server.get_torrent_by_id(i)['status'] not in
                [Transmission.STATUS_CHECK, Transmission.STATUS_CHECK_WAIT]]
         if ids:
             self.server.verify_torrent(ids)
 
-    def reannounce_torrent(self):
+    def action_reannounce_torrent(self):
         ids = self.selected_ids()
         if ids:
             self.server.reannounce_torrent(ids)
 
-    def remove_selected_torrents(self):
+    def action_remove_selected_torrents(self):
         if not self.selected:
             return
         ids = self.selected_ids()
@@ -1732,7 +1732,7 @@ class Interface:
             if self.dialog_yesno("Remove %s?" % name + extraline, hard="WARNING: this will remove more than one torrent"):
                 self.server.remove_torrent(ids)
 
-    def remove_torrent(self):
+    def action_remove_torrent(self):
         if self.focus > -1:
             name = self.torrents[self.focus]['name'][0:self.width - 15]
             if self.dialog_yesno("Remove %s?" % name):
@@ -1743,7 +1743,7 @@ class Interface:
                 self.server.remove_torrent([self.torrents[self.focus]['id']])
                 self.focus_next_after_delete()
 
-    def remove_torrent_local_data(self):
+    def action_remove_torrent_local_data(self):
         if self.focus > -1:
             name = self.torrents[self.focus]['name'][0:self.width - 15]
             if self.dialog_yesno("Remove and delete %s?" % name, important=True):
@@ -1780,7 +1780,7 @@ class Interface:
                 msg = wrap("Couldn't add tracker: %s" % response)
                 self.dialog_ok("\n".join(msg))
 
-    def remove_tracker(self):
+    def action_remove_tracker(self):
         if self.details_category_focus == 3:
             if self.server.get_rpc_version() < 10:
                 self.dialog_ok("You need Transmission v2.10 or higher to remove trackers.")
@@ -1798,22 +1798,22 @@ class Interface:
                     msg = wrap("Couldn't remove tracker: %s" % response)
                     self.dialog_ok("\n".join(msg))
 
-    def page_up(self):
+    def action_page_up(self):
         self.movement_keys('page_up')
 
-    def page_down(self):
+    def action_page_down(self):
         self.movement_keys('page_down')
 
-    def line_up(self):
+    def action_line_up(self):
         self.movement_keys('line_up')
 
-    def line_down(self):
+    def action_line_down(self):
         self.movement_keys('line_down')
 
-    def go_home(self):
+    def action_go_home(self):
         self.movement_keys('home')
 
-    def go_end(self):
+    def action_go_end(self):
         self.movement_keys('end')
 
     def movement_keys(self, action):
@@ -1920,7 +1920,7 @@ class Interface:
                 self.scrollpos_detaillist[self.details_category_focus] = min(self.scrollpos_detaillist[self.details_category_focus],
                                                                              max(0, list_len - self.detaillines_per_page))
 
-    def file_priority_or_switch_details_next(self):
+    def action_file_priority_or_switch_details_next(self):
         if self.details_category_focus == 1 and \
                 (self.selected_files or self.focus_detaillist > -1):
             if self.selected_files:
@@ -1930,9 +1930,9 @@ class Interface:
                 self.server.increase_file_priority([self.file_index_map[self.focus_detaillist]])
             self.filelist_needs_refresh = True
         else:
-            self.next_details()
+            self.action_next_details()
 
-    def file_priority_or_switch_details_prev(self):
+    def action_file_priority_or_switch_details_prev(self):
         if self.details_category_focus == 1 and \
                 (self.selected_files or self.focus_detaillist > -1):
             if self.selected_files:
@@ -1942,9 +1942,9 @@ class Interface:
                 self.server.decrease_file_priority([self.file_index_map[self.focus_detaillist]])
             self.filelist_needs_refresh = True
         else:
-            self.prev_details()
+            self.action_prev_details()
 
-    def rename_torrent_selected_file(self):
+    def action_rename_torrent_selected_file(self):
         def rename_dialog(oldname):
             filename = os.path.basename(oldname)
             msg = 'Rename "%s"\nto:' % oldname
@@ -1972,7 +1972,7 @@ class Interface:
             # rename torrent folder
             rename_dialog(self.torrents[self.focus]['name'])
 
-    def add_tracker_or_select_all_files(self):
+    def action_add_tracker_or_select_all_files(self):
         # File list
         if self.details_category_focus == 1:
             self.select_unselect_file('all')
@@ -1980,16 +1980,16 @@ class Interface:
         elif self.details_category_focus == 3:
             self.add_tracker()
 
-    def visual_select_files(self):
+    def action_visual_select_files(self):
         self.select_unselect_file('visual')
 
-    def invert_selection_files(self):
+    def action_invert_selection_files(self):
         self.select_unselect_file('invert')
 
-    def select_file(self):
+    def action_select_file(self):
         self.select_unselect_file('file')
 
-    def select_files_dir(self):
+    def action_select_files_dir(self):
         self.select_unselect_file('dir')
 
     def select_unselect_file(self, action):
@@ -2000,7 +2000,7 @@ class Interface:
                     self.selected_files.pop(self.selected_files.index(self.focus_detaillist))
                 except ValueError:
                     self.selected_files.append(self.focus_detaillist)
-                self.line_down()
+                self.action_line_down()
             # (un)select directory
             elif action == 'dir':
                 file_id = self.file_index_map[self.focus_detaillist]
@@ -2019,7 +2019,7 @@ class Interface:
                         file_id = self.file_index_map[focus]
                         if self.torrent_details['files'][file_id]['name'].startswith(focused_dir):
                             self.selected_files.append(focus)
-                self.move_to_next_directory_in_filelist()
+                self.action_move_to_next_directory_in_filelist()
             # (un)select all files
             elif action == 'all':
                 if self.selected_files:
@@ -2040,27 +2040,27 @@ class Interface:
                         self.selected_files.append(self.focus_detaillist)
                     self.vmode_id = self.focus_detaillist
 
-    def move_to_next_directory_in_filelist(self):
+    def action_move_to_next_directory_in_filelist(self):
         if self.selected_torrent > -1 and self.details_category_focus == 1:
             self.focus_detaillist = max(self.focus_detaillist, 0)
             file_id = self.file_index_map[self.focus_detaillist]
             focused_dir = os.path.dirname(self.torrent_details['files'][file_id]['name'])
             while self.torrent_details['files'][file_id]['name'].startswith(focused_dir) \
                     and self.focus_detaillist < len(self.torrent_details['files']) - 1:
-                self.line_down()
+                self.action_line_down()
                 file_id = self.file_index_map[self.focus_detaillist]
 
-    def move_to_previous_directory_in_filelist(self):
+    def action_move_to_previous_directory_in_filelist(self):
         if self.selected_torrent > -1 and self.details_category_focus == 1:
             self.focus_detaillist = max(self.focus_detaillist, 0)
             file_id = self.file_index_map[self.focus_detaillist]
             focused_dir = os.path.dirname(self.torrent_details['files'][file_id]['name'])
             while self.torrent_details['files'][file_id]['name'].startswith(focused_dir) \
                     and self.focus_detaillist > 0:
-                self.line_up()
+                self.action_line_up()
                 file_id = self.file_index_map[self.focus_detaillist]
 
-    def open_torrent_file(self):
+    def action_open_torrent_file(self):
         if self.focus_detaillist >= 0 and self.details_category_focus == 1:
             details = self.server.get_torrent_details()
             stats = self.server.get_global_stats()
@@ -2104,27 +2104,27 @@ class Interface:
                 self.get_screen_size()
                 self.dialog_ok("%s:\n%s" % (" ".join(viewer_cmd), err))
 
-    def show_files_tab(self):
+    def action_show_files_tab(self):
         self.filelist_needs_refresh = True
         self.details_category_focus = 1
 
-    def show_overview_tab(self):
+    def action_show_overview_tab(self):
         self.details_category_focus = 0
 
-    def show_peers_tab(self):
+    def action_show_peers_tab(self):
         self.details_category_focus = 2
 
-    def show_trackers_tab(self):
+    def action_show_trackers_tab(self):
         self.details_category_focus = 3
 
-    def show_chunks_tab(self):
+    def action_show_chunks_tab(self):
         self.details_category_focus = 4
 
-    def profile_menu(self):
+    def action_profile_menu(self):
         if len(gconfig.profiles) > 1:
             self.choose_profile()
 
-    def remove_labels(self):
+    def action_remove_labels(self):
         if self.server.get_rpc_version() < 16:
             return
         ids = self.selected_ids()
@@ -2134,7 +2134,7 @@ class Interface:
             if self.dialog_yesno("Remove labels from %s?" % name + extraline):
                 self.server.set_labels(ids, [])
 
-    def set_labels(self):
+    def action_set_labels(self):
         if self.server.get_rpc_version() < 16:
             return
         ids = self.selected_ids()
@@ -2146,7 +2146,7 @@ class Interface:
             if labels:
                 self.server.set_labels(ids, labels)
 
-    def add_label(self):
+    def action_add_label(self):
         if self.server.get_rpc_version() < 16:
             return
         ids = self.selected_ids()
@@ -2157,12 +2157,12 @@ class Interface:
             if label:
                 self.server.add_label(ids, label)
 
-    def toggle_compact_torrentlist(self):
+    def action_toggle_compact_torrentlist(self):
         gconfig.tlist_item_height = gconfig.tlist_item_height % 3 + 1
         self.recalculate_torrents_per_page()
         self.follow_list_focus()
 
-    def move_torrent(self):
+    def action_move_torrent(self):
         ids = self.selected_ids()
         if ids:
             focused, extraline = self.get_focused(ids)
@@ -2185,7 +2185,7 @@ class Interface:
             f = self.details_keybindings.get(c, None)
         if f:
             #Temporarily:
-            if f == self.profile_selected:
+            if f == self.action_profile_selected:
                 f(c)
             else:
                 f()
@@ -2198,15 +2198,15 @@ class Interface:
             pdebug('caught %s in handle_user_input(): %s\n' % (type(e), str(e)))
         return c
 
-    def invert_selection_torrents(self):
+    def action_invert_selection_torrents(self):
         if self.selected_torrent == -1:
-            self.select_unselect_torrent(invert=True)
+            self.action_select_unselect_torrent(invert=True)
 
-    def select_unselect_torrents(self):
+    def action_select_unselect_torrents(self):
         if self.selected_torrent == -1:
-            self.select_unselect_torrent(all_torrents=True)
+            self.action_select_unselect_torrent(all_torrents=True)
 
-    def select_unselect_torrent(self, all_torrents=False, invert=False):
+    def action_select_unselect_torrent(self, all_torrents=False, invert=False):
         if all_torrents:
             if self.selected:
                 self.selected = set()
@@ -2217,7 +2217,7 @@ class Interface:
         else:
             if self.focus != -1:
                 self.selected.symmetric_difference_update(set([self.torrents[self.focus]['id']]))
-                self.line_down()
+                self.action_line_down()
 
     def filter_torrent(self, t, filtr):
         if filtr['name'] == 'downloading':
@@ -3156,7 +3156,7 @@ class Interface:
             yp += 1
         return yp
 
-    def next_details(self):
+    def action_next_details(self):
         if self.details_category_focus >= 4:
             self.details_category_focus = 0
         else:
@@ -3166,7 +3166,7 @@ class Interface:
         self.focus_detaillist = -1
         self.pad.erase()
 
-    def prev_details(self):
+    def action_prev_details(self):
         if self.details_category_focus <= 0:
             self.details_category_focus = 4
         else:
@@ -3393,7 +3393,7 @@ class Interface:
                 line = line + ' ' + t
         self.screen.addstr(0, self.width - len(line), line, curses.A_REVERSE)
 
-    def list_key_bindings(self):
+    def action_list_key_bindings(self):
         title = 'Help Menu'
         message = "           F1/?  Show this help\n" + \
                   "              X  Ask daemon to quit\n" + \
@@ -3757,25 +3757,25 @@ class Interface:
                 localhistory[-1] = text
             self.update_torrent_list(winstack + [win], pattern=text, search=search)
 
-    def dialog_search_torrentlist(self):
+    def action_dialog_search_torrentlist(self):
         self.dialog_input_text('Search torrent by title:',
                                on_enter=self.increment_search,
                                tab_complete='torrent_list',
                                maxwidth=60, align='right', search='pattern')
 
-    def dialog_search_torrentlist_regex(self):
+    def action_dialog_search_torrentlist_regex(self):
         self.dialog_input_text('Regex search torrent by title:',
                                on_enter=self.increment_search,
                                tab_complete='torrent_list',
                                maxwidth=60, align='right', search='regex')
 
-    def dialog_search_filelist(self):
+    def action_dialog_search_filelist(self):
         self.dialog_input_text('Search file by title:',
                                on_enter=self.increment_file_search,
                                tab_complete='file_list',
                                maxwidth=60, align='right', search='pattern')
 
-    def dialog_search_filelist_regex(self):
+    def action_dialog_search_filelist_regex(self):
         self.dialog_input_text('Regex search file by title:',
                                on_enter=self.increment_file_search,
                                tab_complete='file_list',
@@ -3787,25 +3787,25 @@ class Interface:
     def increment_search(self, pattern, inc=1, search=None):
         self.search_focus += inc
 
-    def dialog_select_search_torrentlist(self):
+    def action_dialog_select_search_torrentlist(self):
         self.dialog_input_text('Select torrents matching pattern',
                                on_enter=self.select_pattern_torrents,
                                tab_complete='torrent_list',
                                maxwidth=60, align='right', search='pattern')
 
-    def dialog_select_search_torrentlist_regex(self):
+    def action_dialog_select_search_torrentlist_regex(self):
         self.dialog_input_text('Select torrents matching regex',
                                on_enter=self.select_pattern_torrents,
                                tab_complete='torrent_list',
                                maxwidth=60, align='right', search='regex')
 
-    def dialog_select_search_filelist(self):
+    def action_dialog_select_search_filelist(self):
         self.dialog_input_text('Select files matching pattern',
                                on_enter=self.select_pattern_files,
                                tab_complete='file_list',
                                maxwidth=60, align='right', search='pattern')
 
-    def dialog_select_search_filelist_regex(self):
+    def action_dialog_select_search_filelist_regex(self):
         self.dialog_input_text('Select files matching regex',
                                on_enter=self.select_pattern_files,
                                tab_complete='file_list',
@@ -3997,7 +3997,7 @@ class Interface:
             i += 1
         return keys
 
-    def draw_options_dialog(self):
+    def action_draw_options_dialog(self):
         enc_options = [('required', '_required'), ('preferred', '_preferred'), ('tolerated', '_tolerated')]
         options = []
         options.append(('Peer _Port', "%d" % self.stats['peer-port']))
