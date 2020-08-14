@@ -2302,17 +2302,38 @@ class Interface:
         self.scrollpos = min(self.scrollpos, (len(self.torrents) - self.torrents_per_page) * gconfig.tlist_item_height)
         self.scrollpos = max(0, self.scrollpos)
 
+    def torrent_text(self, t, search, details=[]):
+        if search in ['fulltext', 'regex_fulltext']:
+            s = t['name']
+            if 'labels' in t:
+                s += '; ' + ','.join(t['labels'])
+            if 'commnets' in t:
+                s += '; ' + t['comment']
+            s += details[t['id']]
+            return s.lower()
+        return t['name'].lower()
+
+    def get_torrents_filenames(self):
+        self.server.set_torrent_details_id([t['id'] for t in self.torrents])
+        self.server.wait_for_details_update()
+        self.server.set_torrent_details_id(-1)
+        return {t['id']: ', '.join(f['name'] for f in t['files']) for t in self.server.get_torrent_details()}
+
     def draw_torrent_list(self, search_keyword='', search=''):
         self.torrents = self.server.get_torrent_list(gconfig.sort_orders)
         self.filter_torrent_list()
 
         if search_keyword and search:
-            if search == 'pattern':
-                matched_torrents = [t for t in self.torrents if search_keyword.lower() in t['name'].lower()]
-            elif search == 'regex':
+            if search in ['fulltext', 'regex_fulltext']:
+                torrents_files = self.get_torrents_filenames()
+            else:
+                torrents_files = None
+            if search in ['pattern', 'fulltext']:
+                matched_torrents = [t for t in self.torrents if search_keyword.lower() in self.torrent_text(t, search, torrents_files)]
+            elif search in ['regex', 'regex_fulltext']:
                 try:
                     regex = re.compile(search_keyword, re.I)
-                    matched_torrents = [t for t in self.torrents if regex.search(t['name'])]
+                    matched_torrents = [t for t in self.torrents if regex.search(self.torrent_text(t, search, torrents_files))]
                 except Exception:
                     matched_torrents = self.torrents
             if matched_torrents:
@@ -3776,11 +3797,23 @@ class Interface:
                                tab_complete='torrent_list',
                                maxwidth=60, align='right', search='pattern')
 
+    def action_dialog_search_torrentlist_fulltext(self):
+        self.dialog_input_text('Search torrent by title (full text):',
+                               on_enter=self.increment_search,
+                               tab_complete='torrent_list',
+                               maxwidth=60, align='right', search='fulltext')
+
     def action_dialog_search_torrentlist_regex(self):
         self.dialog_input_text('Regex search torrent by title:',
                                on_enter=self.increment_search,
                                tab_complete='torrent_list',
                                maxwidth=60, align='right', search='regex')
+
+    def action_dialog_search_torrentlist_regex_fulltext(self):
+        self.dialog_input_text('Regex search torrent by title (full text):',
+                               on_enter=self.increment_search,
+                               tab_complete='torrent_list',
+                               maxwidth=60, align='right', search='regex_fulltext')
 
     def action_dialog_search_filelist(self):
         self.dialog_input_text('Search file by title:',
@@ -3806,11 +3839,26 @@ class Interface:
                                tab_complete='torrent_list',
                                maxwidth=60, align='right', search='pattern')
 
+    def action_dialog_select_search_torrentlist_fulltext(self):
+        self.server.set_torrent_details_id([t['id'] for t in self.torrents])
+        self.server.wait_for_details_update()
+        self.server.set_torrent_details_id(-1)
+        self.dialog_input_text('Select torrents matching pattern (full text)',
+                               on_enter=self.select_pattern_torrents,
+                               tab_complete='torrent_list',
+                               maxwidth=60, align='right', search='fulltext')
+
     def action_dialog_select_search_torrentlist_regex(self):
         self.dialog_input_text('Select torrents matching regex',
                                on_enter=self.select_pattern_torrents,
                                tab_complete='torrent_list',
                                maxwidth=60, align='right', search='regex')
+
+    def action_dialog_select_search_torrentlist_regex_fulltext(self):
+        self.dialog_input_text('Select torrents matching regex (full text)',
+                               on_enter=self.select_pattern_torrents,
+                               tab_complete='torrent_list',
+                               maxwidth=60, align='right', search='regex_fulltext')
 
     def action_dialog_select_search_filelist(self):
         self.dialog_input_text('Select files matching pattern',
@@ -3825,12 +3873,16 @@ class Interface:
                                maxwidth=60, align='right', search='regex')
 
     def select_pattern_torrents(self, pattern, inc=1, search=None):
-        if search == 'pattern':
-            matched_torrents = {t['id'] for t in self.torrents if pattern.lower() in t['name'].lower()}
-        elif search == 'regex':
+        if search in ['fulltext', 'regex_fulltext']:
+            torrents_files = self.get_torrents_filenames()
+        else:
+            torrents_files = None
+        if search in ['pattern', 'fulltext']:
+            matched_torrents = {t['id'] for t in self.torrents if pattern.lower() in self.torrent_text(t, search, torrents_files)}
+        elif search in ['regex', 'regex_fulltext']:
             try:
                 regex = re.compile(pattern, re.I)
-                matched_torrents = {t['id'] for t in self.torrents if regex.search(t['name'])}
+                matched_torrents = {t['id'] for t in self.torrents if regex.search(self.torrent_text(t, search, torrents_files))}
             except Exception:
                 return True
         else:
