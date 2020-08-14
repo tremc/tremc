@@ -109,6 +109,7 @@ In list view and the files tab, a set of items may also be selected.
 * ^w	: Quit `tremc` immediately
 * X		: Send the quit command to the daemon
 * S		: Show session statistics
+* O		: Show `tremc` information and options
 * M 	: Copy magnet link to clipboard (if the pyperclip module is available)
 * B		: Set labels (labels require transmission 3.0 or later) +
 * b		: Add label +
@@ -166,7 +167,7 @@ An action marked with + acts on:
 * q		: Quit `tremc`
 * Esc	: Unfocus torrent
 * Enter, Right, l	: Enter torrent details mode for current torrent
-* o		: Options dialog
+* o		: Server options dialog
 * Space : Select/unselect torrent and move to next torrent
 * A		: Select/unselect all torrents
 * ,		: Select torrents matching text
@@ -259,13 +260,16 @@ The following sections are read:
 
   Keys are
   * lines_per_torrent, value between 1 and 3.
-  * torrentname_is_progressbar (boolean)
+  * torrentname_is_progressbar (boolean).
   * file_viewer, name of program to run for viewing a file.
 
     The string %%s is replaced by the file name.
   * file_open_in_terminal (boolean).
   * rdns (boolean), the value True enables showing the reverse DNS of connected peers.
-  * geoip2_database - The location of the Python-GeoIP2 database file. If this key does not exist, or does not point to a file, the database is also searched for in some commonly used locations.
+  * geoip2_database, The location of the Python-GeoIP2 database file. If this key does not exist, or does not point to a file, the database is also searched for in some commonly used locations.
+  * cancel, List of keys that act as cancel key in dialog windows. Printable characters are allowed, but act as cancel key only when not entering text.
+
+    Default is Escape, Break and q.
 * [Colors]
 
   Allows for setting (some of) the interface colors.
@@ -300,7 +304,7 @@ The following sections are read:
   is the parameter of the filter if needed, it is ignored otherwise. <param.j> may be empty, but the separators must appear.
 
   A torrent satisfies a list of filters if for at least one of the <filters.i>, it satisfies each <filter.j>.
-  sati
+* [CommonKeys], [DetailsKey], [ListKeys]
 
 
 ## Calling transmission-remote
