@@ -92,7 +92,7 @@ class GConfig:
                             help="Select profile to use.")
         parser.add_argument("-r", "--reverse-dns", action="store_true", dest="rdns", default=False,
                             help="Toggle reverse DNS peers addresses.")
-        parser.add_argument("-d", "--debug", action="store", dest="DEBUG", nargs='?', default=True,
+        parser.add_argument("-d", "--debug", action="store", dest="DEBUG", nargs='?', default=False,
                             help="Enable debugging messages.")
         parser.add_argument('transmissionremote_args', nargs='*', metavar='A',
                             help="Torrent files to add using transmission-remote")
@@ -101,9 +101,10 @@ class GConfig:
         for i in vars(cmd_args).keys():
             setattr(self, i, vars(cmd_args)[i])
 
-        self.debug_file = sys.stderr
-        if self.DEBUG:
-            if isinstance(self.DEBUG, str):
+        if self.DEBUG == None:
+            self.DEBUG = True
+            self.debug_file = sys.stderr
+        elif isinstance(self.DEBUG, str):
                 try:
                     self.debug_file = open(self.DEBUG, "a", buffering=1)
                 except OSError:
