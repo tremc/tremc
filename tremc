@@ -4738,10 +4738,10 @@ def parse_config_key(interface, config, gconfig, common_keys, details_keys, list
                 gconfig.esc_keys += (k,)
     else:
         gconfig.esc_keys = (K.ESC, K.q, curses.KEY_BREAK)
-    gconfig.esc_keys_no_ascii = (x for x in gconfig.esc_keys if x not in ranage(32,127))
+    gconfig.esc_keys_no_ascii = tuple(x for x in gconfig.esc_keys if x not in range(32,127))
     gconfig.esc_keys_w = gconfig.esc_keys + (K.w_,)
     gconfig.esc_keys_w_enter = gconfig.esc_keys_w + (K.LF,)
-    gconfig.esc_keys_w_no_ascii = (x for x in gconfig.esc_keys_w if x not in ranage(32,127))
+    gconfig.esc_keys_w_no_ascii = tuple(x for x in gconfig.esc_keys_w if x not in range(32,127))
 
 
 def show_version(option, opt_str, value, parser):
