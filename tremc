@@ -4774,26 +4774,26 @@ def parse_config_key(interface, config, gconfig, common_keys, details_keys, list
     if 'CommonKeys' in config:
         for i in config['CommonKeys']:
             if i in gconfig.keys and config['CommonKeys'][i] in gconfig.actions:
-                k = get_key(K, i)
+                k = get_key(i)
                 common_keys[k] = getattr(interface, 'action_'+config['CommonKeys'][i])
     if 'DetailsKeys' in config:
         for i in config['DetailsKeys']:
             if i in gconfig.keys and config['DetailsKeys'][i] in gconfig.actions:
-                k = get_key(K, i)
+                k = get_key(i)
                 details_keys[k] = getattr(interface, 'action_'+config['DetailsKeys'][i])
                 if k in common_keys:
                     del common_keys[k]
     if 'ListKeys' in config:
         for i in config['ListKeys']:
             if i in gconfig.keys and config['ListKeys'][i] in gconfig.actions:
-                k = get_key(K, i)
+                k = get_key(i)
                 list_keys[k] = getattr(interface, 'action_'+config['ListKeys'][i])
                 if k in common_keys:
                     del common_keys[k]
     if 'cancel' in config['Misc']:
         gconfig.esc_keys = tuple()
         for i in config['Misc']['Esc'].split(','):
-            k = get_key(K, i)
+            k = get_key(i)
             if k:
                 gconfig.esc_keys += (k,)
     else:
