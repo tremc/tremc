@@ -4704,7 +4704,7 @@ def parse_config_profiles(config, orders):
     return ret
 
 
-def get_key(K, key):
+def get_key(key):
     if len(key) == 2 and key[0] == '^':
         # Convert usual ctrl notation (^a) to ours (a_)
         key = key[1] + '_'
