@@ -4733,7 +4733,7 @@ def parse_config_key(interface, config, gconfig, common_keys, details_keys, list
         for i in config['ListKeys']:
             if i in gconfig.keys and config['ListKeys'][i] in gconfig.actions:
                 k = get_key(K, i)
-                details_keys[k] = getattr(interface, 'action_'+config['ListKeys'][i])
+                list_keys[k] = getattr(interface, 'action_'+config['ListKeys'][i])
                 if k in common_keys:
                     del common_keys[k]
     if 'cancel' in config['Misc']:
