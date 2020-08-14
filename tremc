@@ -1155,7 +1155,7 @@ class Interface:
             curses.KEY_BREAK: self.action_go_back_or_unfocus,
             K.q: self.action_leave_details,
             curses.KEY_BACKSPACE: self.action_leave_details,
-            K.LF: self.action_open_torrent_file,
+            K.LF: self.action_view_file,
             K.i: self.action_invert_selection_files,
             K.J: self.action_move_to_next_directory_in_filelist,
             K.K: self.action_move_to_previous_directory_in_filelist,
@@ -2072,7 +2072,7 @@ class Interface:
                 self.action_line_up()
                 file_id = self.file_index_map[self.focus_detaillist]
 
-    def action_open_torrent_file(self):
+    def action_view_file(self):
         if self.focus_detaillist >= 0 and self.details_category_focus == 1:
             details = self.server.get_torrent_details()
             stats = self.server.get_global_stats()
