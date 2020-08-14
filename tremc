@@ -4064,47 +4064,49 @@ class Interface:
 
     def action_draw_server_options_dialog(self):
         enc_options = [('required', '_required'), ('preferred', '_preferred'), ('tolerated', '_tolerated')]
-        options = []
-        options.append(('Peer _Port', "%d" % self.stats['peer-port']))
-        options.append(('UP_nP/NAT-PMP', ('disabled', 'enabled ')[self.stats['port-forwarding-enabled']]))
-        options.append(('Peer E_xchange', ('disabled', 'enabled ')[self.stats['pex-enabled']]))
-        options.append(('_Distributed Hash Table', ('disabled', 'enabled ')[self.stats['dht-enabled']]))
-        options.append(('_Local Peer Discovery', ('disabled', 'enabled ')[self.stats['lpd-enabled']]))
-        options.append(('Protocol En_cryption', "%s" % self.stats['encryption']))
-        # uTP support was added in Transmission v2.3
-        if self.server.get_rpc_version() >= 13:
-            options.append(('_Micro Transport Protocol', ('disabled', 'enabled')[self.stats['utp-enabled']]))
-        options.append(('_Global Peer Limit', "%d" % self.stats['peer-limit-global']))
-        options.append(('Peer Limit per _Torrent', "%d" % self.stats['peer-limit-per-torrent']))
-        options.append(('T_urtle Mode UL Limit', "%dK" % self.stats['alt-speed-up']))
-        options.append(('Tu_rtle Mode DL Limit', "%dK" % self.stats['alt-speed-down']))
-        options.append(('_Seed Ratio Limit', "%s" % ('unlimited', self.stats['seedRatioLimit'])[self.stats['seedRatioLimited']]))
-        # queue was implemented in Transmission v2.4
-        if self.server.get_rpc_version() >= 14:
-            options.append(('Do_wnload Queue Size', "%s" % ('disabled', self.stats['download-queue-size'])[self.stats['download-queue-enabled']]))
-            options.append(('S_eed Queue Size', "%s" % ('disabled', self.stats['seed-queue-size'])[self.stats['seed-queue-enabled']]))
-
-        max_len = max([sum([len(re.sub('_', '', x)) for x in y[0]]) for y in options])
-        width = min(max(len(gconfig.file_viewer) + 6, 15) + max_len, self.width)
-        height = len(options) + 2
-        paging = False
-        if self.height < height:
-            height = self.height
-            paging = True
-        pagelines = height - 2
-        page = 0
-        old_page = -1
-        win = self.window(height, width, '', "Server Options")
-        if paging:
-            if width > 35:
-                win.addstr(height - 1, 1, "More...")
-            else:
-                win.addstr(height - 1, 1, "+")
-
+        first_time = True
         while True:
-            if page != old_page:
-                for i in range(1, height - 1):
-                    win.addstr(i, 2, ' ' * (width - 3), 0)
+            options = []
+            options.append(('Peer _Port', "%d" % self.stats['peer-port']))
+            options.append(('UP_nP/NAT-PMP', ('disabled', 'enabled ')[self.stats['port-forwarding-enabled']]))
+            options.append(('Peer E_xchange', ('disabled', 'enabled ')[self.stats['pex-enabled']]))
+            options.append(('_Distributed Hash Table', ('disabled', 'enabled ')[self.stats['dht-enabled']]))
+            options.append(('_Local Peer Discovery', ('disabled', 'enabled ')[self.stats['lpd-enabled']]))
+            options.append(('Protocol En_cryption', "%s" % self.stats['encryption']))
+            # uTP support was added in Transmission v2.3
+            if self.server.get_rpc_version() >= 13:
+                options.append(('_Micro Transport Protocol', ('disabled', 'enabled')[self.stats['utp-enabled']]))
+            options.append(('_Global Peer Limit', "%d" % self.stats['peer-limit-global']))
+            options.append(('Peer Limit per _Torrent', "%d" % self.stats['peer-limit-per-torrent']))
+            options.append(('T_urtle Mode UL Limit', "%dK" % self.stats['alt-speed-up']))
+            options.append(('Tu_rtle Mode DL Limit', "%dK" % self.stats['alt-speed-down']))
+            options.append(('_Seed Ratio Limit', "%s" % ('unlimited', self.stats['seedRatioLimit'])[self.stats['seedRatioLimited']]))
+            # queue was implemented in Transmission v2.4
+            if self.server.get_rpc_version() >= 14:
+                options.append(('Do_wnload Queue Size', "%s" % ('disabled', self.stats['download-queue-size'])[self.stats['download-queue-enabled']]))
+                options.append(('S_eed Queue Size', "%s" % ('disabled', self.stats['seed-queue-size'])[self.stats['seed-queue-enabled']]))
+
+            if first_time:
+                first_time = False
+                max_len = max([sum([len(re.sub('_', '', x)) for x in y[0]]) for y in options])
+                width = min(max(len(gconfig.file_viewer) + 6, 15) + max_len, self.width)
+                height = len(options) + 2
+                paging = False
+                if self.height < height:
+                    height = self.height
+                    paging = True
+                pagelines = height - 2
+                page = 0
+                old_page = -1
+                win = self.window(height, width, '', "Server Options")
+                if paging:
+                    if width > 35:
+                        win.addstr(height - 1, 1, "More...")
+                    else:
+                        win.addstr(height - 1, 1, "+")
+
+            for i in range(1, height - 1):
+                win.addstr(i, 2, ' ' * (width - 3), 0)
             linestart, lineend = page * pagelines, (page + 1) * pagelines
             line_num = 1
             for option in options:
@@ -4210,33 +4212,36 @@ class Interface:
             self.update_torrent_list([win])
 
     def action_draw_options_dialog(self):
-        options = []
-        options.append(('Version', gconfig.VERSION))
-        options.append(('Terminal size', "%d x %d " % (self.width, self.height)))
-        options.append(('Title is Progress _Bar', ('no', 'yes')[gconfig.torrentname_is_progressbar]))
-        options.append(('File _Viewer', "%s" % gconfig.file_viewer))
-
-        max_len = max([sum([len(re.sub('_', '', x)) for x in y[0]]) for y in options])
-        width = min(max(len(gconfig.file_viewer) + 6, 15) + max_len, self.width)
-        height = len(options) + 2
-        paging = False
-        if self.height < height:
-            height = self.height
-            paging = True
-        pagelines = height - 2
-        page = 0
-        old_page = -1
-        win = self.window(height, width, '', "Global Options")
-        if paging:
-            if width > 35:
-                win.addstr(height - 1, 1, "More...")
-            else:
-                win.addstr(height - 1, 1, "+")
-
+        first_time = True
         while True:
-            if page != old_page:
-                for i in range(1, height - 1):
-                    win.addstr(i, 2, ' ' * (width - 3), 0)
+            options = []
+            options.append(('Version', gconfig.VERSION))
+            options.append(('Terminal size', "%d x %d " % (self.width, self.height)))
+            options.append(('Title is Progress _Bar', ('no', 'yes')[gconfig.torrentname_is_progressbar]))
+            options.append(('File _Viewer', "%s" % gconfig.file_viewer))
+            options.append(("Show peers' _reverse DNS", ('no', 'yes')[gconfig.rdns]))
+
+            if first_time:
+                first_time = False
+                max_len = max([sum([len(re.sub('_', '', x)) for x in y[0]]) for y in options])
+                width = min(max(len(gconfig.file_viewer) + 6, 15) + max_len, self.width)
+                height = len(options) + 2
+                paging = False
+                if self.height < height:
+                    height = self.height
+                    paging = True
+                pagelines = height - 2
+                page = 0
+                old_page = -1
+                win = self.window(height, width, '', "Global Options")
+                if paging:
+                    if width > 35:
+                        win.addstr(height - 1, 1, "More...")
+                    else:
+                        win.addstr(height - 1, 1, "+")
+
+            for i in range(1, height - 1):
+                win.addstr(i, 2, ' ' * (width - 3), 0)
             linestart, lineend = page * pagelines, (page + 1) * pagelines
             line_num = 1
             for option in options:
@@ -4256,6 +4261,9 @@ class Interface:
                 return
             if key == K.b:
                 gconfig.torrentname_is_progressbar = not gconfig.torrentname_is_progressbar
+            elif key == K.r:
+                gconfig.rdns = not gconfig.rdns
+                pdebug(gconfig.rdns)
             elif key == K.v:
                 viewer = self.dialog_input_text('File Viewer\nExample: xdg-viewer %s', gconfig.file_viewer, winstack=[win])
                 if viewer:
