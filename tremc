@@ -4704,6 +4704,11 @@ def parse_config_profiles(config, orders):
 
 
 def get_key(K, key):
+    if len(key) == 2 and key[0] == '^':
+        # Convert usual ctrl notation (^a) to ours (a_)
+        key = key[1] + '_'
+    if len(key) == 1 and '0'<=key[0]<='9':
+        key = 'n' + key
     k = getattr(K, key, None)
     if k is None:
         k = getattr(curses, 'KEY_'+key, None)
