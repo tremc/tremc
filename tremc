@@ -4199,7 +4199,7 @@ class Interface:
             key = self.wingetch(win)
             if key in gconfig.esc_keys_w_enter:
                 return
-            elif key == K.b:
+            if key == K.b:
                 gconfig.torrentname_is_progressbar = not gconfig.torrentname_is_progressbar
             elif key == K.v:
                 viewer = self.dialog_input_text('File Viewer\nExample: xdg-viewer %s', gconfig.file_viewer, winstack=[win])
@@ -4210,7 +4210,6 @@ class Interface:
                 page = page + 1
                 if page > (len(options) - 1) / pagelines:
                     page = 0
-
             self.update_torrent_list([win])
 
     def dialog_filters(self):
