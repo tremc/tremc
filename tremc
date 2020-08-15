@@ -173,6 +173,7 @@ class GConfig:
 class Keys:
     TAB = 9
     LF = 10
+    CR = 13
     ESC = 27
     SPACE = 32
     STAR = 42
@@ -3645,7 +3646,7 @@ class Interface:
             if hard:
                 if c == K.y_:
                     return True
-                if c in (K.n, K.LF, K.SPACE):
+                if c in (K.n, K.LF, K.CR, curses.KEY_ENTER, K.SPACE):
                     return False
                 if c in gconfig.esc_keys_w_no_ascii:
                     return 0
@@ -3660,7 +3661,7 @@ class Interface:
                     choice = True
                 elif c in (curses.KEY_RIGHT, K.l):
                     choice = False
-                elif c in (K.LF, K.SPACE):
+                elif c in (K.LF, K.CR, curses.KEY_ENTER, K.SPACE):
                     return choice
                 if c in gconfig.esc_keys_w_no_ascii:
                     return 0
@@ -3738,7 +3739,7 @@ class Interface:
                 index = 0
             elif c in (curses.KEY_END, K.e_):
                 index = len(text)
-            elif c in (K.LF, K.r_):
+            elif c in (K.LF, K.CR, curses.KEY_ENTER, K.r_):
                 if history is not None and text != '':
                     try:
                         p = history.index(text)
@@ -3749,7 +3750,7 @@ class Interface:
                         history.pop(0)
                     history.append(text)
                 if on_enter:
-                    if on_enter(text, inc=1 if c == K.LF else -1, search=search):
+                    if on_enter(text, inc=1 if c in (K.LF, K.CR, curses.KEY_ENTER) else -1, search=search):
                         return None
                 else:
                     hide_cursor()
@@ -3944,7 +3945,7 @@ class Interface:
             if c in gconfig.esc_keys_w:
                 hide_cursor()
                 return -128
-            if c == K.LF:
+            if c in (K.LF, K.CR, curses.KEY_ENTER):
                 hide_cursor()
                 try:
                     if allow_empty and len(value) <= 0:
@@ -4024,7 +4025,7 @@ class Interface:
                 return (options[keymap[chr(c).lower()]][0], chr(c).isupper(), win) if extended else options[keymap[chr(c).lower()]][0]
             if c in gconfig.esc_keys_w:
                 return (-128, False, win) if extended else -128
-            if c == K.LF:
+            if c in (K.LF, K.CR, curses.KEY_ENTER):
                 return (options[focus - 1][0], False, win) if extended else options[focus - 1][0]
             if c == curses.KEY_BACKSPACE and extended:
                 return (options[focus - 1][0], True, win)
@@ -4311,7 +4312,7 @@ class Interface:
             c = self.wingetch(win)
             if c in gconfig.esc_keys_w:
                 return gconfig.filters
-            if c == K.LF:
+            if c in (K.LF, K.CR, curses.KEY_ENTER):
                 filters = [f for f in filters if f != []]
                 return [[{'name': '', 'inverse': False}]] if filters == [] else filters
             if c == curses.KEY_UP and current[0] > 0:
@@ -4808,7 +4809,7 @@ def parse_config_key(interface, config, gconfig, common_keys, details_keys, list
         gconfig.esc_keys = (K.ESC, K.q, curses.KEY_BREAK)
     gconfig.esc_keys_no_ascii = tuple(x for x in gconfig.esc_keys if x not in range(32, 127))
     gconfig.esc_keys_w = gconfig.esc_keys + (K.w_,)
-    gconfig.esc_keys_w_enter = gconfig.esc_keys_w + (K.LF,)
+    gconfig.esc_keys_w_enter = gconfig.esc_keys_w + (K.LF, K.CR, curses.KEY_ENTER)
     gconfig.esc_keys_w_no_ascii = tuple(x for x in gconfig.esc_keys_w if x not in range(32, 127))
 
 
