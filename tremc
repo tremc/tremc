@@ -4814,11 +4814,6 @@ def parse_config_key(interface, config, gconfig, common_keys, details_keys, list
     gconfig.esc_keys_w_no_ascii = tuple(x for x in gconfig.esc_keys_w if x not in range(32, 127))
 
 
-def show_version(option, opt_str, value, parser):
-    exit_prog("tremc %s  (supports Transmission %s-%s)\n" %
-              (gconfig.VERSION, gconfig.TRNSM_VERSION_MIN, gconfig.TRNSM_VERSION_MAX))
-
-
 def xdg_config_home(*args):
     p = os.environ.get('XDG_CONFIG_HOME')
 
