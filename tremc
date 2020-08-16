@@ -226,6 +226,7 @@ def pdebug(*argv):
 
 # define config defaults
 config = configparser.ConfigParser()
+config.optionxform = lambda option: option
 config.add_section('Connection')
 config.set('Connection', 'password', '')
 config.set('Connection', 'username', '')
