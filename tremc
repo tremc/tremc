@@ -2390,7 +2390,7 @@ class Interface:
 
         return 1
 
-    def draw_downloadrate(self, torrent, ypos, selected, draw=True):
+    def draw_downloadrate(self, torrent, ypos, selected):
         if selected:
             tag = curses.A_REVERSE
         else:
