@@ -3575,7 +3575,7 @@ class Interface:
         return self.real_window(height, width, message=message, title=title, first=first, win=win)
 
     def real_window(self, height, width, message='', title='', first=0, win=None, keypad=True, xpos=None):
-        height = min(self.height, height)
+        height = min(self.height - 2, height)
         width = min(self.width, width)
         ypos = int((self.height - height) / 2)
         if xpos is None:
