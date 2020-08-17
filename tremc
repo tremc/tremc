@@ -3860,31 +3860,30 @@ class Interface:
         return True
 
     def dialog_input_number(self, message, current_value,
-                            cursorkeys=True, floating_point=False, allow_empty=False,
+                            floating_point=False, allow_empty=False,
                             allow_zero=True, allow_negative_one=True, winstack=[]):
         if not allow_zero:
             allow_negative_one = False
 
         width = max(max([len(x) for x in message.split("\n")]), 40) + 4
         width = min(self.width, width)
-        height = message.count("\n") + (4, 6)[cursorkeys]
+        height = message.count("\n") + 6
 
         show_cursor()
         win = self.window(height, width, message=message)
         value = str(current_value)
-        if cursorkeys:
-            if floating_point:
-                bigstep = 1
-                smallstep = 0.1
-            else:
-                bigstep = 100
-                smallstep = 10
-            win.addstr(height - 4, 2, ("   up/down +/- %-3s" % bigstep).rjust(width - 4))
-            win.addstr(height - 3, 2, ("left/right +/- %3s" % smallstep).rjust(width - 4))
-            if allow_negative_one:
-                win.addstr(height - 3, 2, "-1 means unlimited")
-            if allow_empty:
-                win.addstr(height - 4, 2, "leave empty for default")
+        if floating_point:
+            bigstep = 1
+            smallstep = 0.1
+        else:
+            bigstep = 100
+            smallstep = 10
+        win.addstr(height - 4, 2, ("   up/down +/- %-3s" % bigstep).rjust(width - 4))
+        win.addstr(height - 3, 2, ("left/right +/- %3s" % smallstep).rjust(width - 4))
+        if allow_negative_one:
+            win.addstr(height - 3, 2, "-1 means unlimited")
+        if allow_empty:
+            win.addstr(height - 4, 2, "leave empty for default")
 
         while True:
             win.addstr(height - 2, 2, value.ljust(width - 4), curses.color_pair(self.colors.ind('dialog')))
@@ -3917,7 +3916,7 @@ class Interface:
             elif floating_point and c == K.DOT and '.' not in value:
                 value += chr(c)
 
-            elif cursorkeys and c != -1:
+            elif c != -1:
                 try:
                     if value == '':
                         value = 0
@@ -4075,8 +4074,8 @@ class Interface:
                 return
             if key == K.p:
                 port = self.dialog_input_number("Port for incoming connections",
-                                                self.stats['peer-port'],
-                                                cursorkeys=False, winstack=[win])
+                                                self.stats['peer-port'], 
+                                                allow_negative_one=False, winstack=[win])
                 if 0 <= port <= 65535:
                     self.server.set_option('peer-port', port)
                 elif port != -128:  # user hit ESC
