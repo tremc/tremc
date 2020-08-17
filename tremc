@@ -4079,6 +4079,7 @@ class Interface:
                 options.append(('_Micro Transport Protocol', ('disabled', 'enabled')[self.stats['utp-enabled']]))
             options.append(('_Global Peer Limit', "%d" % self.stats['peer-limit-global']))
             options.append(('Peer Limit per _Torrent', "%d" % self.stats['peer-limit-per-torrent']))
+            options.append(('Turtle m_ode', ('disabled', 'enabled ')[self.stats['alt-speed-enabled']]))
             options.append(('T_urtle Mode UL Limit', "%dK" % self.stats['alt-speed-up']))
             options.append(('Tu_rtle Mode DL Limit', "%dK" % self.stats['alt-speed-down']))
             options.append(('_Seed Ratio Limit', "%s" % ('unlimited', self.stats['seedRatioLimit'])[self.stats['seedRatioLimited']]))
@@ -4170,6 +4171,8 @@ class Interface:
                                           list(map(lambda x: x[0] == self.stats['encryption'], enc_options)).index(True) + 1, winstack=[win])
                 if choice != -128:
                     self.server.set_option('encryption', choice)
+            elif key == K.o:
+                self.server.toggle_turtle_mode()
             elif key == K.u:
                 limit = self.dialog_input_number('Upload limit for Turtle Mode in kilobytes per second',
                                                  self.stats['alt-speed-up'],
