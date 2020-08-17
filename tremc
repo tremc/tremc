@@ -142,7 +142,8 @@ class GConfig:
             ('status', 'S_tatus'), ('uploadedEver', 'Up_loaded'),
             ('rateUpload', '_Upload Speed'), ('rateDownload', '_Download Speed'),
             ('uploadRatio', '_Ratio'), ('peersConnected', 'P_eers'),
-            ('downloadDir', 'L_ocation'), ('mainTrackerDomain', 'Trac_ker')]
+            ('downloadDir', 'L_ocation'), ('mainTrackerDomain', 'Trac_ker'),
+            ('reverse', 'Re_verse')]
         self.file_sort_options = [
             ('name', '_Name'), ('progress', '_Progress'),
             ('length', 'Si_ze'), ('bytesCompleted', '_Downloaded'),
@@ -1222,9 +1223,7 @@ class Interface:
 
         # queue was implemmented in transmission 2.4
         if self.server.get_rpc_version() >= 14:
-            gconfig.sort_options.append(('queuePosition', '_Queue Position'))
-
-        gconfig.sort_options.append(('reverse', 'Re_verse'))
+            gconfig.sort_options.insert(-1, ('queuePosition', '_Queue Position'))
 
         self.filelist_needs_refresh = False
         self.sorted_files = None
