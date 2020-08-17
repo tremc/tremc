@@ -166,7 +166,93 @@ class GConfig:
         self.file_open_in_terminal = config.getboolean('Misc', 'file_open_in_terminal')
         self.profiles = parse_config_profiles(config, [x[0] for x in self.sort_options])
 
-        self.actions = [x[7:] for x in dir(Interface) if x[:7] == 'action_']
+        self.actions = {
+            'list_key_bindings': [0, ['F1', '?'], 'List key bindings'],
+            'quit_now': [0, ['^w'], 'Quit immediately'],
+            'quit': [1, ['q'], 'Quit'],
+            'leave_details': [2, ['BACKSPACE', 'q'], 'Back to torrent list'],
+            'go_back_or_unfocus': [2, ['ESC', 'BREAK'], 'Unfocus or back to torrent list'],
+            'daemon_quit': [0, ['X'], 'Ask daemon to quit'],
+            'draw_options_dialog': [0, ['O'], 'tremc options menu'],
+            'draw_server_options_dialog': [1, ['o'], 'Server options menu'],
+            'toggle_compact_torrentlist': [1, ['C'], 'Cycle torrent line height'],
+            'turtle_mode': [1, ['t'], 'Toggle turtle mode'],
+            'global_upload': [0, ['u'], 'Set global upload'],
+            'global_download': [0, ['d'], 'Set global download limit'],
+            'torrent_upload': [0, ['U'], 'Set torrent maximum upload rate'],
+            'torrent_download': [0, ['D'], 'Set torrent maximum download rate'],
+            'seed_ratio': [0, ['L'], 'Set seed ratio limit for focused torrent'],
+            'bandwidth_priority_inc': [0, ['+'], 'Increase torrent bandwidth priority'],
+            'bandwidth_priority_dec': [0, ['-'], 'Decrease torrent bandwidth priority'],
+            'honors_limits': [0, ['*'], 'Toggle torrent honors session limits'],
+            'pause_unpause_torrent': [0, ['p'], 'Pause/Unpause torrent'],
+            'pause_unpause_all_torrent': [0, ['P'], 'Pause/Unpause all torrents'],
+            'start_now_torrent': [0, ['N'], 'Start torrent now'],
+            'verify_torrent': [0, ['v', 'y'], 'Verify torrent'],
+            'move_torrent': [0, ['m'], 'Move torrent'],
+            'rename_torrent_selected_file': [0, ['F'], 'Rename torrent/file'],
+            'reannounce_torrent': [0, ['n'], 'Reannounce torrent'],
+            'show_stats': [0, ['S'], 'Show upload/download stats'],
+            'remove_torrent': [1, ['DC', 'r'], 'Remove torrent keeping content'],
+            'remove_torrent_local_data': [0, ['SDC', 'R'], 'Remove torrent and content'],
+            'remove_selected_torrents': [1, ['^r'], 'Remove selected torrents'],
+            'copy_magnet_link': [0, ['M'], 'Copy Magnet Link to the System Clipboard'],
+            'remove_labels': [256, ['^l'], 'Remove labels'],
+            'add_label': [256, ['b'], 'Add label'],
+            'set_labels': [256, ['B'], 'Set labels'],
+            'move_queue_down': [513, ['J'], 'Move torrent down in queue'],
+            'move_queue_up': [513, ['K'], 'Move torrent up in queue'],
+            'profile_menu': [1, ['e'], 'Profile menu'],
+            'dialog_search_torrentlist': [1, ['/'], 'Find torrent'],
+            'dialog_search_torrentlist_regex': [1, ['.'], 'Find torrents matching regular expression'],
+            'dialog_search_torrentlist_fulltext': [1, [], 'Find torrent (full text)'],
+            'dialog_search_torrentlist_regex_fulltext': [1, [], 'Find torrents matching regular expression (full text)'],
+            'set_filter': [1, ['f'], 'Set filter'],
+            'add_filter': [1, ['T'], 'Add filter'],
+            'edit_filters': [1, ['I'], 'Edit list of filters'],
+            'invert_filters_action': [1, ['~'], 'Reverse filters'],
+            'show_torrent_sort_order_menu': [1, ['s'], 'Sort torrent list'],
+            'select_unselect_torrent': [1, ['SPACE'], 'Select/unselect torrent'],
+            'select_unselect_torrents': [1, ['A'], 'Select/Deselect all torrents'],
+            'invert_selection_torrents': [1, ['i'], 'Invert torrent selection'],
+            'dialog_select_search_torrentlist': [1, [','], 'Select torrents matching pattern'],
+            'dialog_select_search_torrentlist_regex': [1, ['<'], 'Select torrents matching regex'],
+            'dialog_select_search_torrentlist_fulltext': [1, [], 'Select torrents matching pattern (full text)'],
+            'dialog_select_search_torrentlist_regex_fulltext': [1, [], 'Select torrents matching regex (full text)'],
+            'enter_details': [1, ['ENTER', 'RIGHT', 'l'], 'Enter torrent details view'],
+            'add_torrent': [1, ['a'], 'Add torrent'],
+            'add_torrent_paused': [1, ['^a'], 'Add torrent paused'],
+            'unfocus_torrent': [1, ['ESC', 'BREAK'], 'Unfocus torrent'],
+            'show_overview_tab': [2, ['o'], 'Jump to overview'],
+            'show_files_tab': [2, ['f'], 'Jump to file list'],
+            'show_peers_tab': [2, ['e'], 'Jump to peer list'],
+            'show_trackers_tab': [2, ['t'], 'Jump to tracker information'],
+            'show_chunks_tab': [2, ['c'], 'Jump to chunck list'],
+            'next_details': [2, ['TAB'], 'Next details tab'],
+            'prev_details': [2, ['BTAB'], 'Previous details tab'],
+            'file_priority_or_switch_details_next': [2, ['RIGHT', 'l'], 'Raise file priority or Previous tab'],
+            'file_priority_or_switch_details_prev': [2, ['LEFT', 'h'], 'Lower file priority or Previous tab'],
+            'add_tracker_or_select_all_files': [2, ['a'], 'Select/Deselect all files'],
+            'view_file': [3, ['ENTER'], 'View file'],
+            'move_to_next_directory_in_filelist': [3, ['J'], 'Next diectory'],
+            'move_to_previous_directory_in_filelist': [3, ['K'], 'Previous directory'],
+            'show_file_sort_order_menu': [3, ['s'], 'Sort file list'],
+            'visual_select_files': [3, ['V'], 'Visually select files'],
+            'dialog_select_search_filelist': [3, [','], 'Select files matching pattern'],
+            'select_files_dir': [3, ['A'], 'Select/Deselect directory'],
+            'dialog_search_filelist': [3, ['/'], 'Search file list'],
+            'dialog_select_search_filelist_regex': [3, ['<'], 'Select files matching regex'],
+            'dialog_search_filelist_regex': [3, ['.'], 'Find files matching regex'],
+            'invert_selection_files': [3, ['i'], 'Invert selection'],
+            'select_file': [3, ['SPACE'], 'Select/unselect file'],
+            'remove_tracker': [4, ['DC', 'r'], 'Remove tracker'],
+            'page_up': [16, ['PPAGE', '^b'], 'Page Up'],
+            'page_down': [16, ['NPAGE', '^f'], 'Page Down'],
+            'line_up': [16, ['UP', 'k', '^p'], 'Up'],
+            'line_down': [16, ['DOWN', 'j', '^n'], 'Down'],
+            'go_home': [16, ['HOME', 'g'], 'Home'],
+            'go_end': [16, ['END', 'G'], 'End'],
+        }
         self.keys = [x for x in dir(K) if x[0] != '_'] + \
                     [x[4:] for x in dir(curses) if x[:4] == 'KEY_']
 
@@ -1100,32 +1186,6 @@ class Interface:
         self.invert_filters = False
 
         self.common_keybindings = {
-            K.QUES: self.action_list_key_bindings,
-            curses.KEY_F1: self.action_list_key_bindings,
-            K.S: self.action_show_stats,
-            K.M: self.action_copy_magnet_link,
-            K.w_: self.action_quit_now,
-            K.X: self.action_daemon_quit,
-            K.O: self.action_draw_options_dialog,
-            K.B: self.action_set_labels,
-            K.b: self.action_add_label,
-            K.l_: self.action_remove_labels,
-            K.F: self.action_rename_torrent_selected_file,
-            K.N: self.action_start_now_torrent,
-            K.p: self.action_pause_unpause_torrent,
-            K.P: self.action_pause_unpause_all_torrent,
-            K.n: self.action_reannounce_torrent,
-            K.v: self.action_verify_torrent,
-            K.y: self.action_verify_torrent,
-            K.MINUS: self.action_bandwidth_priority_dec,
-            K.PLUS: self.action_bandwidth_priority_inc,
-            K.STAR: self.action_honors_limits,
-            K.d: self.action_global_download,
-            K.u: self.action_global_upload,
-            K.D: self.action_torrent_download,
-            K.U: self.action_torrent_upload,
-            K.L: self.action_seed_ratio,
-            K.m: self.action_move_torrent,
             K.n0: self.action_profile_selected,
             K.n1: self.action_profile_selected,
             K.n2: self.action_profile_selected,
@@ -1136,90 +1196,16 @@ class Interface:
             K.n7: self.action_profile_selected,
             K.n8: self.action_profile_selected,
             K.n9: self.action_profile_selected,
-            curses.KEY_SDC: self.action_remove_torrent_local_data,
-            K.R: self.action_remove_torrent_local_data,
             curses.KEY_SEND: lambda: self.move_queue('bottom'),
             curses.KEY_SHOME: lambda: self.move_queue('top'),
             curses.KEY_SLEFT: lambda: self.move_queue('ppage'),
             curses.KEY_SRIGHT: lambda: self.move_queue('npage'),
-            curses.KEY_UP: self.action_line_up,
-            K.k: self.action_line_up,
-            K.p_: self.action_line_up,
-            curses.KEY_DOWN: self.action_line_down,
-            K.j: self.action_line_down,
-            K.n_: self.action_line_down,
-            curses.KEY_PPAGE: self.action_page_up,
-            K.b_: self.action_page_up,
-            curses.KEY_NPAGE: self.action_page_down,
-            K.f_: self.action_page_down,
-            curses.KEY_HOME: self.action_go_home,
-            K.g: self.action_go_home,
-            curses.KEY_END: self.action_go_end,
-            K.G: self.action_go_end,
         }
-        self.details_keybindings = {
-            K.ESC: self.action_go_back_or_unfocus,
-            curses.KEY_BREAK: self.action_go_back_or_unfocus,
-            K.q: self.action_leave_details,
-            curses.KEY_BACKSPACE: self.action_leave_details,
-            K.LF: self.action_view_file,
-            K.i: self.action_invert_selection_files,
-            K.J: self.action_move_to_next_directory_in_filelist,
-            K.K: self.action_move_to_previous_directory_in_filelist,
-            K.V: self.action_visual_select_files,
-            K.r: self.action_remove_tracker,
-            curses.KEY_DC: self.action_remove_tracker,
-            K.TAB: self.action_next_details,
-            curses.KEY_BTAB: self.action_prev_details,
-            K.o: self.action_show_overview_tab,
-            K.t: self.action_show_trackers_tab,
-            K.e: self.action_show_peers_tab,
-            K.c: self.action_show_chunks_tab,
-            K.f: self.action_show_files_tab,
-            K.h: self.action_file_priority_or_switch_details_prev,
-            K.l: self.action_file_priority_or_switch_details_next,
-            curses.KEY_RIGHT: self.action_file_priority_or_switch_details_next,
-            curses.KEY_LEFT: self.action_file_priority_or_switch_details_prev,
-            K.SPACE: self.action_select_file,
-            K.a: self.action_add_tracker_or_select_all_files,
-            K.A: self.action_select_files_dir,
-            K.SLASH: self.action_dialog_search_filelist,
-            K.DOT: self.action_dialog_search_filelist_regex,
-            K.COMMA: self.action_dialog_select_search_filelist,
-            K.LESS: self.action_dialog_select_search_filelist_regex,
-            K.s: self.action_show_file_sort_order_menu,
-        }
-        self.list_keybindings = {
-            K.q: self.action_quit_now,
-            K.ESC: self.action_unfocus_torrent,
-            curses.KEY_BREAK: self.action_unfocus_torrent,
-            K.LF: self.action_enter_details,
-            curses.KEY_RIGHT: self.action_enter_details,
-            K.o: self.action_draw_server_options_dialog,
-            K.l: self.action_enter_details,
-            K.i: self.action_invert_selection_torrents,
-            K.s: self.action_show_torrent_sort_order_menu,
-            K.f: self.action_set_filter,
-            K.t: self.action_turtle_mode,
-            K.T: self.action_add_filter,
-            K.I: self.action_edit_filters,
-            K.TILDE: self.action_invert_filters_action,
-            K.J: self.action_move_queue_down,
-            K.K: self.action_move_queue_up,
-            K.r: self.action_remove_torrent,
-            curses.KEY_DC: self.action_remove_torrent,
-            K.r_: self.action_remove_selected_torrents,
-            K.e: self.action_profile_menu,
-            K.C: self.action_toggle_compact_torrentlist,
-            K.SPACE: self.action_select_unselect_torrent,
-            K.a_: self.action_add_torrent_paused,
-            K.a: self.action_add_torrent,
-            K.A: self.action_select_unselect_torrents,
-            K.SLASH: self.action_dialog_search_torrentlist,
-            K.DOT: self.action_dialog_search_torrentlist_regex,
-            K.COMMA: self.action_dialog_select_search_torrentlist,
-            K.LESS: self.action_dialog_select_search_torrentlist_regex,
-        }
+        self.list_keybindings = {}
+        self.details_keybindings = {}
+        set_keys(gconfig.actions, self.common_keybindings, [0], self)
+        set_keys(gconfig.actions, self.list_keybindings, [1], self)
+        set_keys(gconfig.actions, self.details_keybindings, [2, 3, 4], self)
 
         # queue was implemmented in transmission 2.4
         if self.server.get_rpc_version() >= 14:
@@ -1393,6 +1379,9 @@ class Interface:
         self.details_category_focus = 0
         self.scrollpos_detaillist = [0] * 5
         self.selected_files = []
+
+    def action_quit(self):
+        self.exit_now = True
 
     def action_quit_now(self):
         self.exit_now = True
@@ -3429,111 +3418,59 @@ class Interface:
         self.screen.addstr(0, self.width - len(line), line, curses.A_REVERSE)
 
     def action_list_key_bindings(self):
+        def key_name(k):
+            map_key_names = {'UP': 'Up', 'DC': 'Del', 'SDC': 'Shift-Del', 'PPAGE': 'PgUp', 'NPAGE': 'PgDn'}
+            if k in map_key_names:
+                return map_key_names[k]
+            if len(k) == 2 and k[0] == 1 and k[1].isdigit():
+                return k[1]
+            if len(k) == 2 and k[1] == '_':
+                return '^'+k[0]
+            return k.title() if len(k) > 2 else k
+
         title = 'Help Menu'
-        message = "           F1/?  Show this help\n" + \
-                  "              X  Ask daemon to quit\n" + \
-                  "            u/d  Adjust maximum global up-/download rate\n" + \
-                  "            U/D  Adjust maximum up-/download rate for focused torrent\n" + \
-                  "              L  Set seed ratio limit for focused torrent\n" + \
-                  "            +/-  Adjust bandwidth priority for focused torrent\n" + \
-                  "              *  Toggle honor session limits flag\n" + \
-                  "              p  Pause/Unpause torrent\n" + \
-                  "              P  Pause/Unpause all torrents\n" + \
-                  "              N  Start torrent now\n" + \
-                  "            v/y  Verify torrent\n" + \
-                  "              m  Move torrent\n" + \
-                  "              F  Rename torrent/file\n" + \
-                  "              n  Reannounce torrent\n" + \
-                  "              S  Show upload/download stats\n" + \
-                  ("          Del/r  Remove torrent and keep content\n" if self.selected_torrent == -1 else "") + \
-                  "    Shift+Del/R  Remove torrent and delete content\n" + \
-                  "             ^r  Remove selected torrents\n"
-
-        if gconfig.clipboard:
-            message += "              M  Copy Magnet Link to the System Clipboard\n"
-
-        if self.server.get_rpc_version() >= 16:
-            message += "              b  Add label\n" + \
-                       "              B  Set labels\n" + \
-                       "             ^l  Remove labels\n"
-
-        # Queue was implemented in Transmission v2.4
-        if self.server.get_rpc_version() >= 14 and self.details_category_focus != 1:
-            message += "            J/K  Move focused torrent in queue up/down\n" + \
-                       " Shift+Lft/Rght  Move focused torrent in queue up/down by 10\n" + \
-                       " Shift+Home/End  Move focused torrent to top/bottom of queue\n"
+        if self.details_category_focus == 2:
+            title = 'Peer status flags'
+            message = " O  Optimistic unchoke\n" + \
+                      " D  Downloading from this peer\n" + \
+                      " d  We would download from this peer if they'd let us\n" + \
+                      " U  Uploading to peer\n" + \
+                      " u  We would upload to this peer if they'd ask\n" + \
+                      " K  Peer has unchoked us, but we're not interested\n" + \
+                      " ?  We unchoked this peer, but they're not interested\n" + \
+                      " E  Encrypted Connection\n" + \
+                      " H  Peer was discovered through DHT\n" + \
+                      " X  Peer was discovered through Peer Exchange (PEX)\n" + \
+                      " I  Peer is an incoming connection\n" + \
+                      " T  Peer is connected via uTP"
         else:
-            message += "            J/K  Jump to next/previous directory\n"
-        # Torrent list
-        if self.selected_torrent == -1:
-            if gconfig.profiles:
-                message += "           0..9  Select profile\n" + \
-                    "              e  Profile menu\n"
-            message += "              /  Search in torrent list\n" + \
-                       "              .  Search regular expression in torrent list\n" + \
-                       "              f  Filter torrent list\n" + \
-                       "              T  Add filter\n" + \
-                       "              I  Edit list of filters\n" + \
-                       "              ~  Invert filters\n" + \
-                       "              s  Sort torrent list\n" \
-                       "          Space  Select/Deselect focused torrent\n" + \
-                       "              A  Select/Deselect all torrents\n" + \
-                       "              i  Invert selection\n" + \
-                       "              ,  Select torrents matching pattern\n" + \
-                       "              <  Select torrents matching regex\n" + \
-                       "    Enter/Right  View torrent's details\n" + \
-                       "              o  Configuration options\n" + \
-                       "              t  Toggle turtle mode\n" + \
-                       "              C  Cycle torrent line height\n" + \
-                       "            Esc  Unfocus\n" + \
-                       "           a/^a  Add torrent / paused\n" + \
-                       "              q  Quit"
-        else:
-            # Peer list
-            if self.details_category_focus == 2:
-                title = 'Peer status flags'
-                message = " O  Optimistic unchoke\n" + \
-                          " D  Downloading from this peer\n" + \
-                          " d  We would download from this peer if they'd let us\n" + \
-                          " U  Uploading to peer\n" + \
-                          " u  We would upload to this peer if they'd ask\n" + \
-                          " K  Peer has unchoked us, but we're not interested\n" + \
-                          " ?  We unchoked this peer, but they're not interested\n" + \
-                          " E  Encrypted Connection\n" + \
-                          " H  Peer was discovered through DHT\n" + \
-                          " X  Peer was discovered through Peer Exchange (PEX)\n" + \
-                          " I  Peer is an incoming connection\n" + \
-                          " T  Peer is connected via uTP"
+            message = ''
+            if self.selected_torrent == -1:
+                categories = [0, 1]
+            elif self.details_category_focus == 1:
+                categories = [0, 2, 3]
+            elif self.details_category_focus == 3:
+                categories = [0, 2, 4]
             else:
-                # Viewing torrent details
-                message += "              o  Jump to overview\n" + \
-                           "              f  Jump to file list\n" + \
-                           "              e  Jump to peer list\n" + \
-                           "              t  Jump to tracker information\n" + \
-                           "              c  Jump to chunck list\n" + \
-                           "      Tab/Right  Jump to next view\n" + \
-                           " Shift+Tab/Left  Jump to previous view\n"
-                if self.details_category_focus == 1:  # files
-                    if self.focus_detaillist > -1:
-                        message += "              s  Sort torrent list\n" + \
-                            "     Left/Right  Decrease/Increase file priority\n"
-                    message += "              /  Search in file list\n" + \
-                               "              .  Search regular expression in file list\n" + \
-                               "        Up/Down  Select file\n" + \
-                               "          Space  Select/Deselect focused file\n" + \
-                               "              a  Select/Deselect all files\n" + \
-                               "              A  Select/Deselect directory\n" + \
-                               "              i  Invert selection\n" + \
-                               "              V  Visually select files\n" + \
-                               "              ,  Select files matching pattern\n" + \
-                               "              <  Select files matching regex\n" + \
-                               "            Esc  Unfocus+Unselect or Back to torrent list\n" + \
-                               "    q/Backspace  Back to torrent list"
-                elif self.details_category_focus == 3:  # trackers
-                    message += "          Del/r  Remove tracker\n"
-                else:
-                    message += "q/Backspace/Esc  Back to torrent list"
+                categories = [0, 2]
 
+            movement_keys = True
+            for a, d in gconfig.actions.items():
+                if d[1] and d[0] & 15 in categories:
+                    if d[0] & 512 and self.server.get_rpc_version() < 14:
+                        continue
+                    if d[0] & 256 and self.server.get_rpc_version() < 16:
+                        continue
+                    if d[0] == 16 and movement_keys:
+                        movement_keys = False
+                        message += '           Movement Keys:\n'
+                    if a == 'profile_menu':
+                        message += "         0..9  Select profile\n"
+                    if a == 'move_queue_down':
+                        message += "Shft+Lft/Rght  Move focused torrent in queue up/down by 10\n"
+                        message += "Shft+Home/End  Move focused torrent to top/bottom of queue\n"
+                    keys_str = '/'.join(key_name(k) for k in d[1])[-13:].rjust(13)
+                    message += keys_str + '  ' + d[2] + '\n'
         width = max([len(x) for x in message.split("\n")]) + 4
         width = min(self.width, width)
         height = min(self.height, message.count("\n") + 3)
@@ -4771,43 +4708,45 @@ def parse_config_profiles(config, orders):
 
 
 def get_key(key):
+    if key == 'ENTER':
+        return (K.LF, K.CR, curses.KEY_ENTER)
     if len(key) == 2 and key[0] == '^':
         # Convert usual ctrl notation (^a) to ours (a_)
         key = key[1] + '_'
-    if len(key) == 1 and '0' <= key[0] <= '9':
-        key = 'n' + key
-    k = getattr(K, key, None)
-    if k is None:
-        k = getattr(curses, 'KEY_'+key, None)
-    return k
+    if len(key) == 1:
+        return ord(key),
+    k = getattr(K, key, ())
+    try:
+        return k or getattr(curses, 'KEY_'+key),
+    except AttributeError:
+        return ()
 
+def set_key(key, key_actions, interface, action, delete=None):
+    for k in get_key(key):
+        key_actions[k] = getattr(interface, 'action_'+action, lambda x: x)
+        if delete and k in delete:
+            del delete[k]
+
+def set_keys(actions, key_actions, accepted, interface):
+    for a in actions:
+        if actions[a][0] & 15 in accepted:
+            for k in actions[a][1]:
+                pdebug(k, accepted, a)
+                set_key(k, key_actions, interface, a)
 
 def parse_config_key(interface, config, gconfig, common_keys, details_keys, list_keys):
-    if 'CommonKeys' in config:
-        for i in config['CommonKeys']:
-            if i in gconfig.keys and config['CommonKeys'][i] in gconfig.actions:
-                k = get_key(i)
-                common_keys[k] = getattr(interface, 'action_'+config['CommonKeys'][i])
-    if 'DetailsKeys' in config:
-        for i in config['DetailsKeys']:
-            if i in gconfig.keys and config['DetailsKeys'][i] in gconfig.actions:
-                k = get_key(i)
-                details_keys[k] = getattr(interface, 'action_'+config['DetailsKeys'][i])
-                if k in common_keys:
-                    del common_keys[k]
-    if 'ListKeys' in config:
-        for i in config['ListKeys']:
-            if i in gconfig.keys and config['ListKeys'][i] in gconfig.actions:
-                k = get_key(i)
-                list_keys[k] = getattr(interface, 'action_'+config['ListKeys'][i])
-                if k in common_keys:
-                    del common_keys[k]
+    sections = {'ListKeys': list_keys, 'CommonKeys': common_keys, 'DetailsKeys': details_keys}
+    for section in sections:
+        if section in config:
+            for key in config[section]:
+                if config[section][key] in gconfig.actions:
+                    set_key(key, sections[section], interface, config[section][key], common_keys if section != 'CommonKeys' else None)
     if 'cancel' in config['Misc']:
         gconfig.esc_keys = tuple()
         for i in config['Misc']['Esc'].split(','):
             k = get_key(i)
             if k:
-                gconfig.esc_keys += (k,)
+                gconfig.esc_keys += k
     else:
         gconfig.esc_keys = (K.ESC, K.q, curses.KEY_BREAK)
     gconfig.esc_keys_no_ascii = tuple(x for x in gconfig.esc_keys if x not in range(32, 127))
