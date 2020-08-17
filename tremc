@@ -4714,10 +4714,10 @@ def get_key(key):
         # Convert usual ctrl notation (^a) to ours (a_)
         key = key[1] + '_'
     if len(key) == 1:
-        return ord(key),
+        return (ord(key),)
     k = getattr(K, key, ())
     try:
-        return k or getattr(curses, 'KEY_'+key),
+        return (k or getattr(curses, 'KEY_'+key),)
     except AttributeError:
         return ()
 
