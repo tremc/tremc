@@ -164,6 +164,7 @@ class GConfig:
         self.torrentname_is_progressbar = config.getboolean('Misc', 'torrentname_is_progressbar')
         self.file_viewer = config.get('Misc', 'file_viewer')
         self.file_open_in_terminal = config.getboolean('Misc', 'file_open_in_terminal')
+        self.torrent_numbers = config.getboolean('Misc', 'torrent_numbers', fallback=False)
         self.profiles = parse_config_profiles(config, [x[0] for x in self.sort_options])
 
         self.actions = {
@@ -176,6 +177,7 @@ class GConfig:
             'draw_options_dialog': [0, ['O'], 'tremc options menu'],
             'draw_server_options_dialog': [1, ['o'], 'Server options menu'],
             'toggle_compact_torrentlist': [1, ['C'], 'Cycle torrent line height'],
+            'toggle_torrent_numbers': [1, [], 'Toggle torrent number in list'],
             'turtle_mode': [1, ['t'], 'Toggle turtle mode'],
             'global_upload': [0, ['u'], 'Set global upload'],
             'global_download': [0, ['d'], 'Set global download limit'],
@@ -2168,6 +2170,9 @@ class Interface:
         self.recalculate_torrents_per_page()
         self.follow_list_focus()
 
+    def action_toggle_torrent_numbers(self):
+        gconfig.torrent_numbers = not gconfig.torrent_numbers
+
     def action_move_torrent(self):
         ids = self.selected_ids()
         if ids:
@@ -2348,15 +2353,15 @@ class Interface:
             ypos += self.draw_torrentlist_item(self.visible_torrents[i],
                                                (i == self.focus - self.visible_torrents_start),
                                                gconfig.tlist_item_height == 1,
-                                               ypos)
+                                               ypos, i + self.visible_torrents_start)
 
         self.pad.refresh(0, 0, 1, 0, self.mainview_height, self.width - 1)
         self.screen.refresh()
 
-    def draw_torrentlist_item(self, torrent, focused, compact, y):
+    def draw_torrentlist_item(self, torrent, focused, compact, y, idx = -1):
         # the torrent name is also a progress bar
         selected = torrent['id'] in self.selected
-        self.draw_torrentlist_title(torrent, focused, self.torrent_title_width, y)
+        self.draw_torrentlist_title(torrent, focused, self.torrent_title_width, y, idx)
 
         if torrent['status'] == Transmission.STATUS_DOWNLOAD:
             self.draw_downloadrate(torrent, y, selected)
@@ -2414,7 +2419,13 @@ class Interface:
                         scale_time(torrent['eta']).rjust(self.rateDownload_width),
                         curses.color_pair(self.colors.ind('eta+ratio')) + curses.A_BOLD)
 
-    def draw_torrentlist_title(self, torrent, focused, width, ypos):
+    def draw_torrentlist_title(self, torrent, focused, width, ypos, idx):
+        if gconfig.torrent_numbers and idx>=0:
+            numwidth = len("%i" % (len(self.torrents) + 1))
+            width = width - numwidth - 1
+            self.pad.addstr(ypos, 0, str(int(idx + 1)).rjust(numwidth)+' ')
+        else:
+            self.pad.move(ypos, 0)
         if torrent['status'] == Transmission.STATUS_SEED:
             if torrent['seedRatioMode'] == 0:  # Use global limit if set, otherwise unlimited
                 limit = self.stats['seedRatioLimit'] if self.stats['seedRatioLimited'] else -1
@@ -2481,10 +2492,10 @@ class Interface:
                 else:
                     bar_complete += bar_incomplete[0]
                     bar_incomplete = bar_incomplete[1:]
-            self.pad.addstr(ypos, 0, bar_complete, tag_done)
-            self.pad.addstr(ypos, len_columns(bar_complete), bar_incomplete, tag)
+            self.pad.addstr(bar_complete, tag_done)
+            self.pad.addstr(bar_incomplete, tag)
         else:
-            self.pad.addstr(ypos, 0, title, tag_done)
+            self.pad.addstr(title, tag_done)
 
     def draw_torrentlist_status(self, torrent, focused, ypos):
         peers = ''
@@ -4161,6 +4172,7 @@ class Interface:
             options.append(('Title is Progress _Bar', ('no', 'yes')[gconfig.torrentname_is_progressbar]))
             options.append(('File _Viewer', "%s" % gconfig.file_viewer))
             options.append(("Show peers' _reverse DNS", ('no', 'yes')[gconfig.rdns]))
+            options.append(("Show torrent _numbers", ('no', 'yes')[gconfig.torrent_numbers]))
 
             if first_time:
                 first_time = False
@@ -4204,7 +4216,8 @@ class Interface:
                 gconfig.torrentname_is_progressbar = not gconfig.torrentname_is_progressbar
             elif key == K.r:
                 gconfig.rdns = not gconfig.rdns
-                pdebug(gconfig.rdns)
+            elif key == K.n:
+                gconfig.torrent_numbers = not gconfig.torrent_numbers
             elif key == K.v:
                 viewer = self.dialog_input_text('File Viewer\nExample: xdg-viewer %s', gconfig.file_viewer, winstack=[win])
                 if viewer:
