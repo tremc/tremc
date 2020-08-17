@@ -204,6 +204,14 @@ In all text input dialogs, edit text with Left, Right, Home, End, Backspace, Del
 
   Select option to modify by pressing the highlighted letter. Esc to close window.
 * Numeric input
+
+  Use numeric keys (and period for non integer values).
+
+  Use Left/h (Right/l) to decrease (increase) the number by 10.
+
+  Use Down/j (Up/k) to decrease (increase) the number by 100.
+
+  For floating points the small increase is 0.1 (instead of 10) and the large increase is 1.
 * Search window: Enter pattern or regular expression to search. Search happens while typing. If none found, the input line shows this by changing color. Keys:
   * Esc closes the window.
   * Tab completes typed pattern by searched items (files/torrents).
