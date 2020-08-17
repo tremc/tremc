@@ -101,7 +101,7 @@ class GConfig:
         for i in vars(cmd_args).keys():
             setattr(self, i, vars(cmd_args)[i])
 
-        if self.DEBUG == None:
+        if self.DEBUG is None:
             self.DEBUG = True
             self.debug_file = sys.stderr
         elif isinstance(self.DEBUG, str):
