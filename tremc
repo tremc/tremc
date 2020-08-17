@@ -3541,7 +3541,7 @@ class Interface:
             win, last = self.help_window(height, width, message=message, title=title)
             while True:
                 c = self.wingetch(win)
-                if c == K.SPACE:
+                if c in [K.SPACE, curses.KEY_NPAGE]:
                     win, last = self.help_window(height, width, message=message, title=title, first=last, win=win)
                 elif c >= 0:
                     return
