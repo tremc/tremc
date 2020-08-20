@@ -3740,37 +3740,37 @@ class Interface:
                 localhistory[-1] = text
             self.update_torrent_list(winstack + [win], pattern=text, search=search)
 
-    def action__search_torrentlist(self):
+    def action_search_torrentlist(self):
         self.dialog_input_text('Search torrent by title:',
                                on_enter=self.increment_search,
                                tab_complete='torrent_list',
                                maxwidth=60, align='right', search='pattern')
 
-    def action__search_torrentlist_fulltext(self):
+    def action_search_torrentlist_fulltext(self):
         self.dialog_input_text('Search torrent by title (full text):',
                                on_enter=self.increment_search,
                                tab_complete='torrent_list',
                                maxwidth=60, align='right', search='fulltext')
 
-    def action__search_torrentlist_regex(self):
+    def action_search_torrentlist_regex(self):
         self.dialog_input_text('Regex search torrent by title:',
                                on_enter=self.increment_search,
                                tab_complete='torrent_list',
                                maxwidth=60, align='right', search='regex')
 
-    def action__search_torrentlist_regex_fulltext(self):
+    def action_search_torrentlist_regex_fulltext(self):
         self.dialog_input_text('Regex search torrent by title (full text):',
                                on_enter=self.increment_search,
                                tab_complete='torrent_list',
                                maxwidth=60, align='right', search='regex_fulltext')
 
-    def action__search_filelist(self):
+    def action_search_filelist(self):
         self.dialog_input_text('Search file by title:',
                                on_enter=self.increment_file_search,
                                tab_complete='file_list',
                                maxwidth=60, align='right', search='pattern')
 
-    def action__search_filelist_regex(self):
+    def action_search_filelist_regex(self):
         self.dialog_input_text('Regex search file by title:',
                                on_enter=self.increment_file_search,
                                tab_complete='file_list',
@@ -3782,13 +3782,13 @@ class Interface:
     def increment_search(self, pattern, inc=1, search=None):
         self.search_focus += inc
 
-    def action__select_search_torrentlist(self):
+    def action_select_search_torrentlist(self):
         self.dialog_input_text('Select torrents matching pattern',
                                on_enter=self.select_pattern_torrents,
                                tab_complete='torrent_list',
                                maxwidth=60, align='right', search='pattern')
 
-    def action__select_search_torrentlist_fulltext(self):
+    def action_select_search_torrentlist_fulltext(self):
         self.server.set_torrent_details_id([t['id'] for t in self.torrents])
         self.server.wait_for_details_update()
         self.server.set_torrent_details_id(-1)
@@ -3797,25 +3797,25 @@ class Interface:
                                tab_complete='torrent_list',
                                maxwidth=60, align='right', search='fulltext')
 
-    def action__select_search_torrentlist_regex(self):
+    def action_select_search_torrentlist_regex(self):
         self.dialog_input_text('Select torrents matching regex',
                                on_enter=self.select_pattern_torrents,
                                tab_complete='torrent_list',
                                maxwidth=60, align='right', search='regex')
 
-    def action__select_search_torrentlist_regex_fulltext(self):
+    def action_select_search_torrentlist_regex_fulltext(self):
         self.dialog_input_text('Select torrents matching regex (full text)',
                                on_enter=self.select_pattern_torrents,
                                tab_complete='torrent_list',
                                maxwidth=60, align='right', search='regex_fulltext')
 
-    def action__select_search_filelist(self):
+    def action_select_search_filelist(self):
         self.dialog_input_text('Select files matching pattern',
                                on_enter=self.select_pattern_files,
                                tab_complete='file_list',
                                maxwidth=60, align='right', search='pattern')
 
-    def action__select_search_filelist_regex(self):
+    def action_select_search_filelist_regex(self):
         self.dialog_input_text('Select files matching regex',
                                on_enter=self.select_pattern_files,
                                tab_complete='file_list',
