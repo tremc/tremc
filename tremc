@@ -489,7 +489,10 @@ class TransmissionRequest:
             return {'result': 'no open request'}
         response = b''
         while True:
-            chunk = self.open_request.read()
+            try:
+                chunk = self.open_request.read()
+            except ConnectionResetError:
+                return {'result': 'connection reset by peer'}
             if not chunk:
                 break
             response += chunk
