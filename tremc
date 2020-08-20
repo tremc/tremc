@@ -4750,6 +4750,7 @@ def get_key(key):
         key = key[1] + '_'
     if len(key) == 1:
         return (ord(key),)
+    key = key.upper()
     k = getattr(K, key, ())
     try:
         return (k or getattr(curses, 'KEY_'+key),)
