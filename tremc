@@ -4735,7 +4735,7 @@ def get_key(key):
 
 def set_key(key, key_actions, interface, action, delete=None):
     for k in get_key(key):
-        key_actions[k] = getattr(interface, 'action_'+action, lambda x: x)
+        key_actions[k] = getattr(interface, 'action_'+action, lambda: x)
         if delete and k in delete:
             del delete[k]
 
@@ -4743,7 +4743,6 @@ def set_keys(actions, key_actions, accepted, interface):
     for a in actions:
         if actions[a][0] & 15 in accepted:
             for k in actions[a][1]:
-                pdebug(k, accepted, a)
                 set_key(k, key_actions, interface, a)
 
 def parse_config_key(interface, config, gconfig, common_keys, details_keys, list_keys):
