@@ -236,6 +236,7 @@ class GConfig:
             'file_priority_or_switch_details_prev': [2, ['LEFT', 'h'], 'Lower file priority or Previous tab'],
             'add_tracker_or_select_all_files': [2, ['a'], 'Select/Deselect all files or add torrent'],
             'view_file': [3, ['ENTER'], 'View file'],
+            'view_file_command': [3, ['|'], 'Run command on file'],
             'move_to_next_directory_in_filelist': [3, ['J'], 'Next diectory'],
             'move_to_previous_directory_in_filelist': [3, ['K'], 'Previous directory'],
             'show_file_sort_order_menu': [3, ['s'], 'Sort file list'],
@@ -2092,6 +2093,9 @@ class Interface:
                 file_id = self.file_index_map[self.focus_detaillist]
 
     def action_view_file(self):
+        self.view_file(gconfig.file_viewer, gconfig.file_open_in_terminal)
+
+    def view_file(self, file_viewer, file_open_in_terminal):
         if self.focus_detaillist >= 0 and self.details_category_focus == 1:
             details = self.server.get_torrent_details()
             stats = self.server.get_global_stats()
@@ -2120,10 +2124,10 @@ class Interface:
                 return
 
             viewer_cmd = []
-            for argstr in gconfig.file_viewer.split(" "):
+            for argstr in file_viewer.split(" "):
                 viewer_cmd.append(argstr.replace('%s', file_path))
             try:
-                if gconfig.file_open_in_terminal:
+                if file_open_in_terminal:
                     self.restore_screen()
                     call(viewer_cmd)
                     self.get_screen_size()
@@ -2134,6 +2138,16 @@ class Interface:
             except OSError as err:
                 self.get_screen_size()
                 self.dialog_ok("%s:\n%s" % (" ".join(viewer_cmd), err))
+
+    def action_view_file_command(self):
+        self.dialog_input_text('Command to run (%s will be replaced by file name)',
+                               on_enter=self.view_file_command,
+                               history=gconfig.histories['command'], history_max=10,
+                               fixed_history=[gconfig.file_viewer])
+
+    def view_file_command(self, pattern, inc=1, search=None):
+        self.view_file(pattern, gconfig.file_open_in_terminal if inc == 1 else not inc)
+        return True
 
     def action_tab_files(self):
         self.filelist_needs_refresh = True
@@ -4359,7 +4373,7 @@ def load_history(filename):
             history = {}
     else:
         history = {}
-    for i in ['label', 'location', 'tracker']:
+    for i in ['label', 'location', 'tracker', 'command']:
         if i not in history:
             history[i] = []
     return history
