@@ -314,8 +314,15 @@ The following sections are read:
   is the parameter of the filter if needed, it is ignored otherwise. <param.j> may be empty, but the separators must appear.
 
   A torrent satisfies a list of filters if for at least one of the <filters.i>, it satisfies each <filter.j>.
-* [CommonKeys], [DetailsKey], [ListKeys]
+* [CommonKeys], [DetailsKeys], [ListKeys]
 
+  Map keys to actions. ListKeys section is for keys pressed in torrent list display, DetailsKeys for torrent details display, and CommonKeys for both.
+
+  The format is key = action.
+
+  A list of action is available by running `tremc -l`.
+
+  Key names are: letters (case sensitive), a_ for ^a, etc. Symbols (comma, semicolon, etc.) are denoted by their name.
 
 ## Calling transmission-remote
 
