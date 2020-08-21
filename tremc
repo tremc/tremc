@@ -205,10 +205,10 @@ class GConfig:
             'move_queue_down': [513, ['J'], 'Move torrent down in queue'],
             'move_queue_up': [513, ['K'], 'Move torrent up in queue'],
             'profile_menu': [1, ['e'], 'Profile menu'],
-            'search_torrentlist': [1, ['/'], 'Find torrent'],
-            'search_torrentlist_regex': [1, ['.'], 'Find torrents matching regular expression'],
-            'search_torrentlist_fulltext': [1, [], 'Find torrent (full text)'],
-            'search_torrentlist_regex_fulltext': [1, [], 'Find torrents matching regular expression (full text)'],
+            'search_torrent': [1, ['/'], 'Find torrent'],
+            'search_torrent_regex': [1, ['.'], 'Find torrents matching regular expression'],
+            'search_torrent_fulltext': [1, [], 'Find torrent (full text)'],
+            'search_torrent_regex_fulltext': [1, [], 'Find torrents matching regular expression (full text)'],
             'set_filter': [1, ['f'], 'Set filter'],
             'add_filter': [1, ['T'], 'Add filter'],
             'edit_filters': [1, ['I'], 'Edit list of filters'],
@@ -217,10 +217,10 @@ class GConfig:
             'select_unselect_torrent': [1, ['SPACE'], 'Select/unselect torrent'],
             'select_unselect_torrents': [1, ['A'], 'Select/Deselect all torrents'],
             'invert_selection_torrents': [1, ['i'], 'Invert torrent selection'],
-            'select_search_torrentlist': [1, [','], 'Select torrents matching pattern'],
-            'select_search_torrentlist_regex': [1, ['<'], 'Select torrents matching regex'],
-            'select_search_torrentlist_fulltext': [1, [], 'Select torrents matching pattern (full text)'],
-            'select_search_torrentlist_regex_fulltext': [1, [], 'Select torrents matching regex (full text)'],
+            'select_search_torrent': [1, [','], 'Select torrents matching pattern'],
+            'select_search_torrent_regex': [1, ['<'], 'Select torrents matching regex'],
+            'select_search_torrent_fulltext': [1, [], 'Select torrents matching pattern (full text)'],
+            'select_search_torrent_regex_fulltext': [1, [], 'Select torrents matching regex (full text)'],
             'enter_details': [1, ['ENTER', 'RIGHT', 'l'], 'Enter torrent details view'],
             'add_torrent': [1, ['a'], 'Add torrent'],
             'add_torrent_paused': [1, ['^a'], 'Add torrent paused'],
@@ -237,15 +237,15 @@ class GConfig:
             'add_tracker_or_select_all_files': [2, ['a'], 'Select/Deselect all files or add torrent'],
             'view_file': [3, ['ENTER'], 'View file'],
             'view_file_command': [3, ['|'], 'Run command on file'],
-            'move_to_next_directory_in_filelist': [3, ['J'], 'Next diectory'],
-            'move_to_previous_directory_in_filelist': [3, ['K'], 'Previous directory'],
+            'move_to_next_directory': [3, ['J'], 'Next diectory'],
+            'move_to_previous_directory': [3, ['K'], 'Previous directory'],
             'show_file_sort_order_menu': [3, ['s'], 'Sort file list'],
             'visual_select_files': [3, ['V'], 'Visually select files'],
-            'select_search_filelist': [3, [','], 'Select files matching pattern'],
+            'select_search_file': [3, [','], 'Select files matching pattern'],
             'select_files_dir': [3, ['A'], 'Select/Deselect directory'],
-            'search_filelist': [3, ['/'], 'Search file list'],
-            'select_search_filelist_regex': [3, ['<'], 'Select files matching regex'],
-            'search_filelist_regex': [3, ['.'], 'Find files matching regex'],
+            'search_file': [3, ['/'], 'Search file list'],
+            'select_search_file_regex': [3, ['<'], 'Select files matching regex'],
+            'search_file_regex': [3, ['.'], 'Find files matching regex'],
             'invert_selection_files': [3, ['i'], 'Invert selection'],
             'select_file': [3, ['SPACE'], 'Select/unselect file'],
             'remove_tracker': [4, ['DC', 'r'], 'Remove tracker'],
@@ -2054,7 +2054,7 @@ class Interface:
                         file_id = self.file_index_map[focus]
                         if self.torrent_details['files'][file_id]['name'].startswith(focused_dir):
                             self.selected_files.append(focus)
-                self.action_move_to_next_directory_in_filelist()
+                self.action_move_to_next_directory()
             # (un)select all files
             elif action == 'all':
                 if self.selected_files:
@@ -2075,7 +2075,7 @@ class Interface:
                         self.selected_files.append(self.focus_detaillist)
                     self.vmode_id = self.focus_detaillist
 
-    def action_move_to_next_directory_in_filelist(self):
+    def action_move_to_next_directory(self):
         if self.selected_torrent > -1 and self.details_category_focus == 1:
             self.focus_detaillist = max(self.focus_detaillist, 0)
             file_id = self.file_index_map[self.focus_detaillist]
@@ -2085,7 +2085,7 @@ class Interface:
                 self.action_line_down()
                 file_id = self.file_index_map[self.focus_detaillist]
 
-    def action_move_to_previous_directory_in_filelist(self):
+    def action_move_to_previous_directory(self):
         if self.selected_torrent > -1 and self.details_category_focus == 1:
             self.focus_detaillist = max(self.focus_detaillist, 0)
             file_id = self.file_index_map[self.focus_detaillist]
@@ -3786,37 +3786,37 @@ class Interface:
                 localhistory[-1] = text
             self.update_torrent_list(winstack + [win], pattern=text, search=search)
 
-    def action_search_torrentlist(self):
+    def action_search_torrent(self):
         self.dialog_input_text('Search torrent by title:',
                                on_enter=self.increment_search,
                                tab_complete='torrent_list',
                                maxwidth=60, align='right', search='pattern')
 
-    def action_search_torrentlist_fulltext(self):
+    def action_search_torrent_fulltext(self):
         self.dialog_input_text('Search torrent by title (full text):',
                                on_enter=self.increment_search,
                                tab_complete='torrent_list',
                                maxwidth=60, align='right', search='fulltext')
 
-    def action_search_torrentlist_regex(self):
+    def action_search_torrent_regex(self):
         self.dialog_input_text('Regex search torrent by title:',
                                on_enter=self.increment_search,
                                tab_complete='torrent_list',
                                maxwidth=60, align='right', search='regex')
 
-    def action_search_torrentlist_regex_fulltext(self):
+    def action_search_torrent_regex_fulltext(self):
         self.dialog_input_text('Regex search torrent by title (full text):',
                                on_enter=self.increment_search,
                                tab_complete='torrent_list',
                                maxwidth=60, align='right', search='regex_fulltext')
 
-    def action_search_filelist(self):
+    def action_search_file(self):
         self.dialog_input_text('Search file by title:',
                                on_enter=self.increment_file_search,
                                tab_complete='file_list',
                                maxwidth=60, align='right', search='pattern')
 
-    def action_search_filelist_regex(self):
+    def action_search_file_regex(self):
         self.dialog_input_text('Regex search file by title:',
                                on_enter=self.increment_file_search,
                                tab_complete='file_list',
@@ -3828,13 +3828,13 @@ class Interface:
     def increment_search(self, pattern, inc=1, search=None):
         self.search_focus += inc
 
-    def action_select_search_torrentlist(self):
+    def action_select_search_torrent(self):
         self.dialog_input_text('Select torrents matching pattern',
                                on_enter=self.select_pattern_torrents,
                                tab_complete='torrent_list',
                                maxwidth=60, align='right', search='pattern')
 
-    def action_select_search_torrentlist_fulltext(self):
+    def action_select_search_torrent_fulltext(self):
         self.server.set_torrent_details_id([t['id'] for t in self.torrents])
         self.server.wait_for_details_update()
         self.server.set_torrent_details_id(-1)
@@ -3843,25 +3843,25 @@ class Interface:
                                tab_complete='torrent_list',
                                maxwidth=60, align='right', search='fulltext')
 
-    def action_select_search_torrentlist_regex(self):
+    def action_select_search_torrent_regex(self):
         self.dialog_input_text('Select torrents matching regex',
                                on_enter=self.select_pattern_torrents,
                                tab_complete='torrent_list',
                                maxwidth=60, align='right', search='regex')
 
-    def action_select_search_torrentlist_regex_fulltext(self):
+    def action_select_search_torrent_regex_fulltext(self):
         self.dialog_input_text('Select torrents matching regex (full text)',
                                on_enter=self.select_pattern_torrents,
                                tab_complete='torrent_list',
                                maxwidth=60, align='right', search='regex_fulltext')
 
-    def action_select_search_filelist(self):
+    def action_select_search_file(self):
         self.dialog_input_text('Select files matching pattern',
                                on_enter=self.select_pattern_files,
                                tab_complete='file_list',
                                maxwidth=60, align='right', search='pattern')
 
-    def action_select_search_filelist_regex(self):
+    def action_select_search_file_regex(self):
         self.dialog_input_text('Select files matching regex',
                                on_enter=self.select_pattern_files,
                                tab_complete='file_list',
