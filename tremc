@@ -84,6 +84,8 @@ class GConfig:
                             help="Path to configuration file.")
         parser.add_argument("--create-config", action="store_true", default=False,
                             help="Create configuration file CONFIGFILE with default values.")
+        parser.add_argument("-l", "--list-actions", action="store_true", dest='listactions', default=False,
+                            help="List available actions for key mapping.")
         parser.add_argument("-n", "--netrc", action="store_true", dest="use_netrc", default=False,
                             help="Get authentication info from your ~/.netrc file.")
         parser.add_argument("-X", "--skip-version-check", "--permissive", action="store_true", dest="PERMISSIVE", default=False,
@@ -258,6 +260,9 @@ class GConfig:
         }
         self.keys = [x for x in dir(K) if x[0] != '_'] + \
                     [x[4:] for x in dir(curses) if x[:4] == 'KEY_']
+        if self.listactions:
+            list_actions(self.actions)
+            sys.exit(0)
 
 
 class Keys:
@@ -4815,6 +4820,12 @@ def parse_config_key(interface, config, gconfig, common_keys, details_keys, list
     gconfig.esc_keys_w = gconfig.esc_keys + (K.w_,)
     gconfig.esc_keys_w_enter = gconfig.esc_keys_w + (K.LF, K.CR, curses.KEY_ENTER)
     gconfig.esc_keys_w_no_ascii = tuple(x for x in gconfig.esc_keys_w if x not in range(32, 127))
+
+
+def list_actions(actions):
+    modes = {0: 'both', 1: 'list', 2: 'details', 3: 'details', 4: 'details', 16: 'movement'}
+    for a, d in actions.items():
+        print(a.ljust(36), modes[d[0] & 255].ljust(8), '/'.join(d[1]).rjust(13), d[2])
 
 
 def xdg_config_home(*args):
