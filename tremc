@@ -181,6 +181,7 @@ class GConfig:
             'toggle_compact_torrentlist': [1, ['C'], 'Cycle torrent line height'],
             'toggle_torrent_numbers': [1, [], 'Toggle torrent number in list'],
             'turtle_mode': [1, ['t'], 'Toggle turtle mode'],
+            'unmapped_actions': [0, '`', 'Show actions not mapped to keys'],
             'global_upload': [0, ['u'], 'Set global upload'],
             'global_download': [0, ['d'], 'Set global download limit'],
             'torrent_upload': [0, ['U'], 'Set torrent maximum upload rate'],
@@ -1247,7 +1248,8 @@ class Interface:
 
         self.filelist_needs_refresh = False
         self.sorted_files = None
-        parse_config_key(self, config, gconfig, self.common_keybindings, self.details_keybindings, self.list_keybindings)
+        self.action_keys = {a:set(d[1]) for a, d in gconfig.actions.items()}
+        parse_config_key(self, config, gconfig, self.common_keybindings, self.details_keybindings, self.list_keybindings, self.action_keys)
 
         try:
             self.init_screen()
@@ -1530,6 +1532,22 @@ class Interface:
             if key in gconfig.esc_keys_w:
                 return -1
             self.update_torrent_list([win])
+
+    def action_unmapped_actions(self):
+        actions = []
+        letters = 'abcdefghijklmnopqrstuvwxyz'
+        i = 0
+        accepted = [0, 1] if self.selected_torrent == -1 else [0, 2, 3, 4]
+        for a in gconfig.actions:
+            if not self.action_keys[a] and gconfig.actions[a][0] & 15 in accepted:
+                actions.append((a, '_' + letters[i] + '. ' + gconfig.actions[a][2]))
+                i += 1
+        if actions == []:
+            return
+        c = self.dialog_menu('Choose action', actions, 0)
+        if isinstance(c, str):
+            f = getattr(self, 'action_' + c, lambda: x)
+            f()
 
     def choose_profile(self):
         profiles = []
@@ -4801,13 +4819,15 @@ def set_keys(actions, key_actions, accepted, interface):
             for k in actions[a][1]:
                 set_key(k, key_actions, interface, a)
 
-def parse_config_key(interface, config, gconfig, common_keys, details_keys, list_keys):
+def parse_config_key(interface, config, gconfig, common_keys, details_keys, list_keys, action_keys):
     sections = {'ListKeys': list_keys, 'CommonKeys': common_keys, 'DetailsKeys': details_keys}
     for section in sections:
         if section in config:
             for key in config[section]:
                 if config[section][key] in gconfig.actions:
                     set_key(key, sections[section], interface, config[section][key], common_keys if section != 'CommonKeys' else None)
+                    for k in action_keys.values():
+                        k.discard(key)
     if 'cancel' in config['Misc']:
         gconfig.esc_keys = tuple()
         for i in config['Misc']['Esc'].split(','):
