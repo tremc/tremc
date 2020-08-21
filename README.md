@@ -140,6 +140,7 @@ An action marked with + acts on:
 * Esc	: Unfocus file if a file is focused, otherwise return to torrents list mode
 * q, Backspace	: Return to torrents list mode
 * Enter	: View file
+* |     : Enter command to view file
 * J		: Move to next directory in file list
 * K		: Move to previous directory in file list
 * Space	: Select/unselect file and move to next file
@@ -224,6 +225,7 @@ In all text input dialogs, edit text with Left, Right, Home, End, Backspace, Del
   * Up/Down cycle through history.
   * Enter selects matching files/torrents.
   * ^r adds matching files/torrents to selection.
+  * ^t selects matching files/torrents only from currently selected.
 * Sort menu
 
   Select sorting key by pressing the highlighted letter, or moving the selection with Up/Down and pressing Enter. Pressing the capital letter or pressing Backspace after highlighting the desired option select reversed filter (satisfied if the condition is not met).
