@@ -86,6 +86,8 @@ class GConfig:
                             help="Create configuration file CONFIGFILE with default values.")
         parser.add_argument("-l", "--list-actions", action="store_true", dest='listactions', default=False,
                             help="List available actions for key mapping.")
+        parser.add_argument("-k", "--list-keys", action="store_true", dest='listkeys', default=False,
+                            help="List available key names for key mapping.")
         parser.add_argument("-n", "--netrc", action="store_true", dest="use_netrc", default=False,
                             help="Get authentication info from your ~/.netrc file.")
         parser.add_argument("-X", "--skip-version-check", "--permissive", action="store_true", dest="PERMISSIVE", default=False,
@@ -261,8 +263,14 @@ class GConfig:
         }
         self.keys = [x for x in dir(K) if x[0] != '_'] + \
                     [x[4:] for x in dir(curses) if x[:4] == 'KEY_']
+        exit = False
         if self.listactions:
             list_actions(self.actions)
+            exit = True
+        if self.listkeys:
+            list_keys()
+            exit = True
+        if exit:
             sys.exit(0)
 
 
@@ -4840,6 +4848,18 @@ def parse_config_key(interface, config, gconfig, common_keys, details_keys, list
     gconfig.esc_keys_w = gconfig.esc_keys + (K.w_,)
     gconfig.esc_keys_w_enter = gconfig.esc_keys_w + (K.LF, K.CR, curses.KEY_ENTER)
     gconfig.esc_keys_w_no_ascii = tuple(x for x in gconfig.esc_keys_w if x not in range(32, 127))
+
+
+def list_keys():
+    print('ASCII:')
+    names = {}
+    for k in dir(Keys):
+        if 'A' <= k[0] <= 'Z':
+            names[getattr(Keys, k)] = k
+    for i in range(32,127):
+        if i < K.n0 or (i > K.n9 and i < K.A) or (i > K.Z and i < K.a) or (i > K.z):
+            print(chr(i), '  ', names[i])
+    print('\nCurses:\n' + ', '.join(x[4:] for x in dir(curses) if x[:4] == 'KEY_'))
 
 
 def list_actions(actions):
