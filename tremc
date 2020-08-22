@@ -4856,7 +4856,7 @@ def list_keys():
     for k in dir(Keys):
         if 'A' <= k[0] <= 'Z':
             names[getattr(Keys, k)] = k
-    for i in range(32,127):
+    for i in range(32, 127):
         if i < K.n0 or (i > K.n9 and i < K.A) or (i > K.Z and i < K.a) or (i > K.z):
             print(chr(i), '  ', names[i])
     print('\nCurses:\n' + ', '.join(x[4:] for x in dir(curses) if x[:4] == 'KEY_'))
