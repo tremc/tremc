@@ -168,6 +168,7 @@ class GConfig:
         self.torrentname_is_progressbar = config.getboolean('Misc', 'torrentname_is_progressbar')
         self.file_viewer = config.get('Misc', 'file_viewer')
         self.file_open_in_terminal = config.getboolean('Misc', 'file_open_in_terminal')
+        self.view_selected = config.getboolean('Misc', 'view_selected', fallback=False)
         self.torrent_numbers = config.getboolean('Misc', 'torrent_numbers', fallback=False)
         self.profiles = parse_config_profiles(config, [x[0] for x in self.sort_options])
 
@@ -2130,36 +2131,48 @@ class Interface:
         self.view_file(gconfig.file_viewer, gconfig.file_open_in_terminal)
 
     def view_file(self, file_viewer, file_open_in_terminal):
-        if self.focus_detaillist >= 0 and self.details_category_focus == 1:
+        if self.details_category_focus == 1:
             details = self.server.get_torrent_details()
             stats = self.server.get_global_stats()
 
-            file_server_index = self.file_index_map[self.focus_detaillist]
-            file_name = details['files'][file_server_index]['name']
+            if gconfig.view_selected and self.selected_files:
+                files = [self.file_index_map[f] for f in self.selected_files]
+            elif self.focus_detaillist >= 0:
+                files = [self.file_index_map[self.focus_detaillist]]
+            else:
+                return
+            file_names = []
+            for file_server_index in files:
+                file_name = details['files'][file_server_index]['name']
 
-            download_dir = details['downloadDir']
-            incomplete_dir = stats['incomplete-dir'] + '/'
+                download_dir = details['downloadDir']
+                incomplete_dir = stats['incomplete-dir'] + '/'
 
-            file_path = None
-            possible_file_locations = [
-                download_dir + file_name,
-                download_dir + file_name + '.part',
-                incomplete_dir + file_name,
-                incomplete_dir + file_name + '.part'
-            ]
+                file_path = None
+                possible_file_locations = [
+                    download_dir + file_name,
+                    download_dir + file_name + '.part',
+                    incomplete_dir + file_name,
+                    incomplete_dir + file_name + '.part'
+                ]
 
-            for f in possible_file_locations:
-                if os.path.isfile(f):
-                    file_path = f
-                    break
+                for f in possible_file_locations:
+                    if os.path.isfile(f):
+                        file_path = f
+                        break
+                if file_path:
+                    file_names.append(file_path)
 
-            if file_path is None:
+            if not file_names:
                 self.dialog_ok("Could not find file:\n%s" % (file_name))
                 return
 
             viewer_cmd = []
             for argstr in file_viewer.split(" "):
-                viewer_cmd.append(argstr.replace('%s', file_path))
+                if argstr == '%s':
+                    viewer_cmd.extend(file_names)
+                else:
+                    viewer_cmd.append(argstr)
             try:
                 if file_open_in_terminal:
                     self.restore_screen()
@@ -4251,6 +4264,7 @@ class Interface:
             options.append(('Terminal size', "%d x %d " % (self.width, self.height)))
             options.append(('Title is Progress _Bar', ('no', 'yes')[gconfig.torrentname_is_progressbar]))
             options.append(('File _Viewer', "%s" % gconfig.file_viewer))
+            options.append(("View _files", ('focused', 'selected')[gconfig.view_selected]))
             options.append(("Show peers' _reverse DNS", ('no', 'yes')[gconfig.rdns]))
             options.append(("Show torrent _numbers", ('no', 'yes')[gconfig.torrent_numbers]))
 
@@ -4294,6 +4308,8 @@ class Interface:
                 return
             if key == K.b:
                 gconfig.torrentname_is_progressbar = not gconfig.torrentname_is_progressbar
+            elif key == K.f:
+                gconfig.view_selected = not gconfig.view_selected
             elif key == K.r:
                 gconfig.rdns = not gconfig.rdns
             elif key == K.n:
