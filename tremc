@@ -317,7 +317,7 @@ class Keys:
     def __init__(self):
         for i in range(1, 27):
             setattr(self, chr(64 + i), 64 + i)
-            setattr(self, chr(96 + i) + '_', i)
+            setattr(self, chr(64 + i) + '_', i)
             setattr(self, chr(96 + i), 96 + i)
         for i in range(0, 10):
             setattr(self, 'n' + str(i), ord('0') + i)
@@ -3581,7 +3581,7 @@ class Interface:
 
     def wingetch(self, win):
         c = win.getch()
-        if c == K.w_:
+        if c == K.W_:
             self.exit_now = True
         return c
 
@@ -3676,7 +3676,7 @@ class Interface:
 
             c = self.wingetch(win)
             if hard:
-                if c == K.y_:
+                if c == K.Y_:
                     return True
                 if c in (K.n, K.LF, K.CR, curses.KEY_ENTER, K.SPACE):
                     return False
@@ -3741,37 +3741,37 @@ class Interface:
             win.move(height - 2, displayindex + 2)
             c = self.wingetch(win)
             if history is not None:
-                if c in (curses.KEY_UP, K.p_):
+                if c in (curses.KEY_UP, K.P_):
                     history_pos = (history_pos - 1) % len(localhistory)
                     text = localhistory[history_pos]
                     index = len(text)
-                if c in (curses.KEY_DOWN, K.n_):
+                if c in (curses.KEY_DOWN, K.N_):
                     history_pos = (history_pos + 1) % len(localhistory)
                     text = localhistory[history_pos]
                     index = len(text)
             if c in gconfig.esc_keys_w_no_ascii:
                 hide_cursor()
                 return ''
-            if index < len(text) and (c in (curses.KEY_RIGHT, K.f_)):
+            if index < len(text) and (c in (curses.KEY_RIGHT, K.F_)):
                 index += 1
-            elif index > 0 and (c in (curses.KEY_LEFT, K.b_)):
+            elif index > 0 and (c in (curses.KEY_LEFT, K.B_)):
                 index -= 1
             elif (c in (curses.KEY_BACKSPACE, K.DEL)) and index > 0:
                 text = text[:index - 1] + (index < len(text) and text[index:] or '')
                 index -= 1
-            elif index < len(text) and (c in (curses.KEY_DC, K.d_)):
+            elif index < len(text) and (c in (curses.KEY_DC, K.D_)):
                 text = text[:index] + text[index + 1:]
-            elif index < len(text) and c == K.k_:
+            elif index < len(text) and c == K.K_:
                 text = text[:index]
-            elif c == K.u_:
+            elif c == K.U_:
                 # Delete from cursor until beginning of line
                 text = text[index:]
                 index = 0
-            elif c in (curses.KEY_HOME, K.a_):
+            elif c in (curses.KEY_HOME, K.A_):
                 index = 0
-            elif c in (curses.KEY_END, K.e_):
+            elif c in (curses.KEY_END, K.E_):
                 index = len(text)
-            elif c in (K.LF, K.CR, curses.KEY_ENTER, K.r_, K.t_):
+            elif c in (K.LF, K.CR, curses.KEY_ENTER, K.R_, K.T_):
                 if history is not None and text != '':
                     try:
                         p = history.index(text)
@@ -3784,7 +3784,7 @@ class Interface:
                 if on_enter:
                     if c in (K.LF, K.CR, curses.KEY_ENTER):
                         inc = 1
-                    elif c == K.r_:
+                    elif c == K.R_:
                         inc = -1
                     else:
                         inc = 0
@@ -4070,11 +4070,11 @@ class Interface:
                 return (options[focus - 1][0], False, win) if extended else options[focus - 1][0]
             if c == curses.KEY_BACKSPACE and extended:
                 return (options[focus - 1][0], True, win)
-            if c in (curses.KEY_DOWN, K.j, K.n_):
+            if c in (curses.KEY_DOWN, K.j, K.N_):
                 focus += 1
                 if focus > len(options):
                     focus = 1
-            elif c in (curses.KEY_UP, K.k, K.p_):
+            elif c in (curses.KEY_UP, K.k, K.P_):
                 focus -= 1
                 if focus < 1:
                     focus = len(options)
@@ -4861,7 +4861,7 @@ def parse_config_key(interface, config, gconfig, common_keys, details_keys, list
     else:
         gconfig.esc_keys = (K.ESC, K.q, curses.KEY_BREAK)
     gconfig.esc_keys_no_ascii = tuple(x for x in gconfig.esc_keys if x not in range(32, 127))
-    gconfig.esc_keys_w = gconfig.esc_keys + (K.w_,)
+    gconfig.esc_keys_w = gconfig.esc_keys + (K.W_,)
     gconfig.esc_keys_w_enter = gconfig.esc_keys_w + (K.LF, K.CR, curses.KEY_ENTER)
     gconfig.esc_keys_w_no_ascii = tuple(x for x in gconfig.esc_keys_w if x not in range(32, 127))
 
