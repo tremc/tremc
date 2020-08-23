@@ -47,6 +47,7 @@ except ImportError:
     pass
 
 locale.setlocale(locale.LC_ALL, '')
+PROG = 'tremc'
 
 # Global constants and constant configuration
 class GConfig:
@@ -70,7 +71,7 @@ class GConfig:
     FILTERS_WITH_PARAM = ['tracker', 'regex', 'location', 'label']
 
     def __init__(self):
-        default_config_path = xdg_config_home('tremc/settings.cfg')
+        default_config_path = xdg_config_home(PROG + '/settings.cfg')
         parser = argparse.ArgumentParser(description="%(prog)s " + self.VERSION,
                                          usage="(prog)s [options] [torrent] -- transmission-remote-args ...",
                                          epilog="Positional arguments are passed to transmission-remote. Use -- to separate from %(prog)s arguments")
@@ -115,17 +116,17 @@ class GConfig:
                 pass
 
         if not self.create_config and not os.path.isfile(self.configfile) and '/' not in self.configfile:
-            if os.path.isfile(xdg_config_home('tremc/' + self.configfile)):
-                self.configfile = xdg_config_home('tremc/' + self.configfile)
-            elif os.path.isfile(xdg_config_home('tremc/' + self.configfile + '.cfg')):
-                self.configfile = xdg_config_home('tremc/' + self.configfile + '.cfg')
+            if os.path.isfile(xdg_config_home(PROG + '/' + self.configfile)):
+                self.configfile = xdg_config_home(PROG + '/' + self.configfile)
+            elif os.path.isfile(xdg_config_home(PROG + '/' + self.configfile + '.cfg')):
+                self.configfile = xdg_config_home(PROG + '/' + self.configfile + '.cfg')
         self.configfile = self.configfile
         config.read(self.configfile)
         self.history_file = ''
-        if 'tremc' in os.path.dirname(self.configfile):
+        if PROG in os.path.dirname(self.configfile):
             self.history_file = os.path.join(os.path.dirname(self.configfile), 'history.json')
-        elif 'tremc' in os.path.basename(self.configfile):
-            self.history_file = self.configfile.rsplit('tremc', 1)[0] + 'tremc-history.json'
+        elif PROG in os.path.basename(self.configfile):
+            self.history_file = self.configfile.rsplit(PROG, 1)[0] + PROG + '-history.json'
 
         self.rdns = self.rdns ^ config.getboolean('Misc', 'rdns', fallback=False)
         if self.create_config:
@@ -179,7 +180,7 @@ class GConfig:
             'leave_details': [2, ['BACKSPACE', 'q'], 'Back to torrent list'],
             'go_back_or_unfocus': [2, ['ESC', 'BREAK'], 'Unfocus or back to torrent list'],
             'daemon_quit': [0, ['X'], 'Ask daemon to quit'],
-            'options_dialog': [0, ['O'], 'tremc options menu'],
+            'options_dialog': [0, ['O'], PROG + 'options menu'],
             'server_options_dialog': [1, ['o'], 'Server options menu'],
             'toggle_compact_torrentlist': [1, ['C'], 'Cycle torrent line height'],
             'toggle_torrent_numbers': [1, [], 'Toggle torrent number in list'],
