@@ -4029,7 +4029,7 @@ class Interface:
                         number = 0
                     elif number < 0:  # value like -0.6 isn't useful
                         number = -1
-                    value = str(number)
+                    value = "%.2g" % number
                 except ValueError:
                     pass
             self.update_torrent_list(winstack + [win])
