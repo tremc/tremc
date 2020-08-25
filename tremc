@@ -1556,7 +1556,7 @@ class Interface:
             return
         c = self.dialog_menu('Choose action', actions, 0)
         if isinstance(c, str):
-            f = getattr(self, 'action_' + c, lambda: x)
+            f = getattr(self, 'action_' + c, lambda: None)
             f()
 
     def choose_profile(self):
@@ -4834,7 +4834,7 @@ def get_key(key):
 
 def set_key(key, key_actions, interface, action, delete=None):
     for k in get_key(key):
-        key_actions[k] = getattr(interface, 'action_'+action, lambda: x)
+        key_actions[k] = getattr(interface, 'action_'+action, lambda: None)
         if delete and k in delete:
             del delete[k]
 
