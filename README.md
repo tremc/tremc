@@ -65,6 +65,12 @@ searched for CONFIGFILE or CONFIGFILE.cfg.
 
   Default: ~/.config/tremc/settings.cfg
 
+* **`-l, --list-actions`**
+List available actions for key mapping.
+
+* **`-k, --list-keys`**
+List key names for key mapping.
+
 * **`-n --netrc`**
 Get authentication info from ~/.netrc.
 
@@ -113,7 +119,7 @@ In list view and the files tab, a set of items may also be selected.
 * M 	: Copy magnet link to clipboard (if the pyperclip module is available)
 * B		: Set labels (labels require transmission 3.0 or later) +
 * b		: Add label +
-* ^l	: Remove label
+* ^l	: Remove label +
 * F		: Rename focused file (or torrent, if no file is focused)
 * N		: Start torrent now +
 * p		: Pause/unpause torrent +
@@ -130,6 +136,7 @@ In list view and the files tab, a set of items may also be selected.
 * L		: Set seed ratio of torrent +
 * m		: Move torrent to another directory +
 * R, Shift+Del	: Remove torrent and delete its data
+* `     : Open menu of actions with not keyboard bindings
 
 An action marked with + acts on:
 * Viewed torrent in details mode
