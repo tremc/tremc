@@ -2399,7 +2399,7 @@ class Interface:
         self.server.set_torrent_details_id(-1)
         return {t['id']: ', '.join(f['name'] for f in t['files']) for t in self.server.get_torrent_details()}
 
-    def draw_torrent_list(self, search_keyword='', search=''):
+    def draw_torrent_list(self, search_keyword='', search='', refresh=True):
         self.torrents = self.server.get_torrent_list(gconfig.sort_orders)
         self.filter_torrent_list()
 
@@ -2439,9 +2439,9 @@ class Interface:
                                                (i == self.focus - self.visible_torrents_start),
                                                gconfig.tlist_item_height == 1,
                                                ypos, i + self.visible_torrents_start)
-
-        self.pad.refresh(0, 0, 1, 0, self.mainview_height, self.width - 1)
-        self.screen.refresh()
+        if refresh:
+            self.pad.refresh(0, 0, 1, 0, self.mainview_height, self.width - 1)
+            self.screen.refresh()
 
     def draw_torrentlist_item(self, torrent, focused, compact, y, idx=-1):
         # the torrent name is also a progress bar
@@ -2642,7 +2642,7 @@ class Interface:
         line += ' ' * int(self.torrent_title_width - len(line) - len(peers)) + peers
         self.pad.addstr(ypos + 1, 0, line, tags)
 
-    def draw_details(self, search_keyword=None, search=''):
+    def draw_details(self, search_keyword=None, search='', refresh=True):
         self.torrent_details = self.server.get_torrent_details()
         self.manage_layout()
 
@@ -2682,8 +2682,9 @@ class Interface:
         elif self.details_category_focus == 4:
             self.draw_pieces_map(5)
 
-        self.pad.refresh(0, 0, 1, 0, self.height - 2, self.width)
-        self.screen.refresh()
+        if refresh:
+            self.pad.refresh(0, 0, 1, 0, self.height - 2, self.width)
+            self.screen.refresh()
 
     def draw_details_overview(self, ypos):
         t = self.torrent_details
@@ -4404,13 +4405,15 @@ class Interface:
         self.server.update(1)
         self.draw_stats()
         if self.selected_torrent == -1:
-            self.draw_torrent_list(search_keyword=pattern, search=search)
+            self.draw_torrent_list(search_keyword=pattern, search=search, refresh=False)
         else:
-            self.draw_details(search_keyword=pattern, search=search)
+            self.draw_details(search_keyword=pattern, search=search, refresh=False)
         for win in winstack[:-1]:
             win.redrawwin()
             win.refresh()
         winstack[-1].redrawwin()
+        self.pad.noutrefresh(0, 0, 1, 0, self.mainview_height, self.width - 1)
+        self.screen.noutrefresh()
 
 # End of class Interface
 
