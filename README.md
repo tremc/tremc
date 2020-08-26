@@ -241,6 +241,7 @@ In all text input dialogs, edit text with Left, Right, Home, End, Backspace, Del
 
   Pressing Esc leaves sort order unchanged.
 * Filter menu
+
   Select filter by pressing the highlighted letter, or moving the selection with Up/Down and pressing Enter. Pressing the capital letter or pressing Backspace after highlighting the desired option select reversed filter (satisfied if the condition is not met).
 
   Some filters open further window to enter or select the filter parameter.
@@ -308,7 +309,7 @@ The following sections are read:
   are exchanged.
 * [Profiles]
 
-  The key is profile<name>. The value is `<filters>#=<sort>`
+  The key is `profile\<name\>`. The value is `<filters>#=<sort>`
 
   <sort> is the name of the torrent sort order, preceded by : for reversed
   order.
