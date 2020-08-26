@@ -180,7 +180,7 @@ class GConfig:
             'leave_details': [2, ['BACKSPACE', 'q'], 'Back to torrent list'],
             'go_back_or_unfocus': [2, ['ESC', 'BREAK'], 'Unfocus or back to torrent list'],
             'daemon_quit': [0, ['X'], 'Ask daemon to quit'],
-            'options_dialog': [0, ['O'], PROG + 'options menu'],
+            'options_dialog': [0, ['O'], PROG + ' options menu'],
             'server_options_dialog': [1, ['o'], 'Server options menu'],
             'toggle_compact_torrentlist': [1, ['C'], 'Cycle torrent line height'],
             'toggle_torrent_numbers': [1, [], 'Toggle torrent number in list'],
