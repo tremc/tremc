@@ -4408,12 +4408,12 @@ class Interface:
             self.draw_torrent_list(search_keyword=pattern, search=search, refresh=False)
         else:
             self.draw_details(search_keyword=pattern, search=search, refresh=False)
+        self.pad.noutrefresh(0, 0, 1, 0, self.mainview_height, self.width - 1)
+        self.screen.noutrefresh()
         for win in winstack[:-1]:
             win.redrawwin()
             win.refresh()
         winstack[-1].redrawwin()
-        self.pad.noutrefresh(0, 0, 1, 0, self.mainview_height, self.width - 1)
-        self.screen.noutrefresh()
 
 # End of class Interface
 
