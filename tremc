@@ -4855,7 +4855,7 @@ def parse_config_key(interface, config, gconfig, common_keys, details_keys, list
                         k.discard(key)
     if 'cancel' in config['Misc']:
         gconfig.esc_keys = tuple()
-        for i in config['Misc']['Esc'].split(','):
+        for i in config['Misc']['cancel'].split(','):
             k = get_key(i)
             if k:
                 gconfig.esc_keys += k
