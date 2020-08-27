@@ -127,6 +127,7 @@ class GConfig:
             self.history_file = os.path.join(os.path.dirname(self.configfile), 'history.json')
         elif PROG in os.path.basename(self.configfile):
             self.history_file = self.configfile.rsplit(PROG, 1)[0] + PROG + '-history.json'
+        self.geoip2_database = config.get('Misc', 'geoip2_database', fallback='')
 
         self.rdns = self.rdns ^ config.getboolean('Misc', 'rdns', fallback=False)
 
@@ -4931,24 +4932,21 @@ if __name__ == '__main__':
     except ImportError:
         pass
     if gconfig.geoip2:
-        geoip2_database = config.get('Misc', 'geoip2_database', fallback='')
-        if not os.path.isfile(geoip2_database):
+        if not os.path.isfile(gconfig.geoip2_database):
             try:
                 for l in open('/etc/GeoIP.conf', "r").read():
                     s = l.split()
                     if len(s) == 2 and s[0] == 'DatabaseDirectory':
-                        geoip2_database = s[1] + '/GeoLite2-Country.mmdb'
+                        gconfig.geoip2_database = s[1] + '/GeoLite2-Country.mmdb'
             except Exception:
                 pass
-        if not os.path.isfile(geoip2_database):
-            geoip2_database = "/usr/share/GeoIP/GeoLite2-Country.mmdb"
-        if not os.path.isfile(geoip2_database):
-            geoip2_database = "/var/lib/GeoIP/GeoLite2-Country.mmdb"
-        if not os.path.isfile(geoip2_database):
+        if not os.path.isfile(gconfig.geoip2_database):
+            gconfig.geoip2_database = "/usr/share/GeoIP/GeoLite2-Country.mmdb"
+        if not os.path.isfile(gconfig.geoip2_database):
+            gconfig.geoip2_database = "/var/lib/GeoIP/GeoLite2-Country.mmdb"
+        if not os.path.isfile(gconfig.geoip2_database):
             gconfig.geoip2 = False
-    if gconfig.geoip2:
-        gconfig.geoip2_database = geoip2_database
-    else:
+    if not gconfig.geoip2:
         try:
             import GeoIP
             gconfig.geoip1 = True
