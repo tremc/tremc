@@ -4955,10 +4955,9 @@ if __name__ == '__main__':
     gconfig.geoip = gconfig.geoip1 or gconfig.geoip2
 
     norm = Normalizer()
-    server = Transmission(gconfig.url, gconfig.username, gconfig.password)
 
     try:
-        Interface(server)
+        Interface(Transmission(gconfig.url, gconfig.username, gconfig.password))
     except Exception:
         import traceback
         traceback.print_exc(file=sys.stderr)
