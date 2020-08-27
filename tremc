@@ -141,7 +141,7 @@ class GConfig:
             self.username = un_pw.split(":")[0]
             self.password = ":".join(un_pw.split(":")[1:])
         if self.use_netrc:
-            self.username, self.password = read_netrc(hostname=config.get('Connection', 'host'))
+            self.username, self.password = read_netrc(hostname=self.host)
         if self.connection:
             try:
                 if self.connection.count('@') == 1:
