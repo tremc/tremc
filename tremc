@@ -2222,6 +2222,7 @@ class Interface:
 
     def action_view_file_command(self):
         self.dialog_input_text('Command to run (%s will be replaced by file name)',
+                               tab_complete='executable',
                                on_enter=self.view_file_command,
                                history=gconfig.histories['command'], history_max=10,
                                fixed_history=[gconfig.file_viewer])
@@ -3740,8 +3741,10 @@ class Interface:
                 'files': complete with any files/directories
                 'dirs': complete only with directories
                 'torrent_list': complete with names from the torrent list
+                'executable': complete with executable name
                 any false value: do not complete
         """
+        path_executables=set()
         self.highlight_dialog = False
         if history is not None:
             localhistory = fixed_history + history + [text]
@@ -3851,6 +3854,13 @@ class Interface:
                 elif tab_complete == 'file_list':
                     possible_choices = [f for f in [os.path.basename(g['name']) for g in self.sorted_files]
                                         if f.startswith(text)]
+                elif tab_complete == 'executable':
+                    if not path_executables:
+                        paths = os.environ["PATH"].split(":")
+                        for p in paths:
+                            if os.path.isdir(p):
+                                path_executables.update(os.listdir(p))
+                    possible_choices = list(p for p in path_executables if p.startswith(text))
                 if possible_choices:
                     text = os.path.commonprefix(possible_choices)
                     if tab_complete in ('files', 'dirs'):
@@ -4350,7 +4360,8 @@ class Interface:
             elif key == K.n:
                 gconfig.torrent_numbers = not gconfig.torrent_numbers
             elif key == K.v:
-                viewer = self.dialog_input_text('File Viewer\nExample: xdg-viewer %s', gconfig.file_viewer, winstack=[win])
+                viewer = self.dialog_input_text('File Viewer\nExample: xdg-viewer %s', gconfig.file_viewer, 
+                                                tab_complete='executable', winstack=[win])
                 if viewer:
                     config.set('Misc', 'file_viewer', viewer.replace('%s', '%%s'))
                     gconfig.file_viewer = viewer
