@@ -1,9 +1,9 @@
-This is the python3 fork of https://github.com/fagga/transmission-remote-cli
-
 ## About
 
 A console client for the BitTorrent client
 [Transmission](http://www.transmissionbt.com/ "Transmission Homepage").
+
+`tremc` is the python3 fork of [transmission-remote-cli](https://github.com/fagga/transmission-remote-cli).
 
 ## Requirements
 
@@ -33,8 +33,8 @@ You can write this (and other) stuff into a configuration file:
 
 `$ tremc -c johndoe:secretbirthday@homeserver:1234 --create-config`
 
-No configuration file is created automatically. You must create it.
-`$ tremc --create-config
+No configuration file is created automatically. You must create it with the
+`--create-config` option.
 
 If you don't like the default configuration file path
 ~/.config/tremc/settings.cfg, change it:
