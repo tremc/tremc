@@ -57,7 +57,7 @@ Use SSL to connect to the server.
 Create configuration file with default values.
 
   *NOTE:* A config file won't be created unless you provide this option at
-least once. After that, it is rewritten whenever tremc exits.
+least once.
 * **`-f CONFIGFILE --config=CONFIGFILE`**
 Set path to configuration file. If not creating a config file, and CONFIGFILE
 does not exist (and contains no slashes), the config directory is also
