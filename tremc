@@ -3493,14 +3493,14 @@ class Interface:
 
         self.screen.move(self.height - 1, self.width - rates_width - limits_width)
         self.screen.addch(curses.ACS_DARROW, curses.A_REVERSE)
-        self.screen.addstr(scale_bytes(self.stats['downloadSpeed']).rjust(self.rateDownload_width),
+        self.screen.addstr(scale_bytes(self.stats['downloadSpeed']).rjust(self.rateDownload_width)[:self.rateDownload_width],
                            curses.color_pair(self.colors.ind('download_rate'))
                            + curses.A_BOLD)
         self.screen.addstr(limits['dn_limit'], curses.A_REVERSE)
         self.screen.addch(' ', curses.A_REVERSE)
         self.screen.addch(curses.ACS_UARROW, curses.A_REVERSE)
         try:
-            self.screen.addstr(scale_bytes(self.stats['uploadSpeed']).rjust(self.rateUpload_width),
+            self.screen.addstr(scale_bytes(self.stats['uploadSpeed']).rjust(self.rateUpload_width)[:self.rateUpload_width],
                                curses.color_pair(self.colors.ind('upload_rate'))
                                + curses.A_BOLD)
             self.screen.addstr(limits['up_limit'], curses.A_REVERSE)
