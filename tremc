@@ -1252,6 +1252,8 @@ class Interface:
         self.scrollpos = 0   # start of torrentlist
         self.torrents_per_page = 0  # will be set by manage_layout()
         self.rateDownload_width = self.rateUpload_width = len(scale_bytes())
+        self.rateDownload_width = self.get_rateDownload_width(self.torrents)
+        self.rateUpload_width = self.get_rateUpload_width(self.torrents)
 
         self.details_category_focus = 0  # overview/files/peers/tracker in details
         self.focus_detaillist = -1  # same as focus but for details
@@ -1393,8 +1395,8 @@ class Interface:
         return new_width
 
     def get_rateUpload_width(self, torrents):
-        new_width = max([len(scale_bytes(x['rateUpload'])) for x in torrents])
-        new_width = max(max([len(num2str(x['uploadRatio'], '%.02f')) for x in torrents]), new_width)
+        new_width = max([len(scale_bytes(x['rateUpload'])) for x in torrents] + [0])
+        new_width = max(max([len(num2str(x['uploadRatio'], '%.02f')) for x in torrents] + [0]), new_width)
         new_width = max(len(scale_bytes(self.stats['uploadSpeed'])), new_width)
         new_width = max(self.rateUpload_width, new_width)  # don't shrink
         return new_width
