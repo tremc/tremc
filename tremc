@@ -3499,10 +3499,10 @@ class Interface:
         self.screen.addstr(limits['dn_limit'], curses.A_REVERSE)
         self.screen.addch(' ', curses.A_REVERSE)
         self.screen.addch(curses.ACS_UARROW, curses.A_REVERSE)
-        self.screen.addstr(scale_bytes(self.stats['uploadSpeed']).rjust(self.rateUpload_width),
-                           curses.color_pair(self.colors.ind('upload_rate'))
-                           + curses.A_BOLD)
         try:
+            self.screen.addstr(scale_bytes(self.stats['uploadSpeed']).rjust(self.rateUpload_width),
+                               curses.color_pair(self.colors.ind('upload_rate'))
+                               + curses.A_BOLD)
             self.screen.addstr(limits['up_limit'], curses.A_REVERSE)
         except curses.error:
             # curses can print to the last char (bottom right corner), but it raises an exception.
