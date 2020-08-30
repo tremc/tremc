@@ -397,7 +397,6 @@ def pdebug(*argv):
 config = configparser.ConfigParser()
 config.optionxform = lambda option: option
 config.add_section('Connection')
-config.set('Connection', 'ssl', 'False')
 config.add_section('Sorting')
 config.set('Sorting', 'order', 'name')
 config.add_section('Filtering')
