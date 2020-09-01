@@ -2245,6 +2245,7 @@ class Interface:
             except OSError as err:
                 self.get_screen_size()
                 self.dialog_ok("%s:\n%s" % (" ".join(viewer_cmd), err))
+            hide_cursor()
 
     def action_view_file_command(self):
         self.dialog_input_text('Command to run (%s will be replaced by file name)',
