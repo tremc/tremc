@@ -12,7 +12,7 @@ Python 3.2
 ### Optional Modules
 
 - python-GeoIP or python-GeoIP2: Guess which country peers come from.
-- [python-pyperclip](https://pypi.org/project/pyperclip/): Copy magnet links to the system clipboard. You will also need either xclip on linux or pbcopy on OS X for this to work.
+- [python-pyperclip](https://pypi.org/project/pyperclip/): Copy magnet links to the system clipboard. You will also need either xclip on Linux or pbcopy on OS X for this to work.
 
 ## Usage
 
@@ -59,7 +59,7 @@ Create configuration file with default values.
   *NOTE:* A config file won't be created unless you provide this option at
 least once. After that, it is rewritten whenever tremc exits.
 * **`-f CONFIGFILE --config=CONFIGFILE`**
-Set path to configuration file. if not creating a config file, and CONFIGFILE
+Set path to configuration file. If not creating a config file, and CONFIGFILE
 does not exist (and contains no slashes), the config directory is also
 searched for CONFIGFILE or CONFIGFILE.cfg.
 
@@ -221,7 +221,7 @@ In all text input dialogs, edit text with Left, Right, Home, End, Backspace, Del
 
   Use Down/j (Up/k) to decrease (increase) the number by 100.
 
-  For floating points the small increase is 0.1 (instead of 10) and the large increase is 1.
+  For setting seed ratios, the small step is 0.1 (instead of 10) and the large step is 1 (instead of 100).
 * Search window: Enter pattern or regular expression to search. Search happens while typing. If none found, the input line shows this by changing color. Keys:
   * Esc closes the window.
   * Tab completes typed pattern by searched items (files/torrents).
@@ -343,7 +343,7 @@ The following sections are read:
 
   A list of action is available by running `tremc -l`.
 
-  Key names are: letters (case sensitive), a_ for ^a, etc. Symbols (comma, semicolon, etc.) are denoted by their name.
+  Key names are: letters (case sensitive), a_ for ^a, etc. Symbols (comma, semicolon, etc.) are denoted by their name. See list by running `tremc -k`.
 
 ## Calling transmission-remote
 
@@ -365,7 +365,7 @@ Some examples:
 ### Add torrents
 
 If you provide only one command line argument and it doesn't start with '-',
-it's treated like a torrent file/URL and submitted to the daemon via
+it is treated as a torrent file/URL and submitted to the daemon via
 transmission-remote. This is useful because you can instruct Firefox to open
 torrent files with tremc.
 
