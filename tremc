@@ -2991,6 +2991,11 @@ class Interface:
         # Build new mapping between sorted local files and transmission-daemon's unsorted files.
         if self.filelist_needs_refresh:
             self.filelist_needs_refresh = False
+            if self.focus_detaillist > -1:
+                # focus_detaillist is the file index in visible list, in order
+                # to facilitate movement and display. So save name in order to
+                # find the new position of the file later.
+                focused_filename = self.torrent_details['files'][self.file_index_map[self.focus_detaillist]]['name']
             self.file_index_map = {}
             if gconfig.file_sort_key in ['name', 'length', 'bytesCompleted']:
                 self.sorted_files = sorted(self.torrent_details['files'], key=lambda x: x[gconfig.file_sort_key], reverse=gconfig.file_sort_reverse)
@@ -3003,6 +3008,11 @@ class Interface:
                     self.sorted_files = self.torrent_details['files'][:]
             for index, file in enumerate(self.sorted_files):
                 self.file_index_map[index] = self.torrent_details['files'].index(file)
+            # Find the focused file in new sorted list. First check if it is in
+            # the same index, as that is the most common case.
+            if self.focus_detaillist > -1 and focused_filename != self.torrent_details['files'][self.file_index_map[self.focus_detaillist]]['name']:
+                self.focus_detaillist = next(i for i in range(len(self.sorted_files)) if
+                                             self.torrent_details['files'][self.file_index_map[i]]['name'] == focused_filename)
 
             self.filelist_cache = []
             self.filelist_cache_pos = []
