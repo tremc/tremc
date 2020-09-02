@@ -2464,6 +2464,7 @@ class Interface:
                 curses.beep()
         else:
             self.search_focus = 0
+            self.highlight_dialog = False
 
         self.follow_list_focus()
         self.manage_layout()
@@ -2926,6 +2927,7 @@ class Interface:
                 curses.beep()
         else:
             self.search_focus = 0
+            self.highlight_dialog = False
         self.draw_filelist(5, needclrtoeol=True)
         self.pad.refresh(0, 0, 1, 0, self.height - 2, self.width)
         self.screen.refresh()
