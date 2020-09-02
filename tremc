@@ -3871,6 +3871,7 @@ class Interface:
                     else:
                         inc = 0
                     if on_enter(text, inc=inc, search=search):
+                        hide_cursor()
                         return None
                 else:
                     hide_cursor()
