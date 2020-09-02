@@ -213,6 +213,11 @@ class GConfig:
         self.torrent_numbers = config.getboolean('Misc', 'torrent_numbers', fallback=False)
         self.profiles = parse_config_profiles(config, [x[0] for x in self.sort_options])
 
+        try:
+            self.selected_file_attr = curses.A_BOLD + curses.A_ITALIC
+        except AttributeError:
+            self.selected_file_attr = curses.A_BOLD
+
         self.actions = {
             'list_key_bindings': [0, ['F1', '?'], 'List key bindings'],
             'quit_now': [0, ['^w'], 'Quit immediately'],
@@ -2940,7 +2945,7 @@ class Interface:
             # highlight focused/selected line(s)
             while line.startswith('_'):
                 if line[1] == 'S':
-                    curses_tags = curses.A_BOLD
+                    curses_tags = gconfig.selected_file_attr
                     line = line[2:]
                 if line[1] == 'F':
                     curses_tags += curses.A_REVERSE
