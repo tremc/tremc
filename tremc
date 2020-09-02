@@ -2221,9 +2221,17 @@ class Interface:
                 self.get_screen_size()
                 self.dialog_ok("%s:\n%s" % (" ".join(viewer_cmd), err))
             hide_cursor()
+            if gconfig.file_viewer != file_viewer:
+                file_type = self.server.get_torrent_details()['files'][self.file_index_map[self.focus_detaillist]]['name'].split('.')[-1]
+                gconfig.histories['types'][file_type] = file_viewer
 
     def action_view_file_command(self):
-        self.dialog_input_text('Command to run (%s will be replaced by file name)',
+        file_type = self.server.get_torrent_details()['files'][self.file_index_map[self.focus_detaillist]]['name'].split('.')[-1]
+        if file_type in gconfig.histories['types']:
+            command = gconfig.histories['types'][file_type]
+        else:
+            command = ''
+        self.dialog_input_text('Command to run (%s will be replaced by file name)', command,
                                tab_complete='executable',
                                on_enter=self.view_file_command,
                                history=gconfig.histories['command'], history_max=10,
@@ -4484,6 +4492,8 @@ def load_history(filename):
     for i in ['label', 'location', 'tracker', 'command']:
         if i not in history:
             history[i] = []
+    if 'types' not in history:
+        history['types'] = {}
     return history
 
 
