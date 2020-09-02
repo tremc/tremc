@@ -291,6 +291,7 @@ class GConfig:
             'select_search_file': [3, [','], 'Select files matching pattern'],
             'select_files_dir': [3, ['A'], 'Select/Deselect directory'],
             'search_file': [3, ['/'], 'Search file list'],
+            'rename_dir': [3, ['C'], 'Rename directory inside torrent'],
             'select_search_file_regex': [3, ['<'], 'Select files matching regex'],
             'search_file_regex': [3, ['.'], 'Find files matching regex'],
             'invert_selection_files': [3, ['i'], 'Invert selection'],
@@ -2046,7 +2047,13 @@ class Interface:
         else:
             self.action_prev_details()
 
+    def action_rename_dir(self):
+        self.rename_torrent_selected_file(True)
+
     def action_rename_torrent_selected_file(self):
+        self.rename_torrent_selected_file()
+
+    def rename_torrent_selected_file(self, rename_dir=False):
         def rename_dialog(oldname):
             filename = os.path.basename(oldname)
             msg = 'Rename "%s"\nto:' % oldname
@@ -2066,9 +2073,18 @@ class Interface:
         if self.selected_torrent > -1 and self.details_category_focus == 1 and self.focus_detaillist >= 0:
             # rename files in torrent
             file_id = self.file_index_map[self.focus_detaillist]
-            newpath = rename_dialog(self.torrent_details['files'][file_id]['name'])
+            name = self.torrent_details['files'][file_id]['name']
+            if rename_dir:
+                name = os.path.dirname(name)
+                if not os.sep in name:
+                    # Don't rename torrent
+                    return
+            newpath = rename_dialog(name)
             if newpath:
-                self.torrent_details['files'][file_id]['name'] = newpath
+                if not rename_dir:
+                    # This shows new name immediately, but for dirs it is
+                    # simpler to wait for the new name from the server
+                    self.torrent_details['files'][file_id]['name'] = newpath
                 self.filelist_needs_refresh = True  # force read
         elif self.focus > -1:
             # rename torrent folder
