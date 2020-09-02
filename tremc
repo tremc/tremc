@@ -3793,6 +3793,9 @@ class Interface:
             if c in gconfig.esc_keys_w_no_ascii:
                 hide_cursor()
                 return ''
+            if c == K.X_:
+                text = ''
+                index = 0
             if index < len(text) and (c in (curses.KEY_RIGHT, K.F_)):
                 index += 1
             elif index > 0 and (c in (curses.KEY_LEFT, K.B_)):
@@ -4047,6 +4050,8 @@ class Interface:
 
             elif c in (curses.KEY_BACKSPACE, curses.KEY_DC, K.DEL, 8):
                 value = value[:-1]
+            elif c in (K.U_, K.X_):
+                value = ''
             elif len(value) >= width - 5:
                 curses.beep()
             elif K.n1 <= c <= K.n9:
