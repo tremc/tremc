@@ -1387,6 +1387,8 @@ class Interface:
             self.torrent_title_width = 80
 
     def get_rateDownload_width(self, torrents):
+        if torrents == []:
+            return 4
         new_width = max([len(scale_bytes(x['rateDownload'])) for x in torrents])
         new_width = max(max([len(scale_time(x['eta'])) for x in torrents]), new_width)
         new_width = max(len(scale_bytes(self.stats['downloadSpeed'])), new_width)
@@ -1394,6 +1396,8 @@ class Interface:
         return new_width
 
     def get_rateUpload_width(self, torrents):
+        if torrents == []:
+            return 4
         new_width = max([len(scale_bytes(x['rateUpload'])) for x in torrents] + [0])
         new_width = max(max([len(num2str(x['uploadRatio'], '%.02f')) for x in torrents] + [0]), new_width)
         new_width = max(len(scale_bytes(self.stats['uploadSpeed'])), new_width)
