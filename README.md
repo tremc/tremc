@@ -157,6 +157,7 @@ An action marked with + acts on:
 * ,		: Select files matching text
 * <		: Select files matching regular expression
 * i		: Invert selection
+* C     : Rename torrent directory containing focused file. Will not rename top directory.
 * r, Del	: Remove tracker
 * Tab	: Move to next tab
 * Shift-Tab	: Move to previous tab
