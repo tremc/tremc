@@ -193,7 +193,7 @@ An action marked with + acts on:
 * r, Del	: Remove torrent, keeping data
 * ^r	: Remove selected torrents, keeping data
 * e		: Profile selection menu
-* C		: Change betweem 1,2,3 lines per torrent modes
+* C		: Change between 1,2,3 lines per torrent modes
 * a		: Add torrent dialog
 * ^a	: Add torrent (in paused mode) dialog
 * /		: Search for torrents matching pattern
@@ -303,7 +303,7 @@ The following sections are read:
   Note that what the colors mean actually depends on the terminal. In some
   cases 'white' is darker then the white that the terminal displays, and
   similarly, 'black' is lighter. Setting 'default' selects the respective
-  background or foreground coloe of the terminal.
+  background or foreground color of the terminal.
 
   The top and bottom status lines (filter_status, multi_filter_status) and the dialog window
   (dialog, dialog_important) are displayed using inverse mode, so the fg and bg
