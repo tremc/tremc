@@ -3673,7 +3673,10 @@ class Interface:
 
     def win_message(self, win, height, width, message, first=0):
         ypos = 1
-        for line in message.split("\n")[first:]:
+        lines = message.split("\n")
+        pages = (len(lines) - 1) // (height - 2) + 1
+        page = first // (height - 2) + 1
+        for line in lines[first:]:
             if len_columns(line) > width - 3:
                 line = ljust_columns(line, width - 6) + '...'
 
@@ -3682,8 +3685,10 @@ class Interface:
                 ypos += 1
             else:
                 # Do not write outside of frame border
-                win.addstr(ypos, 2, " More... ")
+                win.addstr(height - 1, 2, "%d/%d" % (page, pages))
                 return win, ypos + first - 1
+            if pages > 1:
+                win.addstr(height - 1, 2, "%d/%d" % (page, pages))
         return win, 0
 
     def window(self, height, width, message='', title='', xpos=None):
