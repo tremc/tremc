@@ -4117,8 +4117,8 @@ class Interface:
     def dialog_menu(self, title, options, focus=1, extended=False, winstack=[]):
         height = len(options) + 2
         paging = False
-        if self.height < height:
-            height = self.height
+        if self.height - 2 < height:
+            height = self.height - 2
             paging = True
         pagelines = height - 2
         width = max(max([len(x[1]) + 3 for x in options]), len(title) + 3)
@@ -4215,8 +4215,8 @@ class Interface:
                 width = min(max(len(gconfig.file_viewer) + 6, 15) + max_len, self.width)
                 height = len(options) + 2
                 paging = False
-                if self.height < height:
-                    height = self.height
+                if self.height - 2 < height:
+                    height = self.height - 2
                     paging = True
                 pagelines = height - 2
                 page = 0
@@ -4354,8 +4354,8 @@ class Interface:
                 width = min(max(len(gconfig.file_viewer) + 6, 15) + max_len, self.width)
                 height = len(options) + 2
                 paging = False
-                if self.height < height:
-                    height = self.height
+                if self.height - 2 < height:
+                    height = self.height - 2
                     paging = True
                 pagelines = height - 2
                 page = 0
