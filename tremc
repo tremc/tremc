@@ -3040,19 +3040,22 @@ class Interface:
                 index += 1
 
         if self.focus_detaillist == -1:
-            return self.filelist_cache[:self.detaillines_per_page]
-        pos_before_focus = self.filelist_cache_pos[self.focus_detaillist]
-        line_to_show = self.focus_detaillist + pos_before_focus
-        lines_before = self.detaillines_per_page // 2
-        if line_to_show >= lines_before:
-            start = line_to_show - lines_before
-        else:
             start = 0
-        if len(self.filelist_cache) >= start + self.detaillines_per_page:
-            end = start + self.detaillines_per_page
+            end = min(self.detaillines_per_page, len(self.filelist_cache))
+            line_to_show = -1
         else:
-            end = len(self.filelist_cache)
-            start = end - self.detaillines_per_page if end >= self.detaillines_per_page else 0
+            pos_before_focus = self.filelist_cache_pos[self.focus_detaillist]
+            line_to_show = self.focus_detaillist + pos_before_focus
+            lines_before = self.detaillines_per_page // 2
+            if line_to_show >= lines_before:
+                start = line_to_show - lines_before
+            else:
+                start = 0
+            if len(self.filelist_cache) >= start + self.detaillines_per_page:
+                end = start + self.detaillines_per_page
+            else:
+                end = len(self.filelist_cache)
+                start = end - self.detaillines_per_page if end >= self.detaillines_per_page else 0
         ret = []
         for i in range(start, end):
             ret.append(
