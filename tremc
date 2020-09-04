@@ -2975,7 +2975,7 @@ class Interface:
                 xpos += len(part)
             self.pad.addstr(ypos, xpos, line[33:], curses_tags)
             if needclrtoeol:
-                self.pad.clrtoeol()
+                self.pad.addstr(' ' * (self.width - self.pad.getyx()[1]), curses_tags)
             ypos += 1
             if ypos > self.height:
                 break
