@@ -427,10 +427,10 @@ config.set('Colors', 'filter_status', 'bg:red,fg:black')
 config.set('Colors', 'multi_filter_status', 'bg:blue,fg:black')
 config.set('Colors', 'dialog', 'bg:default,fg:default')
 config.set('Colors', 'dialog_important', 'bg:default,fg:red')
-config.set('Colors', 'file_prio_high', 'bg:red,fg:black')
-config.set('Colors', 'file_prio_normal', 'bg:white,fg:black')
-config.set('Colors', 'file_prio_low', 'bg:yellow,fg:black')
-config.set('Colors', 'file_prio_off', 'bg:blue,fg:black')
+config.set('Colors', 'file_prio_high', 'fg:red,bg:default')
+config.set('Colors', 'file_prio_normal', 'fg:default,bg:default')
+config.set('Colors', 'file_prio_low', 'fg:yellow,bg:default')
+config.set('Colors', 'file_prio_off', 'fg:blue,bg:default')
 
 
 class ColorManager:
