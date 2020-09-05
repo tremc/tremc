@@ -3242,34 +3242,53 @@ class Interface:
             ypos += 7
 
     def draw_pieces_map(self, ypos):
+        if self.torrent_details['haveValid'] / self.torrent_details['totalSize'] < 0.5:
+            default_attr = 0
+            new_attr = curses.A_REVERSE
+            change_attr = 0x80
+            skip_run = 0
+        else:
+            new_attr = 0
+            default_attr = curses.A_REVERSE
+            change_attr = 0
+            skip_run = 255
         pieces = self.torrent_details['pieces']
         piece_count = self.torrent_details['pieceCount']
         margin = len(str(piece_count)) + 2
-        piece_attrs = {0: ('-', 0), 0x80: ('-', curses.A_REVERSE)}
+        map_width = (self.width - margin - 1) // 10 * 10
+        start = self.scrollpos_detaillist[4] * map_width
+        end = min(start + (self.height - ypos - 3) * map_width, piece_count)
+        last_line = (end - 1) // map_width
+        if end <= start:
+            return
 
-        map_width = int(str(self.width - margin - 1)[0:-1] + '0')
         for x in range(10, map_width, 10):
             self.pad.addstr(ypos, x + margin - 1, str(x), curses.A_BOLD)
 
-        start = self.scrollpos_detaillist[4] * map_width
-        end = min(start + (self.height - ypos - 3) * map_width, piece_count)
-        if end <= start:
-            return
-        block = (pieces[start >> 3]) << (start & 7)
-
         format_str = "%%%dd" % (margin - 2)
-        for counter in range(start, end):
-            if counter % map_width == 0:
-                ypos += 1
-                xpos = margin
-                self.pad.addstr(ypos, 1, format_str % counter, curses.A_BOLD)
+        yp = ypos + 1
+        for counter in range(self.scrollpos_detaillist[4], last_line + 1):
+            self.pad.addstr(yp, 1, format_str % (counter * map_width), curses.A_BOLD)
+            if counter == last_line:
+                self.pad.addstr(yp, margin, '-' * ((end - 1) % map_width + 1), default_attr)
             else:
-                xpos += 1
+                self.pad.addstr(yp, margin, '-' * map_width, default_attr)
+            yp = yp + 1
 
+        counter = start
+        block = (pieces[start >> 3]) << (start & 7)
+        while counter < end:
             if counter & 7 == 0:
                 block = (pieces[counter >> 3])
-            self.pad.addch(ypos, xpos, *piece_attrs[block & 0x80])
+                while block == skip_run and counter < end - 8:
+                    counter += 8
+                    block = (pieces[counter >> 3])
+            if block & 0x80 == change_attr:
+                self.pad.chgat(ypos + 1 + (counter-start) // map_width, margin + (counter-start) % map_width, 1, new_attr)
             block <<= 1
+            counter += 1
+        if counter >= end:
+            counter = end - 1
 
         missing_pieces = piece_count - counter - 1
         if missing_pieces:
