@@ -4510,7 +4510,7 @@ class Interface:
             elif key == K.n:
                 gconfig.torrent_numbers = not gconfig.torrent_numbers
             elif key == K.v:
-                viewer = self.dialog_input_text('File Viewer\nExample: xdg-viewer %s', gconfig.file_viewer, 
+                viewer = self.dialog_input_text('File Viewer\nExample: xdg-viewer %s', gconfig.file_viewer,
                                                 tab_complete='executable', winstack=[win])
                 if viewer:
                     config.set('Misc', 'file_viewer', viewer.replace('%s', '%%s'))
