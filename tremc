@@ -1357,11 +1357,12 @@ class Interface:
             else:
                 break
         self.manage_layout()
+        # There are two extra lines here: One for a possible invisible line of
+        # the last torrent, the other for avoiding 'last char of window bug'.
+        self.pad = curses.newpad(self.height, self.width)
 
     def manage_layout(self):
         self.recalculate_torrents_per_page()
-        self.pad_height = max((len(self.torrents) + 1) * gconfig.tlist_item_height, self.height)
-        self.pad = curses.newpad(self.pad_height, self.width)
         self.detaillines_per_page = self.height - 8
         self.narrow = self.width < 73
 
@@ -1374,8 +1375,8 @@ class Interface:
                 self.torrent_title_width -= self.rateDownload_width + 2
 
         elif self.torrents:
-            self.visible_torrents_start = self.scrollpos / gconfig.tlist_item_height
-            self.visible_torrents = self.torrents[int(self.visible_torrents_start): int(self.scrollpos / gconfig.tlist_item_height + self.torrents_per_page + 1)]
+            self.visible_torrents_start = self.scrollpos // gconfig.tlist_item_height
+            self.visible_torrents = self.torrents[self.visible_torrents_start: self.visible_torrents_start + self.torrents_per_page]
             self.rateDownload_width = self.get_rateDownload_width(self.visible_torrents)
             self.rateUpload_width = self.get_rateUpload_width(self.visible_torrents)
             self.torrent_title_width = self.width - self.rateUpload_width - 2
@@ -1402,7 +1403,7 @@ class Interface:
 
     def recalculate_torrents_per_page(self):
         self.mainview_height = self.height - 2
-        self.torrents_per_page = self.mainview_height // gconfig.tlist_item_height
+        self.torrents_per_page = (self.mainview_height + gconfig.tlist_item_height - 1) // gconfig.tlist_item_height
 
     def run(self):
         self.draw_title_bar()
@@ -2467,6 +2468,7 @@ class Interface:
 
         self.follow_list_focus()
         self.manage_layout()
+        self.pad.erase()
 
         ypos = 0
         for i in range(len(self.visible_torrents)):
@@ -2680,10 +2682,7 @@ class Interface:
     def draw_details(self, search_keyword=None, search='', refresh=True):
         self.torrent_details = self.server.get_torrent_details()
         self.manage_layout()
-
-        # details could need more space than the torrent list
-        self.pad_height = max(50, len(self.torrent_details['files']) + 10, (len(self.torrents) + 1) * 3, self.height)
-        self.pad = curses.newpad(self.pad_height, self.width)
+        self.pad.erase()
 
         # torrent name + progress bar
         self.draw_torrentlist_item(self.torrent_details, False, False, 0)
@@ -2718,7 +2717,7 @@ class Interface:
             self.draw_pieces_map(5)
 
         if refresh:
-            self.pad.refresh(0, 0, 1, 0, self.height - 2, self.width)
+            self.pad.refresh(0, 0, 1, 0, self.mainview_height, self.width)
             self.screen.refresh()
 
     def draw_details_overview(self, ypos):
@@ -3332,6 +3331,8 @@ class Interface:
                     self.pad.addnstr(v, self.width - value_x)
                 xp += len(v)
             yp += 1
+            if yp > self.mainview_height:
+                return yp
         return yp
 
     def action_next_details(self):
