@@ -148,6 +148,7 @@ An action marked with + acts on:
 * q, Backspace	: Return to torrents list mode
 * Enter	: View file
 * |     : Enter command to view file
+* x     : Show file information window
 * J		: Move to next directory in file list
 * K		: Move to previous directory in file list
 * Space	: Select/unselect file and move to next file
