@@ -301,6 +301,7 @@ class GConfig:
             'search_file_regex': [3, ['.'], 'Find files matching regex'],
             'invert_selection_files': [3, ['i'], 'Invert selection'],
             'select_file': [3, ['SPACE'], 'Select/unselect file'],
+            'file_info': [3, ['x'], 'Show file info'],
             'remove_tracker': [4, ['DC', 'r'], 'Remove tracker'],
             'page_up': [16, ['PPAGE', '^b'], 'Page Up'],
             'page_down': [16, ['NPAGE', '^f'], 'Page Down'],
@@ -2187,6 +2188,22 @@ class Interface:
                     and self.focus_detaillist > 0:
                 self.action_line_up()
                 file_id = self.file_index_map[self.focus_detaillist]
+
+    def action_file_info(self):
+        if self.details_category_focus == 1 and self.focus_detaillist > -1:
+            file_id = self.file_index_map[self.focus_detaillist]
+            name = self.torrent_details['files'][file_id]['name']
+            if '/' in name:
+                name = '/'.join(name.split('/')[1:])
+            size = str(self.torrent_details['files'][file_id]['length'])
+            have = str(self.torrent_details['files'][file_id]['bytesCompleted']).rjust(len(size))
+            msg = "%s\nSize: %s\nHave: %s" % (name, size, have)
+            width = max(len(name), len(size), 15)+10
+            win = self.window(6, width, msg)
+            while True:
+                key = self.wingetch(win)
+                if key in gconfig.esc_keys_w:
+                    return -1
 
     def action_view_file(self):
         self.view_file(gconfig.file_viewer, gconfig.file_open_in_terminal)
