@@ -2210,7 +2210,7 @@ class Interface:
                     self.vmode_id = self.focus_detaillist
 
     def action_move_to_next_directory(self):
-        if self.selected_torrent > -1 and self.details_category_focus == 1:
+        if self.details_category_focus == 1:
             self.focus_detaillist = max(self.focus_detaillist, 0)
             file_id = self.file_index_map[self.focus_detaillist]
             focused_dir = os.path.dirname(self.torrent_details['files'][file_id]['name'])
@@ -2220,7 +2220,7 @@ class Interface:
                 file_id = self.file_index_map[self.focus_detaillist]
 
     def action_move_to_previous_directory(self):
-        if self.selected_torrent > -1 and self.details_category_focus == 1:
+        if self.details_category_focus == 1:
             self.focus_detaillist = max(self.focus_detaillist, 0)
             file_id = self.file_index_map[self.focus_detaillist]
             focused_dir = os.path.dirname(self.torrent_details['files'][file_id]['name'])
