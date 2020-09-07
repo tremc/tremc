@@ -328,6 +328,64 @@ class GConfig:
         if exit:
             sys.exit(0)
 
+    def init_colors(self, config):
+        colors = {
+            'title_seed': 'bg:green,fg:black',
+            'title_download': 'bg:blue,fg:black',
+            'title_idle': 'bg:cyan,fg:black',
+            'title_verify': 'bg:magenta,fg:black',
+            'title_paused': 'bg:default,fg:default',
+            'title_error': 'bg:red,fg:default',
+            'download_rate': 'bg:default,fg:blue',
+            'upload_rate': 'bg:black,fg:red',
+            'eta+ratio': 'bg:default,fg:default',
+            'filter_status': 'bg:red,fg:black',
+            'multi_filter_status': 'bg:blue,fg:black',
+            'dialog': 'bg:default,fg:default',
+            'dialog_important': 'bg:default,fg:red',
+            'file_prio_high': 'fg:red,bg:default',
+            'file_prio_normal': 'fg:default,bg:default',
+            'file_prio_low': 'fg:yellow,bg:default',
+            'file_prio_off': 'fg:blue,bg:default',
+        }
+        colors.update(config)
+        self.colors = dict()
+        self.term_has_colors = curses.has_colors()
+        curses.start_color()
+        if self.term_has_colors:
+            curses.use_default_colors()
+        for name in list(colors.keys()):
+            self.colors[name] = self._parse_color_pair(colors[name])
+            if self.term_has_colors:
+                curses.init_pair(self.colors[name]['ind'],
+                                 self.colors[name]['fg'],
+                                 self.colors[name]['bg'])
+
+    def _parse_color_pair(self, pair):
+        bg_name = [x for x in pair.split(',') if x[:3] == 'bg:'][0].split(':')[1].upper() if 'bg:' in pair else 'DEFAULT'
+        fg_name = [x for x in pair.split(',') if x[:3] == 'fg:'][0].split(':')[1].upper() if 'fg:' in pair else 'DEFAULT'
+        color_pair = {'ind': len(list(self.colors.keys())) + 1}
+        try:
+            if bg_name == 'DEFAULT':
+                color_pair['bg'] = -1
+            else:
+                color_pair['bg'] = getattr(curses, 'COLOR_' + bg_name)
+        except AttributeError:
+            color_pair['bg'] = -1
+        try:
+            if fg_name == 'DEFAULT':
+                color_pair['fg'] = -1
+            else:
+                color_pair['fg'] = getattr(curses, 'COLOR_' + fg_name)
+            if fg_name == 'WHITE':
+                color_pair['fg'] = -1
+        except AttributeError:
+            color_pair['fg'] = -1
+        return color_pair
+
+    def color_ind(self, name):
+        return self.colors[name]['ind']
+
 
 class Keys:
     TAB = 9
@@ -421,64 +479,6 @@ config.set('Misc', 'torrentname_is_progressbar', 'True')
 config.set('Misc', 'file_viewer', 'xdg-open %%s')
 config.set('Misc', 'file_open_in_terminal', 'True')
 config.add_section('Colors')
-config.set('Colors', 'title_seed', 'bg:green,fg:black')
-config.set('Colors', 'title_download', 'bg:blue,fg:black')
-config.set('Colors', 'title_idle', 'bg:cyan,fg:black')
-config.set('Colors', 'title_verify', 'bg:magenta,fg:black')
-config.set('Colors', 'title_paused', 'bg:default,fg:default')
-config.set('Colors', 'title_error', 'bg:red,fg:default')
-config.set('Colors', 'download_rate', 'bg:default,fg:blue')
-config.set('Colors', 'upload_rate', 'bg:black,fg:red')
-config.set('Colors', 'eta+ratio', 'bg:default,fg:default')
-config.set('Colors', 'filter_status', 'bg:red,fg:black')
-config.set('Colors', 'multi_filter_status', 'bg:blue,fg:black')
-config.set('Colors', 'dialog', 'bg:default,fg:default')
-config.set('Colors', 'dialog_important', 'bg:default,fg:red')
-config.set('Colors', 'file_prio_high', 'fg:red,bg:default')
-config.set('Colors', 'file_prio_normal', 'fg:default,bg:default')
-config.set('Colors', 'file_prio_low', 'fg:yellow,bg:default')
-config.set('Colors', 'file_prio_off', 'fg:blue,bg:default')
-
-
-class ColorManager:
-    def __init__(self, config):
-        self.config = dict()
-        self.term_has_colors = curses.has_colors()
-        curses.start_color()
-        if self.term_has_colors:
-            curses.use_default_colors()
-        for name in list(config.keys()):
-            self.config[name] = self._parse_color_pair(config[name])
-            if self.term_has_colors:
-                curses.init_pair(self.config[name]['ind'],
-                                 self.config[name]['fg'],
-                                 self.config[name]['bg'])
-
-    def _parse_color_pair(self, pair):
-        bg_name = [x for x in pair.split(',') if x[:3] == 'bg:'][0].split(':')[1].upper() if 'bg:' in pair else 'DEFAULT'
-        fg_name = [x for x in pair.split(',') if x[:3] == 'fg:'][0].split(':')[1].upper() if 'fg:' in pair else 'DEFAULT'
-        color_pair = {'ind': len(list(self.config.keys())) + 1}
-        try:
-            if bg_name == 'DEFAULT':
-                color_pair['bg'] = -1
-            else:
-                color_pair['bg'] = getattr(curses, 'COLOR_' + bg_name)
-        except AttributeError:
-            color_pair['bg'] = -1
-        try:
-            if fg_name == 'DEFAULT':
-                color_pair['fg'] = -1
-            else:
-                color_pair['fg'] = getattr(curses, 'COLOR_' + fg_name)
-            if fg_name == 'WHITE':
-                color_pair['fg'] = -1
-        except AttributeError:
-            color_pair['fg'] = -1
-        return color_pair
-
-    def ind(self, name):
-        return self.config[name]['ind']
-
 
 class Normalizer:
     def __init__(self):
@@ -1346,7 +1346,7 @@ class Interface:
         self.screen.keypad(1)
         curses.halfdelay(10)  # STDIN timeout
         hide_cursor()
-        self.colors = ColorManager(dict(config.items('Colors')))
+        gconfig.init_colors(dict(config.items('Colors')))
 
         # http://bugs.python.org/issue2675
         try:
@@ -2609,7 +2609,7 @@ class Interface:
         if selected:
             tag = curses.A_REVERSE
         else:
-            tag = curses.color_pair(self.colors.ind('download_rate')) + curses.A_BOLD
+            tag = curses.color_pair(gconfig.color_ind('download_rate')) + curses.A_BOLD
         self.pad.move(ypos, self.width - self.rateDownload_width - self.rateUpload_width - 3)
         self.pad.addch(curses.ACS_DARROW, (0, curses.A_BOLD)[torrent['downloadLimited']])
         rate = ('', scale_bytes(torrent['rateDownload']))[torrent['rateDownload'] > 0]
@@ -2619,7 +2619,7 @@ class Interface:
         if selected:
             tag = curses.A_REVERSE
         else:
-            tag = curses.color_pair(self.colors.ind('upload_rate')) + curses.A_BOLD
+            tag = curses.color_pair(gconfig.color_ind('upload_rate')) + curses.A_BOLD
         self.pad.move(ypos, self.width - self.rateUpload_width - 1)
         self.pad.addch(curses.ACS_UARROW, (0, curses.A_BOLD)[torrent['uploadLimited']])
         rate = ('', scale_bytes(torrent['rateUpload']))[torrent['rateUpload'] > 0]
@@ -2629,7 +2629,7 @@ class Interface:
         if selected:
             tag = curses.A_REVERSE
         else:
-            tag = curses.color_pair(self.colors.ind('eta+ratio')) + curses.A_BOLD
+            tag = curses.color_pair(gconfig.color_ind('eta+ratio')) + curses.A_BOLD
         self.pad.addch(ypos + 1, self.width - self.rateUpload_width - 1, curses.ACS_BULLET,
                        (0, curses.A_BOLD)[torrent['uploadRatio'] < 1 and torrent['uploadRatio'] >= 0])
         self.pad.addstr(ypos + 1, self.width - self.rateUpload_width,
@@ -2639,7 +2639,7 @@ class Interface:
         self.pad.addch(ypos + 1, self.width - self.rateDownload_width - self.rateUpload_width - 3, curses.ACS_PLMINUS)
         self.pad.addstr(ypos + 1, self.width - self.rateDownload_width - self.rateUpload_width - 2,
                         scale_time(torrent['eta']).rjust(self.rateDownload_width),
-                        curses.color_pair(self.colors.ind('eta+ratio')) + curses.A_BOLD)
+                        curses.color_pair(gconfig.color_ind('eta+ratio')) + curses.A_BOLD)
 
     def draw_torrentlist_title(self, torrent, focused, width, ypos, idx):
         if gconfig.torrent_numbers and idx >= 0:
@@ -2679,19 +2679,19 @@ class Interface:
         title = ljust_columns(torrent['name'], width - len(size)) + size
 
         if torrent['isIsolated']:
-            color = curses.color_pair(self.colors.ind('title_error'))
+            color = curses.color_pair(gconfig.color_ind('title_error'))
         elif torrent['status'] == Transmission.STATUS_SEED or \
                 torrent['status'] == Transmission.STATUS_SEED_WAIT:
-            color = curses.color_pair(self.colors.ind('title_seed'))
+            color = curses.color_pair(gconfig.color_ind('title_seed'))
         elif torrent['status'] == Transmission.STATUS_STOPPED:
-            color = curses.color_pair(self.colors.ind('title_paused'))
+            color = curses.color_pair(gconfig.color_ind('title_paused'))
         elif torrent['status'] == Transmission.STATUS_CHECK or \
                 torrent['status'] == Transmission.STATUS_CHECK_WAIT:
-            color = curses.color_pair(self.colors.ind('title_verify'))
+            color = curses.color_pair(gconfig.color_ind('title_verify'))
         elif torrent['rateDownload'] == 0:
-            color = curses.color_pair(self.colors.ind('title_idle'))
+            color = curses.color_pair(gconfig.color_ind('title_idle'))
         elif torrent['percentDone'] < 100:
-            color = curses.color_pair(self.colors.ind('title_download'))
+            color = curses.color_pair(gconfig.color_ind('title_download'))
         else:
             color = 0
 
@@ -3055,16 +3055,16 @@ class Interface:
             for part in re.split('(high|normal|low|off)', line[0:33], 1):
                 if part == 'high':
                     self.pad.addstr(ypos, xpos, part,
-                                    curses_tags + curses.color_pair(self.colors.ind('file_prio_high')))
+                                    curses_tags + curses.color_pair(gconfig.color_ind('file_prio_high')))
                 elif part == 'normal':
                     self.pad.addstr(ypos, xpos, part,
-                                    curses_tags + curses.color_pair(self.colors.ind('file_prio_normal')))
+                                    curses_tags + curses.color_pair(gconfig.color_ind('file_prio_normal')))
                 elif part == 'low':
                     self.pad.addstr(ypos, xpos, part,
-                                    curses_tags + curses.color_pair(self.colors.ind('file_prio_low')))
+                                    curses_tags + curses.color_pair(gconfig.color_ind('file_prio_low')))
                 elif part == 'off':
                     self.pad.addstr(ypos, xpos, part,
-                                    curses_tags + curses.color_pair(self.colors.ind('file_prio_off')))
+                                    curses_tags + curses.color_pair(gconfig.color_ind('file_prio_off')))
                 else:
                     self.pad.addstr(ypos, xpos, part, curses_tags)
                 xpos += len(part)
@@ -3568,7 +3568,7 @@ class Interface:
                         filter_param = ''
                         not_str = ('', strings[5])[gconfig.filters[0][0]['inverse']]
                     self.screen.addstr(not_str + gconfig.filters[0][0]['name'] + filter_param,
-                                       curses.color_pair(self.colors.ind('filter_status' if len(gconfig.filters[0]) <= 1 else 'multi_filter_status')) +
+                                       curses.color_pair(gconfig.color_ind('filter_status' if len(gconfig.filters[0]) <= 1 else 'multi_filter_status')) +
                                        + (curses.A_REVERSE if not self.invert_filters else 0))
 
                 # show last sort order (if terminal size permits it)
@@ -3576,7 +3576,7 @@ class Interface:
                     self.screen.addstr(strings[6], curses.A_REVERSE)
                     name = [name[1] for name in gconfig.sort_options if name[0] == gconfig.sort_orders[-1]['name']][0]
                     name = name.replace('_', '').lower()
-                    curses_tags = curses.color_pair(self.colors.ind('filter_status')) + curses.A_REVERSE
+                    curses_tags = curses.color_pair(gconfig.color_ind('filter_status')) + curses.A_REVERSE
                     if gconfig.sort_orders[-1]['reverse']:
                         self.screen.addch(curses.ACS_DARROW, curses_tags)
                     else:
@@ -3595,7 +3595,7 @@ class Interface:
                         self.screen.addstr(strings[6], curses.A_REVERSE)
                         name = [name[1] for name in gconfig.file_sort_options if name[0] == gconfig.file_sort_key][0]
                         name = name.replace('_', '').lower()
-                        curses_tags = curses.color_pair(self.colors.ind('filter_status')) + curses.A_REVERSE
+                        curses_tags = curses.color_pair(gconfig.color_ind('filter_status')) + curses.A_REVERSE
                         if gconfig.file_sort_reverse:
                             self.screen.addch(curses.ACS_DARROW, curses_tags)
                         else:
@@ -3632,14 +3632,14 @@ class Interface:
         self.screen.move(self.height - 1, self.width - rates_width - limits_width)
         self.screen.addch(curses.ACS_DARROW, curses.A_REVERSE)
         self.screen.addstr(scale_bytes(self.stats['downloadSpeed']).rjust(self.rateDownload_width)[:self.rateDownload_width],
-                           curses.color_pair(self.colors.ind('download_rate'))
+                           curses.color_pair(gconfig.color_ind('download_rate'))
                            + curses.A_BOLD)
         self.screen.addstr(limits['dn_limit'], curses.A_REVERSE)
         self.screen.addch(' ', curses.A_REVERSE)
         self.screen.addch(curses.ACS_UARROW, curses.A_REVERSE)
         try:
             self.screen.addstr(scale_bytes(self.stats['uploadSpeed']).rjust(self.rateUpload_width)[:self.rateUpload_width],
-                               curses.color_pair(self.colors.ind('upload_rate'))
+                               curses.color_pair(gconfig.color_ind('upload_rate'))
                                + curses.A_BOLD)
             self.screen.addstr(limits['up_limit'], curses.A_REVERSE)
         except curses.error:
@@ -3832,7 +3832,7 @@ class Interface:
         win = self.window(height, width, message=message)
 
         if important:
-            win.bkgd(' ', curses.color_pair(self.colors.ind('dialog_important')) + curses.A_REVERSE)
+            win.bkgd(' ', curses.color_pair(gconfig.color_ind('dialog_important')) + curses.A_REVERSE)
 
         choice = False
         while True:
@@ -3916,8 +3916,8 @@ class Interface:
             displaytext = text[textwidth * page:textwidth * (page + 1)]
             displayindex = index - textwidth * page
 
-            color = curses.color_pair(self.colors.ind('dialog_important')) if self.highlight_dialog \
-                    else curses.color_pair(self.colors.ind('dialog'))
+            color = curses.color_pair(gconfig.color_ind('dialog_important')) if self.highlight_dialog \
+                    else curses.color_pair(gconfig.color_ind('dialog'))
             win.bkgdset(win.getbkgd() - curses.A_REVERSE)
             win.addstr(height - 2, 2, displaytext.ljust(textwidth), color)
             win.bkgdset(win.getbkgd() + curses.A_REVERSE)
@@ -4174,7 +4174,7 @@ class Interface:
             win.addstr(height - 4, 2, "leave empty for default")
 
         while True:
-            win.addstr(height - 2, 2, value.ljust(width - 4), curses.color_pair(self.colors.ind('dialog')))
+            win.addstr(height - 2, 2, value.ljust(width - 4), curses.color_pair(gconfig.color_ind('dialog')))
             win.move(height - 2, len(value) + 2)
             c = self.wingetch(win)
             if c in gconfig.esc_keys_w:
