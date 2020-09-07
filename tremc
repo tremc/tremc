@@ -178,6 +178,7 @@ class GConfig:
             config.set('Connection', 'path', self.path)
             config.set('Connection', 'username', self.username)
             config.set('Connection', 'password', self.password)
+            config.set('Connection', 'ssl', self.ssl)
             create_config(self.configfile, self.connection, config)
 
         try:
