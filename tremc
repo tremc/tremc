@@ -121,6 +121,14 @@ class GConfig:
             elif os.path.isfile(xdg_config_home(PROG + '/' + self.configfile + '.cfg')):
                 self.configfile = xdg_config_home(PROG + '/' + self.configfile + '.cfg')
         self.configfile = self.configfile
+        config = configparser.ConfigParser()
+        self.config = config
+        config.optionxform = lambda option: option
+        config.add_section('Connection')
+        config.add_section('Sorting')
+        config.add_section('Filtering')
+        config.add_section('Misc')
+        config.add_section('Colors')
         config.read(self.configfile)
         self.history_file = ''
         if PROG in os.path.dirname(self.configfile):
@@ -170,7 +178,7 @@ class GConfig:
             config.set('Connection', 'path', self.path)
             config.set('Connection', 'username', self.username)
             config.set('Connection', 'password', self.password)
-            create_config(self.configfile, self.connection)
+            create_config(self.configfile, self.connection, config)
 
         try:
             self.ipy = True  # extract ipv4 from ipv6 addresses
@@ -524,13 +532,6 @@ def pdebug(*argv):
 
 
 # define config defaults
-config = configparser.ConfigParser()
-config.optionxform = lambda option: option
-config.add_section('Connection')
-config.add_section('Sorting')
-config.add_section('Filtering')
-config.add_section('Misc')
-config.add_section('Colors')
 
 class Normalizer:
     def __init__(self):
@@ -1398,7 +1399,7 @@ class Interface:
         self.filelist_needs_refresh = False
         self.sorted_files = None
         self.action_keys = {a:set(d[1]) for a, d in gconfig.actions.items()}
-        parse_config_key(self, config, gconfig, self.common_keybindings, self.details_keybindings, self.list_keybindings, self.action_keys)
+        parse_config_key(self, gconfig.config, gconfig, self.common_keybindings, self.details_keybindings, self.list_keybindings, self.action_keys)
 
         try:
             self.init_screen()
@@ -1438,7 +1439,7 @@ class Interface:
         self.screen.keypad(1)
         curses.halfdelay(10)  # STDIN timeout
         hide_cursor()
-        gconfig.init_colors(dict(config.items('Colors')))
+        gconfig.init_colors(dict(gconfig.config.items('Colors')))
 
         # http://bugs.python.org/issue2675
         try:
@@ -5064,7 +5065,7 @@ def read_netrc(file=os.environ['HOME'] + '/.netrc', hostname=None):
 
 
 # create initial config file
-def create_config(configfile, connection):
+def create_config(configfile, connection, config):
     # create directory if necessary
     config_dir = os.path.dirname(configfile)
     if config_dir != '' and not os.path.isdir(config_dir):
@@ -5075,13 +5076,13 @@ def create_config(configfile, connection):
             sys.exit(gconfig.errors.CONFIGFILE_ERROR)
 
     # write file
-    if not save_config(configfile, force=True):
+    if not save_config(configfile, config, force=True):
         sys.exit(gconfig.errors.CONFIGFILE_ERROR)
     print("Wrote config file: %s" % configfile)
     sys.exit(0)
 
 
-def save_config(filepath, force=False):
+def save_config(filepath, config, force=False):
     if force or os.path.isfile(filepath):
         try:
             config.write(open(filepath, 'w'))
@@ -5198,7 +5199,7 @@ def parse_config_key(interface, config, gconfig, common_keys, details_keys, list
                     set_key(key, sections[section], interface, config[section][key], common_keys if section != 'CommonKeys' else None)
                     for k in action_keys.values():
                         k.discard(key)
-    if 'cancel' in config['Misc']:
+    if 'Misc' in config and 'cancel' in config['Misc']:
         gconfig.esc_keys = tuple()
         for i in config['Misc']['cancel'].split(','):
             k = get_key(i)
