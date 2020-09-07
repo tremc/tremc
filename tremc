@@ -201,18 +201,18 @@ class GConfig:
         self.filters = [[{}]]
         self.filters[0][0]['name'] = config.get('Filtering', 'filter', fallback='')
         self.filters[0][0]['inverse'] = config.getboolean('Filtering', 'invert', fallback=False)
-        self.sort_orders = parse_sort_str(config.get('Sorting', 'order', fallback=''), [x[0] for x in self.sort_options])
+        self.sort_orders = parse_sort_str(config.get('Sorting', 'order', fallback='name'), [x[0] for x in self.sort_options])
         self.file_sort_key = 'name'
         self.file_sort_reverse = False
         self.filters[0][0]['regex'] = ''
         self.filters[0][0]['tracker'] = ''
         self.filters[0][0]['location'] = ''
         self.histories = load_history(self.history_file)
-        self.tlist_item_height = config.getint('Misc', 'lines_per_torrent')
         self.narrow_threshold = config.getint('Misc', 'narrow_threshold', fallback=73)
-        self.torrentname_is_progressbar = config.getboolean('Misc', 'torrentname_is_progressbar')
-        self.file_viewer = config.get('Misc', 'file_viewer')
-        self.file_open_in_terminal = config.getboolean('Misc', 'file_open_in_terminal')
+        self.tlist_item_height = config.getint('Misc', 'lines_per_torrent', fallback=3)
+        self.torrentname_is_progressbar = config.getboolean('Misc', 'torrentname_is_progressbar', fallback=True)
+        self.file_viewer = config.get('Misc', 'file_viewer', fallback='xdg-open %%s')
+        self.file_open_in_terminal = config.getboolean('Misc', 'file_open_in_terminal', fallback=True)
         self.view_selected = config.getboolean('Misc', 'view_selected', fallback=False)
         self.torrent_numbers = config.getboolean('Misc', 'torrent_numbers', fallback=False)
         self.profiles = parse_config_profiles(config, [x[0] for x in self.sort_options])
@@ -528,15 +528,8 @@ config = configparser.ConfigParser()
 config.optionxform = lambda option: option
 config.add_section('Connection')
 config.add_section('Sorting')
-config.set('Sorting', 'order', 'name')
 config.add_section('Filtering')
-config.set('Filtering', 'filter', '')
-config.set('Filtering', 'invert', 'False')
 config.add_section('Misc')
-config.set('Misc', 'lines_per_torrent', '2')
-config.set('Misc', 'torrentname_is_progressbar', 'True')
-config.set('Misc', 'file_viewer', 'xdg-open %%s')
-config.set('Misc', 'file_open_in_terminal', 'True')
 config.add_section('Colors')
 
 class Normalizer:
