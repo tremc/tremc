@@ -4900,7 +4900,7 @@ def parse_single_filter_str(s):
         return {'name': '', 'inverse': False}
     s = s.split('#=')
     if len(s) == 0 or len(s) % 2 == 1:
-        return [[{'name': '', 'inverse': False}]]
+        return [{'name': '', 'inverse': False}]
     ret = []
     for i in range(0, len(s), 2):
         f = {}
