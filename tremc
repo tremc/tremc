@@ -362,6 +362,7 @@ class GConfig:
             'go_back_or_unfocus': [2, ['ESC', 'BREAK'], 'Unfocus or back to torrent list'],
             'daemon_quit': [0, ['X'], 'Ask daemon to quit'],
             'options_dialog': [0, ['O'], PROG + ' options menu'],
+            'save_config': [0, [], 'Save config file'],
             'server_options_dialog': [1, ['o'], 'Server options menu'],
             'toggle_compact_torrentlist': [1, ['C'], 'Cycle torrent line height'],
             'toggle_torrent_numbers': [1, [], 'Toggle torrent number in list'],
@@ -1452,6 +1453,9 @@ class Interface:
             raise
         else:
             self.restore_screen()
+
+    def action_save_config(self):
+        gconfig.save_config()
 
     def apply_profile(self, profile):
         gconfig.sort_orders = [s.copy() for s in profile['sort']]
