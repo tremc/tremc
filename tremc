@@ -218,7 +218,7 @@ class GConfig:
         self.filters[0][0]['location'] = ''
         self.histories = load_history(self.history_file)
         self.narrow_threshold = config.getint('Misc', 'narrow_threshold', fallback=73)
-        self.tlist_item_height = config.getint('Misc', 'lines_per_torrent', fallback=3)
+        self.lines_per_torrent = config.getint('Misc', 'lines_per_torrent', fallback=3)
         self.torrentname_is_progressbar = config.getboolean('Misc', 'torrentname_is_progressbar', fallback=True)
         self.file_viewer = config.get('Misc', 'file_viewer', fallback='xdg-open %%s')
         self.file_open_in_terminal = config.getboolean('Misc', 'file_open_in_terminal', fallback=True)
@@ -1491,7 +1491,7 @@ class Interface:
                 self.torrent_title_width -= self.rateDownload_width + 2
 
         elif self.torrents:
-            self.visible_torrents_start = self.scrollpos // gconfig.tlist_item_height
+            self.visible_torrents_start = self.scrollpos // gconfig.lines_per_torrent
             self.visible_torrents = self.torrents[self.visible_torrents_start: self.visible_torrents_start + self.torrents_per_page]
             self.rateDownload_width = self.get_rateDownload_width(self.visible_torrents)
             self.rateUpload_width = self.get_rateUpload_width(self.visible_torrents)
@@ -1523,7 +1523,7 @@ class Interface:
 
     def recalculate_torrents_per_page(self):
         self.mainview_height = self.height - 2
-        self.torrents_per_page = (self.mainview_height + gconfig.tlist_item_height - 1) // gconfig.tlist_item_height
+        self.torrents_per_page = (self.mainview_height + gconfig.lines_per_torrent - 1) // gconfig.lines_per_torrent
 
     def run(self):
         self.draw_title_bar()
@@ -2120,20 +2120,20 @@ class Interface:
     def movement_keys(self, action):
         if self.selected_torrent == -1 and len(self.torrents) > 0:
             if action == 'line_up':
-                self.focus, self.scrollpos = self.move_up(self.focus, self.scrollpos, gconfig.tlist_item_height)
+                self.focus, self.scrollpos = self.move_up(self.focus, self.scrollpos, gconfig.lines_per_torrent)
             elif action == 'line_down':
-                self.focus, self.scrollpos = self.move_down(self.focus, self.scrollpos, gconfig.tlist_item_height,
+                self.focus, self.scrollpos = self.move_down(self.focus, self.scrollpos, gconfig.lines_per_torrent,
                                                             self.torrents_per_page, len(self.torrents))
             elif action == 'page_up':
-                self.focus, self.scrollpos = self.move_page_up(self.focus, self.scrollpos, gconfig.tlist_item_height,
+                self.focus, self.scrollpos = self.move_page_up(self.focus, self.scrollpos, gconfig.lines_per_torrent,
                                                                self.torrents_per_page)
             elif action == 'page_down':
-                self.focus, self.scrollpos = self.move_page_down(self.focus, self.scrollpos, gconfig.tlist_item_height,
+                self.focus, self.scrollpos = self.move_page_down(self.focus, self.scrollpos, gconfig.lines_per_torrent,
                                                                  self.torrents_per_page, len(self.torrents))
             elif action == 'home':
                 self.focus, self.scrollpos = self.move_to_top()
             elif action == 'end':
-                self.focus, self.scrollpos = self.move_to_end(gconfig.tlist_item_height, self.torrents_per_page, len(self.torrents))
+                self.focus, self.scrollpos = self.move_to_end(gconfig.lines_per_torrent, self.torrents_per_page, len(self.torrents))
             self.focused_id = self.torrents[self.focus]['id']
         elif self.selected_torrent > -1:
             # overview
@@ -2536,7 +2536,7 @@ class Interface:
                 self.server.add_label(ids, label)
 
     def action_toggle_compact_torrentlist(self):
-        gconfig.tlist_item_height = gconfig.tlist_item_height % 3 + 1
+        gconfig.lines_per_torrent = gconfig.lines_per_torrent % 3 + 1
         self.recalculate_torrents_per_page()
         self.follow_list_focus()
 
@@ -2664,13 +2664,13 @@ class Interface:
                     break
 
         # make sure the focus is not above the visible area
-        while self.focus < (self.scrollpos / gconfig.tlist_item_height):
-            self.scrollpos -= gconfig.tlist_item_height
+        while self.focus < (self.scrollpos / gconfig.lines_per_torrent):
+            self.scrollpos -= gconfig.lines_per_torrent
         # make sure the focus is not below the visible area
-        while self.focus > (self.scrollpos / gconfig.tlist_item_height) + self.torrents_per_page - 1:
-            self.scrollpos += gconfig.tlist_item_height
+        while self.focus > (self.scrollpos / gconfig.lines_per_torrent) + self.torrents_per_page - 1:
+            self.scrollpos += gconfig.lines_per_torrent
         # keep min and max bounds
-        self.scrollpos = min(self.scrollpos, (len(self.torrents) - self.torrents_per_page) * gconfig.tlist_item_height)
+        self.scrollpos = min(self.scrollpos, (len(self.torrents) - self.torrents_per_page) * gconfig.lines_per_torrent)
         self.scrollpos = max(0, self.scrollpos)
 
     def torrent_text(self, t, search, details=[]):
@@ -2730,7 +2730,7 @@ class Interface:
         for i in range(len(self.visible_torrents)):
             ypos += self.draw_torrentlist_item(self.visible_torrents[i],
                                                (i == self.focus - self.visible_torrents_start),
-                                               gconfig.tlist_item_height == 1,
+                                               gconfig.lines_per_torrent == 1,
                                                ypos, i + self.visible_torrents_start)
         if refresh:
             self.pad.refresh(0, 0, 1, 0, self.mainview_height, self.width - 1)
@@ -2754,7 +2754,7 @@ class Interface:
             self.draw_ratio(torrent, y, False)
             self.draw_torrentlist_status(torrent, focused, y)
 
-            return gconfig.tlist_item_height  # number of lines that were used for drawing the list item
+            return gconfig.lines_per_torrent  # number of lines that were used for drawing the list item
         # Draw ratio in place of upload rate if upload rate = 0
         if not torrent['rateUpload']:
             self.draw_ratio(torrent, y - 1, selected)
