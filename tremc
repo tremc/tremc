@@ -266,6 +266,7 @@ class GConfig:
             'move_queue_down': [513, ['J'], 'Move torrent down in queue'],
             'move_queue_up': [513, ['K'], 'Move torrent up in queue'],
             'profile_menu': [1, ['e'], 'Profile menu'],
+            'save_profile': [1, ['E'], 'Save profile'],
             'search_torrent': [1, ['/'], 'Find torrent'],
             'search_torrent_regex': [1, ['.'], 'Find torrents matching regular expression'],
             'search_torrent_fulltext': [1, [], 'Find torrent (full text)'],
@@ -1311,6 +1312,15 @@ class Interface:
         # copy filter array from profile
         gconfig.filters = [[f.copy() for f in l] for l in profile['filter']]
         self.invert_filters = False
+
+    def save_profile(self, profile):
+        gconfig.profiles[profile] = {'filter': [[f.copy() for f in l] for l in gconfig.filters],
+                                     'sort': [s.copy() for s in gconfig.sort_orders]}
+
+    def action_save_profile(self):
+        name = self.dialog_input_text("Profile name to save:", "")
+        if name:
+            self.save_profile(name)
 
     def action_profile_selected(self, p):
         if p in range(K.n0, K.n9 + 1):
