@@ -255,6 +255,7 @@ class GConfig:
         config.add_section('Filtering')
         config.add_section('Misc')
         config.add_section('Colors')
+        config.add_section('Profiles')
         config.read(self.configfile)
         self.history_file = ''
         if PROG in os.path.dirname(self.configfile):
@@ -515,6 +516,25 @@ class GConfig:
 
     def color_ind(self, name):
         return self.colors[name]['ind']
+
+    def save_profile(self, name, profile):
+        filters_str = ' #& '.join(('#='.join((filter_config_str(f) for f in l)) for l in profile['filter']))
+        profile_str = filters_str + '#=' + sort_config_str(profile['sort'][0])
+        self.config.set('Profiles', 'profile' + name, profile_str)
+
+    def save_config(self):
+        save_keys = {
+            'Connection': ['host', 'port', 'path', 'username', 'password', 'ssl'],
+            'Misc': ['lines_per_torrent', 'torrentname_is_progressbar', 'file_viewer', 'file_open_in_terminal',
+                     'view_selected', 'rdns', 'geoip2_database', 'torrent_numbers']
+        }
+        for section, keys in save_keys.items():
+            for key in keys:
+                self.config.set(section, key, str(getattr(self, key)).replace('%','%%'))
+        for name, profile in self.profiles.items():
+            self.save_profile(name, profile)
+        fp = open(self.configfile,"w+")
+        self.config.update_file(fp)
 
 
 class Keys:
@@ -4991,6 +5011,19 @@ def save_config(filepath, config, force=False):
             return 0
     return -1
 
+def sort_config_str(f):
+    s = ':' if f['reverse'] else ''
+    s += f['name'] + '#='
+    if f['name'] in gconfig.FILTERS_WITH_PARAM:
+        s += '=' + f[f['name']]
+    return s
+
+def filter_config_str(f):
+    s = ':' if f['inverse'] else ''
+    s += f['name'] + '#='
+    if f['name'] in gconfig.FILTERS_WITH_PARAM:
+        s += '=' + f[f['name']]
+    return s
 
 def filter2string(f):
     s = '~' if f['inverse'] else ''
@@ -4998,7 +5031,6 @@ def filter2string(f):
     if f['name'] in gconfig.FILTERS_WITH_PARAM:
         s += '=' + f[f['name']]
     return s
-
 
 def parse_sort_str(sort_str, orders):
     sort_orders = []
