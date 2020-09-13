@@ -403,6 +403,7 @@ class GConfig:
             'remove_labels': [256, ['^l'], 'Remove labels'],
             'add_label': [256, ['b'], 'Add label'],
             'set_labels': [256, ['B'], 'Set labels'],
+            'set_group': [256, [], 'Set group'],
             'move_queue_down': [513, ['J'], 'Move torrent down in queue'],
             'move_queue_up': [513, ['K'], 'Move torrent up in queue'],
             'profile_menu': [1, ['e'], 'Profile menu'],
@@ -885,6 +886,8 @@ class Transmission:
         if self.rpc_version >= 16:
             self.LIST_FIELDS.append('labels')
             self.DETAIL_FIELDS.append('labels')
+            self.LIST_FIELDS.append('group')
+            self.DETAIL_FIELDS.append('group')
 
         # set up request list
         self.requests = {'torrent-list':
@@ -1265,6 +1268,16 @@ class Transmission:
         request.send_request()
         response = request.get_response()
         return response['result']
+
+    def set_group(self, ids, group):
+        data = {
+            'ids': ids,
+            'group': group
+        }
+        request = TransmissionRequest(self.url, 'torrent-set', 1, data, server=self)
+        request.send_request()
+        response = request.get_response()
+        return response['result'] if response['result'] != 'success' else ''
 
     def set_labels(self, ids, labels):
         data = {
@@ -2636,6 +2649,17 @@ class Interface:
             if self.dialog_yesno("Remove labels from %s?" % name + extraline):
                 self.server.set_labels(ids, [])
 
+    def action_set_group(self):
+        if self.server.get_rpc_version() < 16:
+            return
+        ids = self.selected_ids()
+        if ids:
+            focused, extraline = self.get_focused(ids)
+            msg = ('Set group of "%s"' % focused['name']) + extraline + '\nto:'
+            group = self.dialog_input_text(msg, '')
+            if group:
+                self.server.set_group(ids, group)
+
     def action_set_labels(self):
         if self.server.get_rpc_version() < 16:
             return
@@ -3236,6 +3260,9 @@ class Interface:
             info.append(['Labels: '])
             info[-1].extend([s + '; ' for s in t['labels'][:-1]])
             info[-1].append(t['labels'][-1])
+
+        if 'group' in t and t['group']:
+            info.append(['Group: ', t['group']])
 
         info.append([''])
 
