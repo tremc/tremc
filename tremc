@@ -237,6 +237,8 @@ class GConfig:
             'global_download': [0, ['d'], 'Set global download limit'],
             'torrent_upload': [0, ['U'], 'Set torrent maximum upload rate'],
             'torrent_download': [0, ['D'], 'Set torrent maximum download rate'],
+            'group_upload': [0, [], 'Set group maximum upload rate'],
+            'group_download': [0, [], 'Set group maximum download rate'],
             'seed_ratio': [0, ['L'], 'Set seed ratio limit for focused torrent'],
             'bandwidth_priority_inc': [0, ['+'], 'Increase torrent bandwidth priority'],
             'bandwidth_priority_dec': [0, ['-'], 'Decrease torrent bandwidth priority'],
@@ -959,7 +961,7 @@ class Transmission:
         self.wait_for_status_update()
 
     # torrent_id is -1 for global or a non-empty list of ids
-    def set_rate_limit(self, direction, new_limit, torrent_id=-1):
+    def set_rate_limit(self, direction, new_limit, torrent_id=-1, group = None):
         data = dict()
         if new_limit <= -1:
             new_limit = None
@@ -967,7 +969,12 @@ class Transmission:
         else:
             limit_enabled = True
 
-        if torrent_id == -1:
+        if group is not None:
+            request_type = 'group-set'
+            data['name'] = group
+            data['speed-limit-' + direction] = new_limit
+            data['speed-limit-' + direction + '-enabled'] = limit_enabled
+        elif torrent_id == -1:
             request_type = 'session-set'
             data['speed-limit-' + direction] = new_limit
             data['speed-limit-' + direction + '-enabled'] = limit_enabled
@@ -1808,6 +1815,26 @@ class Interface:
         if limit == -128:
             return
         self.server.set_rate_limit('down', limit)
+
+    def action_group_upload(self):
+        self.group_set_limit('up')
+
+    def action_group_download(self):
+        self.group_set_limit('down')
+
+    def group_set_limit(self, direction):
+        group = ''
+        if self.selected_torrent > -1:
+            group = self.torrent_details['group']
+        elif self.focus > -1:
+            group = self.torrents[self.focus]['group']
+        if not group:
+            return
+        current_limit = (-1, self.stats['speed-limit-'+direction])[self.stats['speed-limit-'+direction+'-enabled']]
+        limit = self.dialog_input_number(direction.title()+'load limit in kilobytes per second for group '+group, current_limit)
+        if limit == -128:
+            return
+        self.server.set_rate_limit(direction, limit, group=group)
 
     def selected_ids(self):
         # If viewing torrent details, act on viewed torrent, even if there is a
