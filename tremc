@@ -1674,6 +1674,7 @@ class Interface:
     def recalculate_torrents_per_page(self):
         self.mainview_height = self.height - 2
         self.torrents_per_page = (self.mainview_height + gconfig.lines_per_torrent - 1) // gconfig.lines_per_torrent
+        self.last_torrent_partial = self.torrents_per_page * gconfig.lines_per_torrent - self.mainview_height > max(0, gconfig.lines_per_torrent - 2)
 
     def run(self):
         self.draw_title_bar()
@@ -2818,10 +2819,10 @@ class Interface:
         while self.focus < (self.scrollpos / gconfig.lines_per_torrent):
             self.scrollpos -= gconfig.lines_per_torrent
         # make sure the focus is not below the visible area
-        while self.focus > (self.scrollpos / gconfig.lines_per_torrent) + self.torrents_per_page - 1:
+        while self.focus > (self.scrollpos / gconfig.lines_per_torrent) + self.torrents_per_page - 1 - int(self.last_torrent_partial):
             self.scrollpos += gconfig.lines_per_torrent
         # keep min and max bounds
-        self.scrollpos = min(self.scrollpos, (len(self.torrents) - self.torrents_per_page) * gconfig.lines_per_torrent)
+        self.scrollpos = min(self.scrollpos, (len(self.torrents) - self.torrents_per_page + int(self.last_torrent_partial)) * gconfig.lines_per_torrent)
         self.scrollpos = max(0, self.scrollpos)
 
     def torrent_text(self, t, search, details=[]):
