@@ -196,6 +196,8 @@ class GConfig:
 
     FILTERS_WITH_PARAM = ['tracker', 'regex', 'location', 'label', 'group']
 
+    speed_k = 1024
+
     def __init__(self):
         default_config_path = xdg_config_home(PROG + '/settings.cfg')
         parser = argparse.ArgumentParser(description="%(prog)s " + self.VERSION,
@@ -3187,7 +3189,7 @@ class Interface:
             if t['rateDownload']:
                 info[-1].append("receiving %s per second" % scale_bytes(t['rateDownload'], long=True))
                 if t['downloadLimited']:
-                    info[-1][-1] += " (throttled to %s)" % scale_bytes(t['downloadLimit'] * 1024, long=True)
+                    info[-1][-1] += " (throttled to %s)" % scale_bytes(t['downloadLimit'] * speed_k, long=True)
 
         try:
             copies_distributed = (float(t['uploadedEver']) / float(t['sizeWhenDone']))
@@ -3198,7 +3200,7 @@ class Interface:
         if t['rateUpload']:
             info.append(" Sending %s per second" % scale_bytes(t['rateUpload'], long=True))
             if t['uploadLimited']:
-                info[-1] += " (throttled to %s)" % scale_bytes(t['uploadLimit'] * 1024, long=True)
+                info[-1] += " (throttled to %s)" % scale_bytes(t['uploadLimit'] * speed_k, long=True)
 
         info.append(['Ratio: ', '%.2f copies distributed' % copies_distributed])
         norm_upload_rate = norm.add('%s:rateUpload' % t['id'], t['rateUpload'], 50)
@@ -3222,8 +3224,8 @@ class Interface:
 
         info.append([strings[8]])
         unlimited = 'session' if t['honorsSessionLimits'] else 'unlimited'
-        info[-1].append(strings[9] + (scale_bytes(t['downloadLimit'] * 1024) if t['downloadLimited'] else unlimited) + ";  ")
-        info[-1].append(strings[10] + (scale_bytes(t['uploadLimit'] * 1024) if t['uploadLimited'] else unlimited))
+        info[-1].append(strings[9] + (scale_bytes(t['downloadLimit'] * speed_k) if t['downloadLimited'] else unlimited) + ";  ")
+        info[-1].append(strings[10] + (scale_bytes(t['uploadLimit'] * speed_k) if t['uploadLimited'] else unlimited))
 
         info.append(['Peers: ',
                      strings[0] + "%d;  " % t['peersConnected'],
@@ -3549,7 +3551,7 @@ class Interface:
 
             # ETA
             if self.width >= 55:
-                if peer['progress'] < 1 and peer['download_speed'] > 1024:
+                if peer['progress'] < 1 and peer['download_speed'] > speed_k:
                     self.pad.addstr(" %8s %4s " %
                                     ('~' + scale_bytes(peer['download_speed']),
                                      '~' + scale_time(peer['time_left'])))
@@ -5064,18 +5066,18 @@ def timestamp(timestamp, time_format="%x %X", narrow=False):
     return "%s (%s)" % (absolute, relative)
 
 
-def scale_bytes(num=0, long=False):
-    if num >= 1099511627776:
-        scaled_num = round((num / 1099511627776.0), 1)
+def scale_bytes(num=0, long=False, k=1024):
+    if num >= k * k * k * k:
+        scaled_num = round((num / k / k / k / k), 1)
         unit = 'T'
-    elif num >= 1073741824:
-        scaled_num = round((num / 1073741824.0), 1)
+    elif num >= k * k * k:
+        scaled_num = round((num / k / k / k), 1)
         unit = 'G'
-    elif num >= 1048576:
-        scaled_num = round((num / 1048576.0), 1)
+    elif num >= k * k:
+        scaled_num = round((num / k / k), 1)
         unit = 'M'
     else:
-        scaled_num = round((num / 1024.0), 1)
+        scaled_num = round((num / k), 1)
         unit = 'K'
 
     # handle 0 num special
