@@ -651,6 +651,11 @@ class Transmission:
             self.LIST_FIELDS.append('labels')
             self.DETAIL_FIELDS.append('labels')
 
+        # queue was implemmented in transmission 2.4
+        if self.rpc_version < 14:
+            gconfig.sort_options.remove(('queuePosition', '_Queue Position'))
+            gconfig.sort_orders = [{'name': 'name', 'reverse': True}] # assume optimistically that 'name' is a valid sorting order key
+
         # set up request list
         self.requests = {'torrent-list':
                          TransmissionRequest(url, 'torrent-get', self.TAG_TORRENT_LIST, {'fields': self.LIST_FIELDS}, server=self),
