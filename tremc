@@ -247,9 +247,12 @@ class GConfig:
             'rename_torrent_selected_file': [0, ['F'], 'Rename torrent/file'],
             'reannounce_torrent': [0, ['n'], 'Reannounce torrent'],
             'show_stats': [0, ['S'], 'Show upload/download stats'],
-            'remove_torrent': [1, ['DC', 'r'], 'Remove torrent keeping content'],
-            'remove_torrent_local_data': [0, ['SDC', 'R'], 'Remove torrent and content'],
-            'remove_selected_torrents': [1, ['^r'], 'Remove selected torrents'],
+            'remove': [1, ['DC', 'r'], 'Remove seected/focused torrents, keeping content'],
+            'remove_focused': [1, [], 'Remove focused torrent keeping content'],
+            'remove_selected': [1, ['^r'], 'Remove selected torrents'],
+            'remove_data': [0, [], 'Remove seected/focused torrents and content'],
+            'remove_focused_data': [0, ['SDC', 'R'], 'Remove torrent and content'],
+            'remove_selected_data': [1, [], 'Remove selected torrents and content'],
             'copy_magnet_link': [0, ['M'], 'Copy Magnet Link to the System Clipboard'],
             'remove_labels': [256, ['^l'], 'Remove labels'],
             'add_label': [256, ['b'], 'Add label'],
@@ -1835,37 +1838,70 @@ class Interface:
         if ids:
             self.server.reannounce_torrent(ids)
 
-    def action_remove_selected_torrents(self):
+
+    def conditional_remove(self, ids, first, data=False):
+        if ids:
+            hard="WARNING: this will remove more than one torrent" if len(ids)>1 else None
+            if first in ids:
+                ids.remove(first)
+            else:
+                first=ids.pop(0)
+            name = self.server.get_torrent_by_id(first)['name'][:self.width - 20]
+            if ids:
+                extraline = " And:\n"
+                for i in ids[:self.height - 12]:
+                    extraline = extraline + " " + self.server.get_torrent_by_id(i)['name'][:self.width - 8] + "\n"
+                if len(ids)> self.height - 12:
+                    extraline += "   and even %d more." % (len(ids)-self.height - 12)
+            else:
+                extraline = "\n"
+            ids.append(first)
+            question = "Remove AND DELETE" if data else "Remove"
+            if self.dialog_yesno(question + " %s?" % name + extraline, hard=hard, important=data):
+                self.server.remove_torrent(ids, data=data)
+                if self.selected_torrent > -1:  # leave details
+                    self.server.set_torrent_details_id(-1)
+                    self.selected_torrent = -1
+                    self.details_category_focus = 0
+                self.focus_next_after_delete()
+
+    def action_remove(self):
+        ids = self.selected_ids()
+        if ids:
+            focused, extraline = self.get_focused(ids)
+            self.conditional_remove(ids, focused['id'])
+
+    def action_remove_selected(self):
         if not self.selected:
             return
         ids = self.selected_ids()
         if ids:
             focused, extraline = self.get_focused(ids)
-            name = focused['name'][:self.width - 15]
-            if self.dialog_yesno("Remove %s?" % name + extraline, hard="WARNING: this will remove more than one torrent"):
-                self.server.remove_torrent(ids)
+            self.conditional_remove(ids, focused['id'])
 
-    def action_remove_torrent(self):
+    def action_remove_focused(self):
         if self.focus > -1:
-            name = self.torrents[self.focus]['name'][0:self.width - 15]
-            if self.dialog_yesno("Remove %s?" % name):
-                if self.selected_torrent > -1:  # leave details
-                    self.server.set_torrent_details_id(-1)
-                    self.selected_torrent = -1
-                    self.details_category_focus = 0
-                self.server.remove_torrent([self.torrents[self.focus]['id']])
-                self.focus_next_after_delete()
+            ids = [self.torrents[self.focus]['id']]
+            self.conditional_remove(ids, ids[0])
 
-    def action_remove_torrent_local_data(self):
+    def action_remove_data(self):
+        ids = self.selected_ids()
+        if ids:
+            focused, extraline = self.get_focused(ids)
+            self.conditional_remove(ids, focused['id'], data=True)
+
+    def action_remove_selected_data(self):
+        if not self.selected:
+            return
+        ids = self.selected_ids()
+        if ids:
+            focused, extraline = self.get_focused(ids)
+            self.conditional_remove(ids, focused['id'], data=True)
+
+    def action_remove_focused_data(self):
         if self.focus > -1:
-            name = self.torrents[self.focus]['name'][0:self.width - 15]
-            if self.dialog_yesno("Remove and delete %s?" % name, important=True):
-                if self.selected_torrent > -1:  # leave details
-                    self.server.set_torrent_details_id(-1)
-                    self.selected_torrent = -1
-                    self.details_category_focus = 0
-                self.server.remove_torrent([self.torrents[self.focus]['id']], data=True)
-                self.focus_next_after_delete()
+            ids = [self.torrents[self.focus]['id']]
+            self.conditional_remove(ids, ids[0], data=True)
 
     def focus_next_after_delete(self):
         """ Focus next torrent after user deletes torrent
@@ -3751,7 +3787,7 @@ class Interface:
     def dialog_yesno(self, message, important=False, hard=None):
         if hard:
             important = True
-            message = message + "\n" + hard + "\n" + "Press ctrl-y to accept.\n"
+            message = message + "\n" + hard + "\n\n   Press ctrl-y to accept.\n"
         height = 5 + message.count("\n")
         width = max(len_columns(message), 8) + 4
         win = self.window(height, width, message=message)
