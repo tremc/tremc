@@ -357,6 +357,8 @@ class GConfig:
             self.selected_file_attr = curses.A_BOLD
 
         self.actions = {
+            # First in list: 0=all 1=list 2=details 3=files 4=tracker 16=movement
+            # +256 for RPC>=14, +512 for RPC>=16
             'list_key_bindings': [0, ['F1', '?'], 'List key bindings'],
             'quit_now': [0, ['^w'], 'Quit immediately'],
             'quit': [1, ['q'], 'Quit'],
