@@ -4727,13 +4727,19 @@ def num2str(num, num_format='%s'):
     return num_format % num
 
 
+lastexitcode = -1
 def exit_prog(msg='', exitcode=0):
+    global lastexitcode
     try:
         curses.endwin()
     except curses.error:
         pass
     if msg or exitcode:
         print(msg, file=sys.stderr)
+    if lastexitcode == -1:
+        lastexitcode = exitcode
+    elif exitcode == 0:
+        exitcode = lastexitcode
     sys.exit(exitcode)
 
 
