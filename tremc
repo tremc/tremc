@@ -652,6 +652,11 @@ class Transmission:
         if self.rpc_version >= 14:
             self.LIST_FIELDS.append('queuePosition')
             self.DETAIL_FIELDS.append('queuePosition')
+        else:
+            gconfig.sort_options.remove(('queuePosition', '_Queue Position'))
+            if gconfig.sort_orders[0]['name'] == 'queuePosition':
+                # Use default sort if set to invalid queuePosition.
+                gconfig.sort_orders = [{'name': 'name', 'reverse': False}]
 
         if self.rpc_version >= 16:
             self.LIST_FIELDS.append('labels')
