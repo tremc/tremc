@@ -803,6 +803,11 @@ class Transmission:
         if self.rpc_version >= 14:
             self.LIST_FIELDS.append('queuePosition')
             self.DETAIL_FIELDS.append('queuePosition')
+        else:
+            gconfig.sort_options.remove(('queuePosition', '_Queue Position'))
+            if gconfig.sort_orders[0]['name'] == 'queuePosition':
+                # Use default sort if set to invalid queuePosition.
+                gconfig.sort_orders = [{'name': 'name', 'reverse': False}]
 
         if self.rpc_version >= 16:
             self.LIST_FIELDS.append('labels')
@@ -1451,13 +1456,6 @@ class Interface:
         self.sorted_files = None
         self.action_keys = {a:set(d[1]) for a, d in gconfig.actions.items()}
         parse_config_key(self, gconfig.config, gconfig, self.common_keybindings, self.details_keybindings, self.list_keybindings, self.action_keys)
-
-        # queue was implemmented in transmission 2.4
-        if self.server.get_rpc_version() < 14:
-            gconfig.sort_options.remove(('queuePosition', '_Queue Position'))
-            if gconfig.sort_orders[0]['name'] == 'queuePosition':
-                # Use default sort if set to invalid queuePosition.
-                gconfig.sort_orders = [{'name': 'name', 'reverse': False}]
 
         try:
             self.init_screen()
