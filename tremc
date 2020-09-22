@@ -2797,7 +2797,7 @@ class Interface:
             self.pad.addstr(ypos, 0, str(int(idx + 1)).rjust(numwidth)+' ')
         else:
             self.pad.move(ypos, 0)
-        if torrent['status'] == Transmission.STATUS_SEED:
+        if torrent['status'] == Transmission.STATUS_SEED or (torrent['percentDone'] == 100 and torrent['status'] == Transmission.STATUS_STOPPED):
             if torrent['seedRatioMode'] == 0:  # Use global limit if set, otherwise unlimited
                 limit = self.stats['seedRatioLimit'] if self.stats['seedRatioLimited'] else -1
             elif torrent['seedRatioMode'] == 1:  # Stop seeding at seedRatioLimit
