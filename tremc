@@ -829,10 +829,14 @@ class Transmission:
 
     def get_torrent_list(self, sort_orders):
         def sort_value(value):
-            try:
+            # Always return a string, so everything is comparable
+            if isinstance(value, (int, float)):
+                # 20 digits should be quite enough for anything (for now)
+                return "%027.6f" % value
+            elif isinstance(value, str):
                 return value.lower()
-            except AttributeError:
-                return value
+            else:
+                return str(value)
         try:
             for sort_order in sort_orders:
                 self.torrent_cache.sort(key=lambda x: sort_value(x[sort_order['name']]),
