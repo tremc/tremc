@@ -3042,7 +3042,7 @@ class Interface:
             if t['rateDownload']:
                 info[-1].append("receiving %s per second" % scale_bytes(t['rateDownload'], long=True))
                 if t['downloadLimited']:
-                    info[-1][-1] += " (throttled to %s)" % scale_bytes(t['downloadLimit'] * speed_k, long=True)
+                    info[-1][-1] += " (throttled to %s)" % scale_bytes(t['downloadLimit'] * gconfig.speed_k, long=True)
 
         try:
             copies_distributed = (float(t['uploadedEver']) / float(t['sizeWhenDone']))
@@ -3053,7 +3053,7 @@ class Interface:
         if t['rateUpload']:
             info.append(" Sending %s per second" % scale_bytes(t['rateUpload'], long=True))
             if t['uploadLimited']:
-                info[-1] += " (throttled to %s)" % scale_bytes(t['uploadLimit'] * speed_k, long=True)
+                info[-1] += " (throttled to %s)" % scale_bytes(t['uploadLimit'] * gconfig.speed_k, long=True)
 
         info.append(['Ratio: ', '%.2f copies distributed' % copies_distributed])
         norm_upload_rate = norm.add('%s:rateUpload' % t['id'], t['rateUpload'], 50)
@@ -3076,8 +3076,8 @@ class Interface:
 
         info.append([strings[8]])
         unlimited = 'session' if t['honorsSessionLimits'] else 'unlimited'
-        info[-1].append(strings[9] + (scale_bytes(t['downloadLimit'] * speed_k) if t['downloadLimited'] else unlimited) + ";  ")
-        info[-1].append(strings[10] + (scale_bytes(t['uploadLimit'] * speed_k) if t['uploadLimited'] else unlimited))
+        info[-1].append(strings[9] + (scale_bytes(t['downloadLimit'] * gconfig.speed_k) if t['downloadLimited'] else unlimited) + ";  ")
+        info[-1].append(strings[10] + (scale_bytes(t['uploadLimit'] * gconfig.speed_k) if t['uploadLimited'] else unlimited))
 
         info.append(['Peers: ',
                      strings[0] + "%d;  " % t['peersConnected'],
@@ -3408,7 +3408,7 @@ class Interface:
 
             # ETA
             if self.width >= 55:
-                if peer['progress'] < 1 and peer['download_speed'] > speed_k:
+                if peer['progress'] < 1 and peer['download_speed'] > gconfig.speed_k:
                     self.pad.addstr(" %8s %4s " %
                                     ('~' + scale_bytes(peer['download_speed']),
                                      '~' + scale_time(peer['time_left'])))
