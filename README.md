@@ -191,7 +191,7 @@ An action marked with + acts on:
 * t		: Toggle turtle mode
 * J		: Move torrent down in queue
 * K		: Move torrent up in queue
-* r, Del	: Remove torrent, keeping data
+* r, Del	: Remove torrent, keeping data +
 * ^r	: Remove selected torrents, keeping data
 * e		: Profile selection menu
 * C		: Change between 1,2,3 lines per torrent modes
