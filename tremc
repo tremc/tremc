@@ -2605,12 +2605,12 @@ class Interface:
                 self.dialog_ok("%s:\n%s" % (" ".join(viewer_cmd), err))
             hide_cursor()
             if gconfig.file_viewer != file_viewer:
-                file_type = self.server.get_torrent_details()['files'][self.file_index_map[self.focus_detaillist]]['name'].split('.')[-1]
+                file_type = self.server.get_torrent_details()['files'][self.file_index_map[self.focus_detaillist]]['name'].split('.')[-1].lower()
                 gconfig.histories['types'][file_type] = file_viewer
 
     def action_view_file_command(self):
         if self.details_category_focus == 1 and self.focus_detaillist > -1:
-            file_type = self.server.get_torrent_details()['files'][self.file_index_map[self.focus_detaillist]]['name'].split('.')[-1]
+            file_type = self.server.get_torrent_details()['files'][self.file_index_map[self.focus_detaillist]]['name'].split('.')[-1].lower()
             if file_type in gconfig.histories['types']:
                 command = gconfig.histories['types'][file_type]
             else:
