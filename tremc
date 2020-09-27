@@ -362,25 +362,27 @@ class GConfig:
                                  self.colors[name]['bg'])
 
     def _parse_color_pair(self, pair):
-        bg_name = [x for x in pair.split(',') if x[:3] == 'bg:'][0].split(':')[1].upper() if 'bg:' in pair else 'DEFAULT'
-        fg_name = [x for x in pair.split(',') if x[:3] == 'fg:'][0].split(':')[1].upper() if 'fg:' in pair else 'DEFAULT'
+        parts = pair.split(',')
+        bg_name = [x for x in parts if x[:3] == 'bg:'][0].split(':')[1].upper() if 'bg:' in pair else None
+        fg_name = [x for x in parts if x[:3] == 'fg:'][0].split(':')[1].upper() if 'fg:' in pair else None
+        element_copy = next((x for x in parts if x in self.colors), None)
         color_pair = {'ind': len(list(self.colors.keys())) + 1}
-        try:
+        color_pair['bg'] = -1
+        color_pair['fg'] = -1
+
+        if element_copy:
+            color_pair['bg'] = self.colors[element_copy]['bg']
+            color_pair['fg'] = self.colors[element_copy]['fg']
+        if bg_name:
             if bg_name == 'DEFAULT':
                 color_pair['bg'] = -1
             else:
-                color_pair['bg'] = getattr(curses, 'COLOR_' + bg_name)
-        except AttributeError:
-            color_pair['bg'] = -1
-        try:
+                color_pair['bg'] = getattr(curses, 'COLOR_' + bg_name, -1)
+        if fg_name:
             if fg_name == 'DEFAULT':
                 color_pair['fg'] = -1
             else:
-                color_pair['fg'] = getattr(curses, 'COLOR_' + fg_name)
-            if fg_name == 'WHITE':
-                color_pair['fg'] = -1
-        except AttributeError:
-            color_pair['fg'] = -1
+                color_pair['fg'] = getattr(curses, 'COLOR_' + fg_name, -1)
         return color_pair
 
     def color_ind(self, name):
