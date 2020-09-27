@@ -336,6 +336,12 @@ class GConfig:
             'title_verify': 'bg:magenta,fg:black',
             'title_paused': 'bg:default,fg:default',
             'title_error': 'bg:red,fg:default',
+            'title_seed_incomp': 'a:r',
+            'title_download_incomp': 'a:r',
+            'title_idle_incomp': 'a:r',
+            'title_verify_incomp': 'a:r',
+            'title_paused_incomp': 'a:r',
+            'title_error_incomp': 'a:r',
             'download_rate': 'bg:default,fg:blue,a:b',
             'upload_rate': 'bg:black,fg:red,a:b',
             'eta+ratio': 'bg:default,fg:default,a:b',
@@ -2702,24 +2708,24 @@ class Interface:
         title = ljust_columns(torrent['name'], width - len(size)) + size
 
         if torrent['isIsolated']:
-            color = gconfig.element_attr('title_error')
+            element_name = 'title_error'
         elif torrent['status'] == Transmission.STATUS_SEED or \
                 torrent['status'] == Transmission.STATUS_SEED_WAIT:
-            color = gconfig.element_attr('title_seed')
+            element_name = 'title_seed'
         elif torrent['status'] == Transmission.STATUS_STOPPED:
-            color = gconfig.element_attr('title_paused')
+            element_name = 'title_paused'
         elif torrent['status'] == Transmission.STATUS_CHECK or \
                 torrent['status'] == Transmission.STATUS_CHECK_WAIT:
-            color = gconfig.element_attr('title_verify')
+            element_name = 'title_verify'
         elif torrent['rateDownload'] == 0:
-            color = gconfig.element_attr('title_idle')
+            element_name = 'title_idle'
         elif torrent['percentDone'] < 100:
-            color = gconfig.element_attr('title_download')
+            element_name = 'title_download'
         else:
             color = 0
 
-        tag = curses.A_REVERSE
-        tag_done = color
+        tag = gconfig.element_attr(element_name+'_incomp')
+        tag_done = gconfig.element_attr(element_name)
         if focused:
             tag += curses.A_BOLD
             tag_done += curses.A_BOLD
