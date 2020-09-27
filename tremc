@@ -3564,10 +3564,10 @@ class Interface:
             self.screen.addstr((self.height - 1), 0, "-- VISUAL --", curses.A_REVERSE)
         else:
             if self.narrow:
-                strings = ['T', 'D', 'S', 'P', '', '!', ' ', ' S:%d', ' F:%d']
+                strings = ['T', 'D', 'S', 'P', '', '!', ' ', ' S:%d', ' F:%d', 'Sz']
             else:
                 strings = ["Torrent%s:" % ('s', '')[len(self.torrents) == 1], "Downloading:", "Seeding:", "Paused:",
-                           "Filter:", "not ", " Sort by:", " Selected:%d", " Files:%d"]
+                           "Filter:", "not ", " Sort by:", " Selected:%d", " Files:%d", 'Size:']
             self.screen.addstr((self.height - 1), 0, strings[0],
                                curses.A_REVERSE)
             self.screen.addstr("%d (" % len(self.torrents), curses.A_REVERSE)
@@ -3577,12 +3577,18 @@ class Interface:
             paused = len([x for x in self.torrents if x['status'] in [Transmission.STATUS_STOPPED, Transmission.STATUS_CHECK_WAIT,
                                                                       Transmission.STATUS_CHECK, Transmission.STATUS_DOWNLOAD_WAIT, Transmission.STATUS_SEED_WAIT]])
 
+            total_size = sum(x['sizeWhenDone'] for x  in self.torrents)
+            total_done = percent(total_size, sum(x['haveValid'] for x  in self.torrents))
+
             self.screen.addstr(strings[1], curses.A_REVERSE)
             self.screen.addstr("%d " % downloading, curses.A_REVERSE)
             self.screen.addstr(strings[2], curses.A_REVERSE)
             self.screen.addstr("%d " % seeding, curses.A_REVERSE)
             self.screen.addstr(strings[3], curses.A_REVERSE)
-            self.screen.addstr("%d) " % paused, curses.A_REVERSE)
+            self.screen.addstr("%d " % paused, curses.A_REVERSE)
+            self.screen.addstr(strings[9] + scale_bytes(total_size), curses.A_REVERSE)
+            self.screen.addstr("[%.2f%%]" % total_done, curses.A_REVERSE)
+            self.screen.addstr(") ", curses.A_REVERSE)
 
             if self.selected_torrent == -1:
                 if gconfig.filters[0][0]['name']:
