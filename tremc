@@ -335,12 +335,14 @@ class GConfig:
             'title_idle': 'bg:cyan,fg:black',
             'title_verify': 'bg:magenta,fg:black',
             'title_paused': 'bg:default,fg:default',
+            'title_paused_done': 'title_paused',
             'title_error': 'bg:red,fg:default',
             'title_seed_incomp': 'a:r',
             'title_download_incomp': 'a:r',
             'title_idle_incomp': 'a:r',
             'title_verify_incomp': 'a:r',
             'title_paused_incomp': 'a:r',
+            'title_paused_done_incomp': 'title_paused_incomp',
             'title_error_incomp': 'a:r',
             'download_rate': 'bg:default,fg:blue,a:b',
             'upload_rate': 'bg:black,fg:red,a:b',
@@ -2713,7 +2715,7 @@ class Interface:
                 torrent['status'] == Transmission.STATUS_SEED_WAIT:
             element_name = 'title_seed'
         elif torrent['status'] == Transmission.STATUS_STOPPED:
-            element_name = 'title_paused'
+            element_name = 'title_paused_done' if torrent['percentDone'] == 100 else 'title_paused'
         elif torrent['status'] == Transmission.STATUS_CHECK or \
                 torrent['status'] == Transmission.STATUS_CHECK_WAIT:
             element_name = 'title_verify'
