@@ -3580,14 +3580,18 @@ class Interface:
             total_size = sum(x['sizeWhenDone'] for x  in self.torrents)
             total_done = percent(total_size, sum(x['haveValid'] for x  in self.torrents))
 
-            self.screen.addstr(strings[1], curses.A_REVERSE)
-            self.screen.addstr("%d " % downloading, curses.A_REVERSE)
-            self.screen.addstr(strings[2], curses.A_REVERSE)
-            self.screen.addstr("%d " % seeding, curses.A_REVERSE)
-            self.screen.addstr(strings[3], curses.A_REVERSE)
-            self.screen.addstr("%d " % paused, curses.A_REVERSE)
+            if downloading > 0:
+                self.screen.addstr(strings[1], curses.A_REVERSE)
+                self.screen.addstr("%d " % downloading, curses.A_REVERSE)
+            if seeding > 0:
+                self.screen.addstr(strings[2], curses.A_REVERSE)
+                self.screen.addstr("%d " % seeding, curses.A_REVERSE)
+            if paused > 0:
+                self.screen.addstr(strings[3], curses.A_REVERSE)
+                self.screen.addstr("%d " % paused, curses.A_REVERSE)
             self.screen.addstr(strings[9] + scale_bytes(total_size), curses.A_REVERSE)
-            self.screen.addstr("[%.2f%%]" % total_done, curses.A_REVERSE)
+            if downloading >0 or paused >0:
+                self.screen.addstr("[%.2f%%]" % total_done, curses.A_REVERSE)
             self.screen.addstr(") ", curses.A_REVERSE)
 
             if self.selected_torrent == -1:
