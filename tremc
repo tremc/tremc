@@ -488,8 +488,11 @@ class GConfig:
             'eta+ratio': 'bg:default,fg:default,a:b',
             'filter_status': 'bg:red,fg:black',
             'multi_filter_status': 'bg:blue,fg:black',
-            'dialog': 'bg:default,fg:default',
-            'dialog_important': 'bg:default,fg:red',
+            'dialog': 'bg:default,fg:default,a:rb',
+            'dialog_important': 'bg:default,fg:red,a:r',
+            'dialog_text': 'dialog,a:*r',
+            'dialog_text_important': 'dialog_important,a:*r',
+            'menu_focused': 'dialog,a:*r',
             'file_prio_high': 'fg:red,bg:default',
             'file_prio_normal': 'fg:default,bg:default',
             'file_prio_low': 'fg:yellow,bg:default',
@@ -3969,13 +3972,13 @@ class Interface:
                 win.addstr(height - 1, 2, "%d/%d" % (page, pages))
         return win, 0
 
-    def window(self, height, width, message='', title='', xpos=None):
-        return self.real_window(height, width, message=message, title=title, xpos=xpos)[0]
+    def window(self, height, width, message='', title='', xpos=None, attr='dialog'):
+        return self.real_window(height, width, message=message, title=title, xpos=xpos, attr=attr)[0]
 
     def help_window(self, height, width, message='', title='', first=0, win=None):
         return self.real_window(height, width, message=message, title=title, first=first, win=win)
 
-    def real_window(self, height, width, message='', title='', first=0, win=None, keypad=True, xpos=None):
+    def real_window(self, height, width, message='', title='', first=0, win=None, keypad=True, xpos=None, attr='dialog'):
         height = min(self.mainview_height, height)
         width = min(self.width, width)
         ypos = int((self.height - height) / 2)
@@ -3987,7 +3990,7 @@ class Interface:
         else:
             win.erase()
         win.box()
-        win.bkgd(' ', curses.A_REVERSE + curses.A_BOLD)
+        win.bkgd(' ', gconfig.element_attr(attr))
 
         if width >= 20:
             win.addch(height - 1, width - 19, curses.ACS_RTEE)
@@ -4015,22 +4018,21 @@ class Interface:
         if hard:
             important = True
             message = message + "\n" + hard + "\n\n   Press ctrl-y to accept.\n"
+        attr = 'dialog_important' if important else 'dialog'
         height = 5 + message.count("\n")
         width = max(len_columns(message), 8) + 4
-        win = self.window(height, width, message=message)
-
-        if important:
-            win.bkgd(' ', gconfig.element_attr('dialog_important') + curses.A_REVERSE)
+        win = self.window(height, width, message=message, attr=attr)
 
         choice = False
         while True:
             win.move(int(height - 2), int(width / 2) - 4)
             if not hard:
                 if choice:
-                    win.bkgdset(win.getbkgd() - curses.A_REVERSE)
+                    bg = win.getbkgd()
+                    win.bkgdset(gconfig.element_attr('menu_focused'))
                     win.addstr('Y', curses.A_UNDERLINE)
                     win.addstr('es')
-                    win.bkgdset(win.getbkgd() + curses.A_REVERSE)
+                    win.bkgdset(bg)
                     win.addstr('   ')
                     win.addstr('N', curses.A_UNDERLINE)
                     win.addstr('o')
@@ -4038,10 +4040,11 @@ class Interface:
                     win.addstr('Y', curses.A_UNDERLINE)
                     win.addstr('es')
                     win.addstr('   ')
-                    win.bkgdset(win.getbkgd() - curses.A_REVERSE)
+                    bg = win.getbkgd()
+                    win.bkgdset(gconfig.element_attr('menu_focused'))
                     win.addstr('N', curses.A_UNDERLINE)
                     win.addstr('o')
-                    win.bkgdset(win.getbkgd() + curses.A_REVERSE)
+                    win.bkgdset(bg)
 
             c = self.wingetch(win)
             if hard:
@@ -4104,11 +4107,13 @@ class Interface:
             displaytext = text[textwidth * page:textwidth * (page + 1)]
             displayindex = index - textwidth * page
 
-            color = gconfig.element_attr('dialog_important') if self.highlight_dialog \
-                    else gconfig.element_attr('dialog')
-            win.bkgdset(win.getbkgd() - curses.A_REVERSE)
+            color = gconfig.element_attr('dialog_text_important') if self.highlight_dialog \
+                    else gconfig.element_attr('dialog_text')
+
+            bg = win.getbkgd()
+            win.bkgdset(0)
             win.addstr(height - 2, 2, displaytext.ljust(textwidth), color)
-            win.bkgdset(win.getbkgd() + curses.A_REVERSE)
+            win.bkgdset(bg)
             win.move(height - 2, displayindex + 2)
             c = self.wingetch(win)
             if history is not None:
@@ -4362,7 +4367,10 @@ class Interface:
             win.addstr(height - 4, 2, "leave empty for default")
 
         while True:
-            win.addstr(height - 2, 2, value.ljust(width - 4), gconfig.element_attr('dialog'))
+            bg = win.getbkgd()
+            win.bkgdset(0)
+            win.addstr(height - 2, 2, value.ljust(width - 4), gconfig.element_attr('dialog_text'))
+            win.bkgdset(bg)
             win.move(height - 2, len(value) + 2)
             c = self.wingetch(win)
             if c in gconfig.esc_keys_w:
@@ -4476,7 +4484,8 @@ class Interface:
             title = option[1].split('_', 1)
             if startline < i <= endline:
                 if i == focus:
-                    win.bkgdset(win.getbkgd() - curses.A_REVERSE)
+                    bg = win.getbkgd()
+                    win.bkgdset(gconfig.element_attr('menu_focused'))
                 win.addstr(i - startline, 2, title[0])
                 if len(title) > 1:
                     win.addstr(title[1][0], curses.A_UNDERLINE)
@@ -4484,7 +4493,7 @@ class Interface:
                     keys[title[1][0].lower()] = i - 1
                 win.addstr(''.ljust(width - len(option[1]) - 3))
                 if i == focus:
-                    win.bkgdset(win.getbkgd() + curses.A_REVERSE)
+                    win.bkgdset(bg)
             i += 1
         return keys
 
