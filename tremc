@@ -336,9 +336,9 @@ class GConfig:
             'title_verify': 'bg:magenta,fg:black',
             'title_paused': 'bg:default,fg:default',
             'title_error': 'bg:red,fg:default',
-            'download_rate': 'bg:default,fg:blue',
-            'upload_rate': 'bg:black,fg:red',
-            'eta+ratio': 'bg:default,fg:default',
+            'download_rate': 'bg:default,fg:blue,a:b',
+            'upload_rate': 'bg:black,fg:red,a:b',
+            'eta+ratio': 'bg:default,fg:default,a:b',
             'filter_status': 'bg:red,fg:black',
             'multi_filter_status': 'bg:blue,fg:black',
             'dialog': 'bg:default,fg:default',
@@ -2632,7 +2632,7 @@ class Interface:
         if selected:
             tag = curses.A_REVERSE
         else:
-            tag = gconfig.element_attr('download_rate') + curses.A_BOLD
+            tag = gconfig.element_attr('download_rate')
         self.pad.move(ypos, self.width - self.rateDownload_width - self.rateUpload_width - 3)
         self.pad.addch(curses.ACS_DARROW, (0, curses.A_BOLD)[torrent['downloadLimited']])
         rate = ('', scale_bytes(torrent['rateDownload']))[torrent['rateDownload'] > 0]
@@ -2642,7 +2642,7 @@ class Interface:
         if selected:
             tag = curses.A_REVERSE
         else:
-            tag = gconfig.element_attr('upload_rate') + curses.A_BOLD
+            tag = gconfig.element_attr('upload_rate')
         self.pad.move(ypos, self.width - self.rateUpload_width - 1)
         self.pad.addch(curses.ACS_UARROW, (0, curses.A_BOLD)[torrent['uploadLimited']])
         rate = ('', scale_bytes(torrent['rateUpload']))[torrent['rateUpload'] > 0]
@@ -2652,7 +2652,7 @@ class Interface:
         if selected:
             tag = curses.A_REVERSE
         else:
-            tag = gconfig.element_attr('eta+ratio') + curses.A_BOLD
+            tag = gconfig.element_attr('eta+ratio')
         self.pad.addch(ypos + 1, self.width - self.rateUpload_width - 1, curses.ACS_BULLET,
                        (0, curses.A_BOLD)[torrent['uploadRatio'] < 1 and torrent['uploadRatio'] >= 0])
         self.pad.addstr(ypos + 1, self.width - self.rateUpload_width,
@@ -2662,7 +2662,7 @@ class Interface:
         self.pad.addch(ypos + 1, self.width - self.rateDownload_width - self.rateUpload_width - 3, curses.ACS_PLMINUS)
         self.pad.addstr(ypos + 1, self.width - self.rateDownload_width - self.rateUpload_width - 2,
                         scale_time(torrent['eta']).rjust(self.rateDownload_width),
-                        gconfig.element_attr('eta+ratio') + curses.A_BOLD)
+                        gconfig.element_attr('eta+ratio'))
 
     def draw_torrentlist_title(self, torrent, focused, width, ypos, idx):
         if gconfig.torrent_numbers and idx >= 0:
@@ -3655,15 +3655,13 @@ class Interface:
         self.screen.move(self.height - 1, self.width - rates_width - limits_width)
         self.screen.addch(curses.ACS_DARROW, curses.A_REVERSE)
         self.screen.addstr(scale_bytes(self.stats['downloadSpeed']).rjust(self.rateDownload_width)[:self.rateDownload_width],
-                           gconfig.element_attr('download_rate')
-                           + curses.A_BOLD)
+                           gconfig.element_attr('download_rate'))
         self.screen.addstr(limits['dn_limit'], curses.A_REVERSE)
         self.screen.addch(' ', curses.A_REVERSE)
         self.screen.addch(curses.ACS_UARROW, curses.A_REVERSE)
         try:
             self.screen.addstr(scale_bytes(self.stats['uploadSpeed']).rjust(self.rateUpload_width)[:self.rateUpload_width],
-                               gconfig.element_attr('upload_rate')
-                               + curses.A_BOLD)
+                               gconfig.element_attr('upload_rate'))
             self.screen.addstr(limits['up_limit'], curses.A_REVERSE)
         except curses.error:
             # curses can print to the last char (bottom right corner), but it raises an exception.
