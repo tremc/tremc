@@ -417,7 +417,11 @@ class GConfig:
                     color_pair['at'] = color_pair['at'] | attrs[attrs_name[i]]
         return color_pair
 
-    def element_attr(self, name):
+    def element_attr(self, name, st=False):
+        if st:
+            name = 'st_' + name
+            if name not in self.colors:
+                return curses.A_REVERSE
         return curses.color_pair(self.colors[name]['ind']) + self.colors[name]['at']
 
 
@@ -2640,30 +2644,21 @@ class Interface:
         return 1
 
     def draw_downloadrate(self, torrent, ypos, selected):
-        if selected:
-            tag = curses.A_REVERSE
-        else:
-            tag = gconfig.element_attr('download_rate')
+        tag = gconfig.element_attr('download_rate', st=selected)
         self.pad.move(ypos, self.width - self.rateDownload_width - self.rateUpload_width - 3)
         self.pad.addch(curses.ACS_DARROW, (0, curses.A_BOLD)[torrent['downloadLimited']])
         rate = ('', scale_bytes(torrent['rateDownload']))[torrent['rateDownload'] > 0]
         self.pad.addstr(rate.rjust(self.rateDownload_width), tag)
 
     def draw_uploadrate(self, torrent, ypos, selected):
-        if selected:
-            tag = curses.A_REVERSE
-        else:
-            tag = gconfig.element_attr('upload_rate')
+        tag = gconfig.element_attr('upload_rate', st=selected)
         self.pad.move(ypos, self.width - self.rateUpload_width - 1)
         self.pad.addch(curses.ACS_UARROW, (0, curses.A_BOLD)[torrent['uploadLimited']])
         rate = ('', scale_bytes(torrent['rateUpload']))[torrent['rateUpload'] > 0]
         self.pad.addstr(rate.rjust(self.rateUpload_width), tag)
 
     def draw_ratio(self, torrent, ypos, selected):
-        if selected:
-            tag = curses.A_REVERSE
-        else:
-            tag = gconfig.element_attr('eta+ratio')
+        tag = gconfig.element_attr('eta+ratio', st=selected)
         self.pad.addch(ypos + 1, self.width - self.rateUpload_width - 1, curses.ACS_BULLET,
                        (0, curses.A_BOLD)[torrent['uploadRatio'] < 1 and torrent['uploadRatio'] >= 0])
         self.pad.addstr(ypos + 1, self.width - self.rateUpload_width,
