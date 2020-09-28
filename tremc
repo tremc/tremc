@@ -3742,7 +3742,7 @@ class Interface:
                 self.screen.addstr(strings[3], gconfig.element_attr('bottom_line'))
                 self.screen.addstr("%d " % paused, gconfig.element_attr('bottom_line'))
             self.screen.addstr(strings[9] + scale_bytes(total_size), gconfig.element_attr('bottom_line'))
-            if downloading >0 or paused >0:
+            if total_done < 100:
                 self.screen.addstr("[%.2f%%]" % total_done, gconfig.element_attr('bottom_line'))
             self.screen.addstr(") ", gconfig.element_attr('bottom_line'))
 
