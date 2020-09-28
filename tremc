@@ -3064,20 +3064,17 @@ class Interface:
         self.pad.addstr(ypos, 0, column_names.ljust(self.width), curses.A_UNDERLINE)
         ypos += 1
 
-        for line in self.create_filelist():
+        for line, sel, focus in self.create_filelist():
             curses_tags = 0
             # highlight focused/selected line(s)
-            while line.startswith('_'):
-                if line[1] == 'S':
-                    curses_tags = gconfig.selected_file_attr
-                    line = line[2:]
-                if line[1] == 'F':
-                    curses_tags += curses.A_REVERSE
-                    line = line[2:]
-                try:
-                    self.pad.addstr(ypos, 0, ' ' * self.width, curses_tags)
-                except Exception as e:
-                    pdebug('caught %s in draw_filelist(): %s\n' % (type(e), str(e)))
+            if sel:
+                curses_tags = gconfig.selected_file_attr
+            if focus:
+                curses_tags += curses.A_REVERSE
+            try:
+                self.pad.addstr(ypos, 0, ' ' * self.width, curses_tags)
+            except Exception as e:
+                pdebug('caught %s in draw_filelist(): %s\n' % (type(e), str(e)))
 
             # colored priority (only in the first 33 chars, the rest is filename)
             xpos = 0
@@ -3170,11 +3167,11 @@ class Interface:
                 start = end - self.detaillines_per_page if end >= self.detaillines_per_page else 0
         ret = []
         for i in range(start, end):
-            ret.append(
-                ('_S' if i in self.filelist_cache_pos_dict and self.filelist_cache_pos_dict[i] in self.selected_files else '') +
-                ('_F' if i == line_to_show else '') +
-                self.filelist_cache[i]
-            )
+            ret.append((
+                self.filelist_cache[i],
+                i in self.filelist_cache_pos_dict and self.filelist_cache_pos_dict[i] in self.selected_files,
+                i == line_to_show
+            ))
         return ret
 
     def create_filelist_transition(self, f, current_folder, filelist, current_depth, pos):
