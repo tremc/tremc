@@ -500,6 +500,8 @@ class GConfig:
             'file_prio_off': 'fg:blue,bg:default',
             'top_line': 'a:r',
             'bottom_line': 'a:r',
+            'chunk_have': 'a:r',
+            'chunk_dont_have': '',
         }
         colors.update(config)
         self.colors = dict()
@@ -3539,13 +3541,13 @@ class Interface:
 
     def draw_pieces_map(self, ypos):
         if self.torrent_details['haveValid'] / self.torrent_details['totalSize'] < 0.5:
-            default_attr = 0
-            new_attr = curses.A_REVERSE
+            default_attr = gconfig.element_attr('chunk_dont_have')
+            new_attr = gconfig.element_attr('chunk_have')
             change_attr = 0x80
             skip_run = 0
         else:
-            new_attr = 0
-            default_attr = curses.A_REVERSE
+            new_attr = gconfig.element_attr('chunk_dont_have')
+            default_attr = gconfig.element_attr('chunk_have')
             change_attr = 0
             skip_run = 255
         pieces = self.torrent_details['pieces']
