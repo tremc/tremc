@@ -409,7 +409,7 @@ class GConfig:
             'set_filter': [1, ['f'], 'Set filter'],
             'add_filter': [1, ['T'], 'Add filter'],
             'edit_filters': [1, ['I'], 'Edit list of filters'],
-            'invert_filters_action': [1, ['~'], 'Reverse filters'],
+            'invert_filters': [1, ['~'], 'Reverse filters'],
             'show_torrent_sort_order_menu': [1, ['s'], 'Sort torrent list'],
             'select_unselect_torrent': [1, ['SPACE'], 'Select/unselect torrent'],
             'select_unselect_torrents': [1, ['A'], 'Select/Deselect all torrents'],
@@ -1469,7 +1469,7 @@ class Interface:
         self.max_overview_scroll = 0
         self.exit_now = False
         self.vmode_id = -1
-        self.invert_filters = False
+        self.filters_inverted = False
 
         self.common_keybindings = {
             K.n0: self.action_profile_selected,
@@ -1514,7 +1514,7 @@ class Interface:
         gconfig.sort_orders = [s.copy() for s in profile['sort']]
         # copy filter array from profile
         gconfig.filters = [[f.copy() for f in l] for l in profile['filter']]
-        self.invert_filters = False
+        self.filters_inverted = False
 
     def save_profile(self, profile):
         gconfig.profiles[profile] = {'filter': [[f.copy() for f in l] for l in gconfig.filters],
@@ -1894,10 +1894,10 @@ class Interface:
         new_filter = self.filter_menu(gconfig.filters[0][0], prompt=prompt)
         if new_filter:
             gconfig.filters = [[new_filter]]
-            self.invert_filters = False
+            self.filters_inverted = False
 
-    def action_invert_filters_action(self):
-        self.invert_filters = not self.invert_filters
+    def action_invert_filters(self):
+        self.filters_inverted = not self.filters_inverted
 
     def action_add_filter(self):
         new_filter = self.filter_menu(prompt="Add filter:")
@@ -2680,7 +2680,7 @@ class Interface:
         return True  # Unknown filter does not filter anything
 
     def filter_torrent_list(self):
-        self.torrents = [t for t in self.torrents if any(all(self.filter_torrent(t, f) for f in fs) for fs in gconfig.filters) != self.invert_filters]
+        self.torrents = [t for t in self.torrents if any(all(self.filter_torrent(t, f) for f in fs) for fs in gconfig.filters) != self.filters_inverted]
         # Also filter selected:
         self.selected.intersection_update({t['id'] for t in self.torrents})
 
@@ -3757,7 +3757,7 @@ class Interface:
                         not_str = ('', strings[5])[gconfig.filters[0][0]['inverse']]
                     self.screen.addstr(not_str + gconfig.filters[0][0]['name'] + filter_param,
                                        gconfig.element_attr('filter_status' if len(gconfig.filters[0]) <= 1 else 'multi_filter_status')
-                                       ^ (curses.A_REVERSE if self.invert_filters else 0))
+                                       ^ (curses.A_REVERSE if self.filters_inverted else 0))
 
                 # show last sort order (if terminal size permits it)
                 if gconfig.sort_orders and self.width - self.screen.getyx()[1] > 20:
