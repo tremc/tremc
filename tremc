@@ -780,14 +780,14 @@ class Transmission:
                    'uploadedEver', 'errorString', 'recheckProgress',
                    'peersConnected', 'uploadLimit', 'downloadLimit',
                    'uploadLimited', 'downloadLimited', 'bandwidthPriority',
-                   'peersSendingToUs', 'peersGettingFromUs',
+                   'peersSendingToUs', 'peersGettingFromUs', 'totalSize',
                    'seedRatioLimit', 'seedRatioMode', 'isPrivate', 'magnetLink',
                    'honorsSessionLimits', 'metadataPercentComplete',
                    ]
 
     DETAIL_FIELDS = ['files', 'priorities', 'wanted', 'peers', 'trackers',
                      'activityDate', 'dateCreated', 'startDate', 'doneDate',
-                     'totalSize', 'leftUntilDone', 'comment', 'creator',
+                     'leftUntilDone', 'comment', 'creator',
                      'hashString', 'pieceCount', 'pieceSize', 'pieces',
                      'downloadedEver', 'corruptEver', 'peersFrom'] + LIST_FIELDS
 
@@ -1840,6 +1840,7 @@ class Interface:
                    ('location', 'L_ocation'),
                    ('selected', 'S_elected'),
                    ('honors', '_Honors limits'),
+                   ('partwanted', 'Part _wanted'),
                    ('invert', 'In_vert'), ('', '_All')]
         if self.server.get_rpc_version() >= 16:
             options.insert(-2, ('label', 'La_bel'))
@@ -2678,6 +2679,8 @@ class Interface:
             return filtr['inverse'] != (homedir2tilde(t['downloadDir']) == filtr['location'])
         if filtr['name'] == 'label':
             return filtr['inverse'] != (filtr['label'] in t['labels'])
+        if filtr['name'] == 'partwanted':
+            return filtr['inverse'] != (t['totalSize'] > t['sizeWhenDone'])
 
         return True  # Unknown filter does not filter anything
 
