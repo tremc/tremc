@@ -133,7 +133,7 @@ class GConfig:
 
         # Handle connection details
         self.host = config.get('Connection', 'host', fallback='localhost')
-        self.port = config.getint('Connetion', 'port', fallback=9091)
+        self.port = config.getint('Connection', 'port', fallback=9091)
         self.path = config.get('Connection', 'path', fallback='/transmission/rpc')
         self.username = config.get('Connection', 'username', fallback='')
         self.password = config.get('Connection', 'password', fallback='')
