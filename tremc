@@ -4537,6 +4537,7 @@ class Interface:
                     lines.append(', '.join([filter2string(f) for f in fl]) + ', ')
                     if lines[-1] == ', ':
                         lines[-1] = ''
+                        current[1] = 0
                     if i == current[0]:
                         commas = [i for i, v in enumerate(lines[-1]) if v == ',']
                         commas.append(len(lines[-1]) + 1)
@@ -4544,7 +4545,7 @@ class Interface:
                     i += 1
 
                 height = len(lines) + 3
-                width = min(max(len(s) for s in lines) + 6, self.width - 2)
+                width = min(max([14] + [len(s) for s in lines]) + 6, self.width - 2, )
                 if height > oldheight or width > oldwidth or win is None:
                     win = self.window(height, width, title='Filters')
                     oldheight, oldwidth = height, width
@@ -4572,7 +4573,7 @@ class Interface:
             if c == curses.KEY_LEFT and current[1] > 0:
                 current[1] -= 1
                 changed = True
-            if c == K.d and current[1] < len(filters[current[0]]):
+            if c in (K.d, curses.KEY_DC) and current[1] < len(filters[current[0]]):
                 filters[current[0]].pop(current[1])
                 changed = True
             if c == K.f:
