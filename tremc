@@ -2137,7 +2137,7 @@ class Interface:
             self.dialog_ok("You need Transmission v2.10 or higher to add trackers.")
             return
 
-        tracker = self.dialog_input_text('Add tracker URL:', history=gconfig.histories['tracker'], history_max=10,
+        tracker = self.dialog_input_text('Add tracker URL:', history=gconfig.histories['tracker'],
                                          fixed_history=list(self.server.trackers))
         if tracker:
             t = self.torrent_details
@@ -2531,7 +2531,7 @@ class Interface:
             self.dialog_input_text('Command to run (%s will be replaced by file name)', command,
                                    tab_complete='executable',
                                    on_enter=self.view_file_command,
-                                   history=gconfig.histories['command'], history_max=10,
+                                   history=gconfig.histories['command'],
                                    fixed_history=[gconfig.file_viewer])
 
     def view_file_command(self, pattern, inc=1, search=None):
@@ -2587,7 +2587,7 @@ class Interface:
         if ids:
             focused, extraline = self.get_focused(ids)
             msg = ('Label to add to "%s"' % focused['name']) + extraline
-            label = self.dialog_input_text(msg, '', history=gconfig.histories['label'], history_max=10, fixed_history=list(self.server.labels))
+            label = self.dialog_input_text(msg, '', history=gconfig.histories['label'], fixed_history=list(self.server.labels))
             if label:
                 self.server.add_label(ids, label)
 
@@ -2606,7 +2606,7 @@ class Interface:
             location = homedir2tilde(self.torrents[self.focus]['downloadDir'])
             msg = ('Move "%s"' % focused['name']) + extraline + '\nfrom %s to' % location
             path = self.dialog_input_text(msg, location, tab_complete='dirs',
-                                          history=gconfig.histories['location'], history_max=10, fixed_history=list(self.server.locations))
+                                          history=gconfig.histories['location'], fixed_history=list(self.server.locations))
             if path:
                 self.server.move_torrent(ids, tilde2homedir(path))
 
@@ -4076,7 +4076,7 @@ class Interface:
             self.update_torrent_list([win])
 
     def dialog_input_text(self, message, text='', on_change=None, on_enter=None, tab_complete=None, maxwidth=9999,
-                          align='center', history=None, history_max=0, fixed_history=[], search='', winstack=[]):
+                          align='center', history=None, history_max=10, fixed_history=[], search='', winstack=[]):
         """tab_complete values:
                 'files': complete with any files/directories
                 'dirs': complete only with directories
