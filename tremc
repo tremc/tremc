@@ -4225,18 +4225,21 @@ class Interface:
         self.dialog_input_text('Search torrent by title:',
                                on_enter=self.increment_search,
                                tab_complete='torrent_list',
+                               history=gconfig.histories['search'],
                                maxwidth=60, align='right', search='pattern')
 
     def action_search_torrent_fulltext(self):
         self.dialog_input_text('Search torrent by title (full text):',
                                on_enter=self.increment_search,
                                tab_complete='torrent_list',
+                               history=gconfig.histories['search'],
                                maxwidth=60, align='right', search='fulltext')
 
     def action_search_torrent_regex(self):
         self.dialog_input_text('Regex search torrent by title:',
                                on_enter=self.increment_search,
                                tab_complete='torrent_list',
+                               history=gconfig.histories['regex'],
                                maxwidth=60, align='right', search='regex')
 
     def action_search_torrent_regex_fulltext(self):
@@ -4249,12 +4252,14 @@ class Interface:
         self.dialog_input_text('Search file by title:',
                                on_enter=self.increment_file_search,
                                tab_complete='file_list',
+                               history=gconfig.histories['search'],
                                maxwidth=60, align='right', search='pattern')
 
     def action_search_file_regex(self):
         self.dialog_input_text('Regex search file by title:',
                                on_enter=self.increment_file_search,
                                tab_complete='file_list',
+                               history=gconfig.histories['regex'],
                                maxwidth=60, align='right', search='regex')
 
     def increment_file_search(self, pattern, inc=1, search=None):
@@ -4267,6 +4272,7 @@ class Interface:
         self.dialog_input_text('Select torrents matching pattern',
                                on_enter=self.select_pattern_torrents,
                                tab_complete='torrent_list',
+                               history=gconfig.histories['search'],
                                maxwidth=60, align='right', search='pattern')
 
     def action_select_search_torrent_fulltext(self):
@@ -4276,30 +4282,35 @@ class Interface:
         self.dialog_input_text('Select torrents matching pattern (full text)',
                                on_enter=self.select_pattern_torrents,
                                tab_complete='torrent_list',
+                               history=gconfig.histories['search'],
                                maxwidth=60, align='right', search='fulltext')
 
     def action_select_search_torrent_regex(self):
         self.dialog_input_text('Select torrents matching regex',
                                on_enter=self.select_pattern_torrents,
                                tab_complete='torrent_list',
+                               history=gconfig.histories['regex'],
                                maxwidth=60, align='right', search='regex')
 
     def action_select_search_torrent_regex_fulltext(self):
         self.dialog_input_text('Select torrents matching regex (full text)',
                                on_enter=self.select_pattern_torrents,
                                tab_complete='torrent_list',
+                               history=gconfig.histories['regex'],
                                maxwidth=60, align='right', search='regex_fulltext')
 
     def action_select_search_file(self):
         self.dialog_input_text('Select files matching pattern',
                                on_enter=self.select_pattern_files,
                                tab_complete='file_list',
+                               history=gconfig.histories['search'],
                                maxwidth=60, align='right', search='pattern')
 
     def action_select_search_file_regex(self):
         self.dialog_input_text('Select files matching regex',
                                on_enter=self.select_pattern_files,
                                tab_complete='file_list',
+                               history=gconfig.histories['regex'],
                                maxwidth=60, align='right', search='regex')
 
     def select_pattern_torrents(self, pattern, inc=1, search=None):
@@ -4823,7 +4834,7 @@ def load_history(filename):
             history = {}
     else:
         history = {}
-    for i in ['label', 'location', 'tracker', 'command']:
+    for i in ['label', 'location', 'tracker', 'command', 'search', 'regex']:
         if i not in history:
             history[i] = []
     if 'types' not in history:
