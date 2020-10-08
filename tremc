@@ -333,6 +333,7 @@ class GConfig:
         self.file_sort_options = [
             ('name', '_Name'), ('progress', '_Progress'),
             ('length', 'Si_ze'), ('bytesCompleted', '_Downloaded'),
+            ('priority', 'P_riority'),
             ('none', '_Torrent order'),
             ('reverse', 'Re_verse')
         ]
@@ -1366,6 +1367,13 @@ class Transmission:
         request = TransmissionRequest(self.url, 'torrent-set', 1, request_data, server=self)
         request.send_request()
         self.wait_for_details_update()
+
+    def get_num_file_priority(self, torrent_id, file_num):
+        if self.torrent_details_cache['wanted'][file_num]:
+            return self.torrent_details_cache['priorities'][file_num]
+        else:
+            # Small enough ?
+            return -999
 
     def get_file_priority(self, torrent_id, file_num):
         priority = self.torrent_details_cache['priorities'][file_num]
@@ -3386,6 +3394,9 @@ class Interface:
                 self.sorted_files = sorted(self.torrent_details['files'], key=lambda x: x[gconfig.file_sort_key], reverse=gconfig.file_sort_reverse)
             elif gconfig.file_sort_key == 'progress':
                 self.sorted_files = sorted(self.torrent_details['files'], key=lambda x: x['bytesCompleted'] / x['length'] if x['length'] > 0 else 0, reverse=gconfig.file_sort_reverse)
+            elif gconfig.file_sort_key == 'priority':
+                positions = sorted(range(len(self.torrent_details['files'])), key=lambda x: self.server.get_num_file_priority(self.torrent_details['id'], x))
+                self.sorted_files = [self.torrent_details['files'][x] for x in positions]
             else:
                 if gconfig.file_sort_reverse:
                     self.sorted_files = list(reversed(self.torrent_details['files']))
