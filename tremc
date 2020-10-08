@@ -444,6 +444,8 @@ class GConfig:
             'add_tracker_or_select_all_files': [2, ['a'], 'Select/Deselect all files or add torrent'],
             'view_file': [3, ['ENTER'], 'View file'],
             'view_file_command': [3, ['|'], 'Run command on file'],
+            'view_torrent': [1, [], "View torrent's single file"],
+            'view_torrent_command': [1, [], "Run command on torrent's single file"],
             'move_to_next_directory': [3, ['J'], 'Next diectory'],
             'move_to_previous_directory': [3, ['K'], 'Previous directory'],
             'show_file_sort_order_menu': [3, ['s'], 'Sort file list'],
@@ -2556,12 +2558,28 @@ class Interface:
     def action_view_file(self):
         self.view_file(gconfig.file_viewer, gconfig.file_open_in_terminal)
 
+    def action_view_torrent(self):
+        self.view_file(gconfig.file_viewer, gconfig.file_open_in_terminal)
+
     def view_file(self, file_viewer, file_open_in_terminal):
-        if self.details_category_focus == 1:
+        if self.selected_torrent == -1:
+            if self.focus == -1:
+                return
+            torrent = self.torrents[self.focus]['id']
+            self.server.set_torrent_details_id(torrent)
+            self.server.wait_for_details_update()
+            self.server.set_torrent_details_id(-1)
+            if len(self.server.get_torrent_details()['files']) > 1:
+                return
+            files = [0]
+        else:
+            files = []
+        if self.details_category_focus == 1 or torrent:
             details = self.server.get_torrent_details()
             stats = self.server.get_global_stats()
-
-            if gconfig.view_selected and self.selected_files:
+            if files:
+                pass
+            elif gconfig.view_selected and self.selected_files:
                 files = [self.file_index_map[f] for f in self.selected_files]
             elif self.focus_detaillist >= 0:
                 files = [self.file_index_map[self.focus_detaillist]]
@@ -2613,12 +2631,28 @@ class Interface:
                 self.dialog_ok("%s:\n%s" % (" ".join(viewer_cmd), err))
             hide_cursor()
             if gconfig.file_viewer != file_viewer:
-                file_type = self.server.get_torrent_details()['files'][self.file_index_map[self.focus_detaillist]]['name'].split('.')[-1].lower()
+                if self.selected_torrent == -1:
+                    file_type = self.torrents[self.focus]['name'].split('.')[-1].lower()
+                else:
+                    file_type = self.server.get_torrent_details()['files'][self.file_index_map[self.focus_detaillist]]['name'].split('.')[-1].lower()
                 gconfig.histories['types'][file_type] = file_viewer
 
-    def action_view_file_command(self):
-        if self.details_category_focus == 1 and self.focus_detaillist > -1:
-            file_type = self.server.get_torrent_details()['files'][self.file_index_map[self.focus_detaillist]]['name'].split('.')[-1].lower()
+    def action_view_torrent_command(self):
+        if self.focus >= 0:
+            torrent = self.torrents[self.focus]['id']
+            self.server.set_torrent_details_id(torrent)
+            self.server.wait_for_details_update()
+            self.server.set_torrent_details_id(-1)
+            if len(self.server.get_torrent_details()['files']) > 1:
+                return
+            self.action_view_file_command(torrent=self.torrents[self.focus])
+
+    def action_view_file_command(self, torrent=None):
+        if torrent or (self.details_category_focus == 1 and self.focus_detaillist > -1):
+            if torrent:
+                file_type = torrent['name'].split('.')[-1].lower()
+            else:
+                file_type = self.server.get_torrent_details()['files'][self.file_index_map[self.focus_detaillist]]['name'].split('.')[-1].lower()
             if file_type in gconfig.histories['types']:
                 command = gconfig.histories['types'][file_type]
             else:
