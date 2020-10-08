@@ -3238,25 +3238,18 @@ class Interface:
             except Exception as e:
                 pdebug('caught %s in draw_filelist(): %s\n' % (type(e), str(e)))
 
-            # colored priority (only in the first 33 chars, the rest is filename)
-            xpos = 0
-            for part in re.split('(high|normal|low|off)', line[0:33], 1):
-                if part == 'high':
-                    self.pad.addstr(ypos, xpos, part,
-                                    curses_tags + gconfig.element_attr('file_prio_high'))
-                elif part == 'normal':
-                    self.pad.addstr(ypos, xpos, part,
-                                    curses_tags + gconfig.element_attr('file_prio_normal'))
-                elif part == 'low':
-                    self.pad.addstr(ypos, xpos, part,
-                                    curses_tags + gconfig.element_attr('file_prio_low'))
-                elif part == 'off':
-                    self.pad.addstr(ypos, xpos, part,
-                                    curses_tags + gconfig.element_attr('file_prio_off'))
-                else:
-                    self.pad.addstr(ypos, xpos, part, curses_tags)
-                xpos += len(part)
-            self.pad.addstr(ypos, xpos, line[33:], curses_tags)
+            # 25 chars before priority, 6 chars priority, 2 chars skipped
+            priority = line[25:31].strip()
+            priority_start = 28 - (len(priority) + 1) // 2
+            priority_end = priority_start + len(priority)
+            if priority:
+                priority_tag = curses_tags + gconfig.element_attr('file_prio_' + priority)
+            else:
+                priority_tag = curses_tags
+            self.pad.addstr(ypos, 0, line[0:priority_start], curses_tags)
+            self.pad.addstr(ypos, priority_start, line[priority_start:priority_end], priority_tag)
+            self.pad.addstr(ypos, priority_end, line[priority_end:33], curses_tags)
+            self.pad.addstr(ypos, 33, line[33:], curses_tags)
             if needclrtoeol:
                 self.pad.addstr(' ' * (self.width - self.pad.getyx()[1]), curses_tags)
             ypos += 1
