@@ -1019,7 +1019,7 @@ class Transmission:
 
             # resolve and locate peer's ip
             if gconfig.rdns and ip not in self.hosts_cache:
-                threading.Thread(target=reverse_dns, args=(self.hosts_cache, ip)).start()
+                threading.Thread(target=reverse_dns, args=(self.hosts_cache, ip), daemon=True).start()
             if gconfig.geoip and ip not in self.geo_ips_cache:
                 self.geo_ips_cache[ip] = country_code_by_addr_vany(self.geo_ip, self.geo_ip6, ip)
 
