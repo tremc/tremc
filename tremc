@@ -3097,10 +3097,14 @@ class Interface:
         sizes.extend(["%s left" % scale_bytes(t['leftUntilDone'], long=True)])
         info.append(sizes)
 
-        info.append(['Files: ', "%d;  " % len(t['files'])])
+        nr_files = len(t['files'])
+        info.append(['Files: ', "%d;  " % nr_files])
         complete = list(map(lambda x: x['bytesCompleted'] == x['length'], t['files'])).count(True)
         not_complete = [x for x in t['files'] if x['bytesCompleted'] != x['length']]
         partial = list(map(lambda x: x['bytesCompleted'] > 0, not_complete)).count(True)
+        nr_wanted = t['wanted'].count(1)
+        if nr_wanted < nr_files:
+            info[-1].append("%d wanted;  " % nr_wanted)
         if complete == len(t['files']):
             info[-1].append("all complete")
         else:
