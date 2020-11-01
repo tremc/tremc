@@ -4542,7 +4542,8 @@ class Interface:
                     lines.append(', '.join([filter2string(f) for f in fl]) + ', ')
                     if lines[-1] == ', ':
                         lines[-1] = ''
-                        current[1] = 0
+                        if current[0] == len(lines) - 1:
+                            current[1] = 0
                     if i == current[0]:
                         commas = [i for i, v in enumerate(lines[-1]) if v == ',']
                         commas.append(len(lines[-1]) + 1)
