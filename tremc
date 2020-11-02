@@ -429,6 +429,7 @@ config.set('Colors', 'upload_rate', 'bg:black,fg:red')
 config.set('Colors', 'eta+ratio', 'bg:default,fg:default')
 config.set('Colors', 'filter_status', 'bg:red,fg:black')
 config.set('Colors', 'multi_filter_status', 'bg:blue,fg:black')
+config.set('Colors', 'window', 'bg:default,fg:default')
 config.set('Colors', 'dialog', 'bg:default,fg:default')
 config.set('Colors', 'dialog_important', 'bg:default,fg:red')
 config.set('Colors', 'file_prio_high', 'fg:red,bg:default')
@@ -3709,7 +3710,7 @@ class Interface:
         else:
             win.erase()
         win.box()
-        win.bkgd(' ', curses.A_REVERSE + curses.A_BOLD)
+        win.bkgd(' ', curses.color_pair(self.colors.ind('window')) + curses.A_REVERSE + curses.A_BOLD)
 
         if width >= 20:
             win.addch(height - 1, width - 19, curses.ACS_RTEE)
