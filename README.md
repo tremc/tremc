@@ -296,17 +296,17 @@ The following sections are read:
   The format of a color is 'fg:color,bg:color', where each color is one of the
   eight curses colors, or default.
 
-  Allowed elements are title_seed, title_download, title_idle, title_verify, title_paused, title_error,
-  download_rate, upload_rate, eta+ratio, filter_status, multi_filter_status, dialog, dialog_important,
-  file_prio_high, file_prio_normal, file_prio_low, file_prio_off.
+  Allowed elements are header, footer, selection,title_seed, title_download, title_idle, title_incomplete, title_verify,
+  title_paused, title_error, download_rate, upload_rate, eta+ratio, filter_status, multi_filter_status, 
+  window, dialog, dialog_important, file_prio_high, file_prio_normal, file_prio_low, file_prio_off.
 
   Note that what the colors mean actually depends on the terminal. In some
   cases 'white' is darker then the white that the terminal displays, and
   similarly, 'black' is lighter. Setting 'default' selects the respective
   background or foreground coloe of the terminal.
 
-  The top and bottom status lines (filter_status, multi_filter_status) and the dialog window
-  (dialog, dialog_important) are displayed using inverse mode, so the fg and bg
+  The top and bottom status lines (header, footer, filter_status, multi_filter_status) and the dialog window
+  (window, dialog, dialog_important) are displayed using inverse mode, so the fg and bg
   are exchanged.
 * [Profiles]
 
