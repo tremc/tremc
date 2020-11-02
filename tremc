@@ -423,6 +423,7 @@ config.set('Colors', 'selection', 'bg:default,fg:default')
 config.set('Colors', 'title_seed', 'bg:green,fg:black')
 config.set('Colors', 'title_download', 'bg:blue,fg:black')
 config.set('Colors', 'title_idle', 'bg:cyan,fg:black')
+config.set('Colors', 'title_incomplete', 'bg:default,fg:default')
 config.set('Colors', 'title_verify', 'bg:magenta,fg:black')
 config.set('Colors', 'title_paused', 'bg:default,fg:default')
 config.set('Colors', 'title_error', 'bg:red,fg:default')
@@ -2669,10 +2670,10 @@ class Interface:
         else:
             color = 0
 
-        tag = curses.A_REVERSE
+        tag = curses.color_pair(self.colors.ind('title_incomplete')) + curses.A_REVERSE
         tag_done = color
         if focused:
-            tag += curses.color_pair(self.colors.ind('selection'))
+            tag = curses.color_pair(self.colors.ind('selection')) + curses.A_REVERSE
             tag += curses.A_BOLD
             tag_done += curses.A_BOLD
 
