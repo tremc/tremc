@@ -297,7 +297,7 @@ The following sections are read:
   The format of a color is 'fg:color,bg:color', where each color is one of the
   eight curses colors, or default.
 
-  Allowed elements are header, footer, selection,title_seed, title_download, title_idle, title_incomplete, title_verify,
+  Allowed elements are header, footer, title_seed, title_download, title_idle, title_incomplete, title_verify,
   title_paused, title_error, download_rate, upload_rate, eta+ratio, filter_status, multi_filter_status, 
   window, dialog, dialog_important, file_prio_high, file_prio_normal, file_prio_low, file_prio_off.
 
