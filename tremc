@@ -3702,9 +3702,9 @@ class Interface:
 
     def draw_pieces_map(self, ypos):
         if self.torrent_details['totalSize'] == 0:
-            # No pieces in file of size 0
+            # No pieces in file with no metadata
             return
-        elif self.torrent_details['haveValid'] / self.torrent_details['totalSize'] < 0.5:
+        if self.torrent_details['haveValid'] / self.torrent_details['totalSize'] < 0.5:
             default_attr = gconfig.element_attr('chunk_dont_have')
             new_attr = gconfig.element_attr('chunk_have')
             change_attr = 0x80
