@@ -212,6 +212,7 @@ class GConfig:
         self.view_selected = config.getboolean('Misc', 'view_selected', fallback=False)
         self.torrent_numbers = config.getboolean('Misc', 'torrent_numbers', fallback=False)
         self.profiles = parse_config_profiles(config, [x[0] for x in self.sort_options])
+        self.x_selection = config.get('Misc', 'x_selection')
 
         try:
             self.selected_file_attr = curses.A_BOLD + curses.A_ITALIC
@@ -420,6 +421,7 @@ config.set('Misc', 'lines_per_torrent', '2')
 config.set('Misc', 'torrentname_is_progressbar', 'True')
 config.set('Misc', 'file_viewer', 'xdg-open %%s')
 config.set('Misc', 'file_open_in_terminal', 'True')
+config.set('Misc', 'x_selection', 'clipboard')
 config.add_section('Colors')
 config.set('Colors', 'header', 'bg:default,fg:default')
 config.set('Colors', 'footer', 'bg:default,fg:default')
@@ -1805,7 +1807,13 @@ class Interface:
         if self.focus > -1 and gconfig.clipboard:
             magnet = self.torrents[self.focus]['magnetLink']
             try:
-                pyperclip.copy(magnet)
+                ## Initialize clipboard
+                pyperclip.copy("")
+
+                if gconfig.x_selection == "clipboard":
+                    pyperclip.copy(magnet)
+                elif gconfig.x_selection == "primary":
+                    pyperclip.copy(magnet, primary=True)
             except Exception as e:
                 self.dialog_ok(str(e))
 
