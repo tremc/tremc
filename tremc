@@ -565,11 +565,17 @@ class GConfig:
         return color_pair
 
     def element_attr(self, name, st=False):
-        if st:
-            name = 'st_' + name
-            if name not in self.colors:
-                return curses.A_REVERSE
-        return curses.color_pair(self.colors[name]['ind']) + self.colors[name]['at']
+        try:
+            if st:
+                name = 'st_' + name
+                if name not in self.colors:
+                    return curses.A_REVERSE
+            return curses.color_pair(self.colors[name]['ind']) + self.colors[name]['at']
+        except:
+            # This only happens if when a bug manifests, but it's better to not
+            # crach even in this situation.
+            pdebug('element_attr', name, st)
+            return 0
 
     def save_profile(self, name, profile):
         filters_str = ' #& '.join(('#='.join((filter_config_str(f) for f in l)) for l in profile['filter']))
