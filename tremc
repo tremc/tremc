@@ -3286,6 +3286,9 @@ class Interface:
 
             # 25 chars before priority, 6 chars priority, 2 chars skipped
             priority = line[25:31].strip()
+            # Except if the file index has more than 4 digits:
+            if priority[:4] == 'norm':
+                priority = 'normal'
             priority_start = 28 - (len(priority) + 1) // 2
             priority_end = priority_start + len(priority)
             if priority:
