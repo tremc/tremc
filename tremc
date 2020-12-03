@@ -5184,16 +5184,14 @@ def save_config(filepath, config, force=False):
 
 def sort_config_str(f):
     s = ':' if f['reverse'] else ''
-    s += f['name'] + '#='
-    if f['name'] in gconfig.FILTERS_WITH_PARAM:
-        s += '=' + f[f['name']]
+    s += f['name']
     return s
 
 def filter_config_str(f):
     s = ':' if f['inverse'] else ''
     s += f['name'] + '#='
     if f['name'] in gconfig.FILTERS_WITH_PARAM:
-        s += '=' + f[f['name']]
+        s += f[f['name']]
     return s
 
 def filter2string(f):
