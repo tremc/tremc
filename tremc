@@ -409,6 +409,7 @@ class GConfig:
             'search_torrent_regex_fulltext': [1, [], 'Find torrents matching regular expression (full text)'],
             'set_filter': [1, ['f'], 'Set filter'],
             'add_filter': [1, ['T'], 'Add filter'],
+            'add_filter_line': [1, ['^t'], 'Add filter line'],
             'edit_filters': [1, ['I'], 'Edit list of filters'],
             'invert_filters': [1, ['~'], 'Reverse filters'],
             'show_torrent_sort_order_menu': [1, ['s'], 'Sort torrent list'],
@@ -1917,6 +1918,11 @@ class Interface:
 
     def action_invert_filters(self):
         self.filters_inverted = not self.filters_inverted
+
+    def action_add_filter_line(self):
+        new_filter = self.filter_menu(prompt="Add filter:")
+        if new_filter:
+            gconfig.filters.append([new_filter])
 
     def action_add_filter(self):
         new_filter = self.filter_menu(prompt="Add filter:")
