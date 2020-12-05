@@ -350,6 +350,7 @@ class GConfig:
         self.file_open_in_terminal = config.getboolean('Misc', 'file_open_in_terminal', fallback=True)
         self.view_selected = config.getboolean('Misc', 'view_selected', fallback=False)
         self.torrent_numbers = config.getboolean('Misc', 'torrent_numbers', fallback=False)
+        self.save_conf = config.getboolean('Misc', 'save_conf', fallback=False)
         self.profiles = parse_config_profiles(config, [x[0] for x in self.sort_options])
 
         try:
@@ -587,7 +588,7 @@ class GConfig:
         save_keys = {
             'Connection': ['host', 'port', 'path', 'username', 'password', 'ssl'],
             'Misc': ['lines_per_torrent', 'torrentname_is_progressbar', 'file_viewer', 'file_open_in_terminal',
-                     'view_selected', 'rdns', 'geoip2_database', 'torrent_numbers']
+                     'view_selected', 'rdns', 'geoip2_database', 'torrent_numbers', 'save_conf']
         }
         for section, keys in save_keys.items():
             for key in keys:
@@ -4731,6 +4732,7 @@ class Interface:
             options.append(("View _files", ('focused', 'selected')[gconfig.view_selected]))
             options.append(("Show peers' _reverse DNS", ('no', 'yes')[gconfig.rdns]))
             options.append(("Show torrent _numbers", ('no', 'yes')[gconfig.torrent_numbers]))
+            options.append(("Save _config on exit", ('no', 'yes')[gconfig.save_conf]))
 
             if first_time:
                 first_time = False
@@ -4772,6 +4774,8 @@ class Interface:
                 return
             if key == K.b:
                 gconfig.torrentname_is_progressbar = not gconfig.torrentname_is_progressbar
+            elif key == K.c:
+                gconfig.save_conf = not gconfig.save_conf
             elif key == K.f:
                 gconfig.view_selected = not gconfig.view_selected
             elif key == K.r:
@@ -5132,6 +5136,9 @@ def exit_prog(msg='', exitcode=0):
         lastexitcode = exitcode
     elif exitcode == 0:
         exitcode = lastexitcode
+    if gconfig.save_conf:
+        gconfig.save_config()
+
     sys.exit(exitcode)
 
 
