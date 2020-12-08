@@ -1683,9 +1683,7 @@ class Interface:
             self.scrollpos_detaillist = [0] * 5
             self.selected_files = []
         else:  # return from details
-            self.details_category_focus = 0
-            self.selected_torrent = -1
-            self.selected_files = []
+            self.action_leave_details()
 
     def action_unfocus_torrent(self):
         if self.focus > -1:
@@ -1700,6 +1698,7 @@ class Interface:
         self.details_category_focus = 0
         self.scrollpos_detaillist = [0] * 5
         self.selected_files = []
+        self.vmode_id = -1
 
     def action_quit(self):
         self.exit_now = True
@@ -2092,10 +2091,8 @@ class Interface:
             question = "Remove AND DELETE" if data else "Remove"
             if self.dialog_yesno(question + " %s?" % name + extraline, hard=hard, important=data):
                 self.server.remove_torrent(ids, data=data)
-                if self.selected_torrent > -1:  # leave details
-                    self.server.set_torrent_details_id(-1)
-                    self.selected_torrent = -1
-                    self.details_category_focus = 0
+                if self.selected_torrent > -1:
+                    self.action_leave_details()
                 self.focus_next_after_delete()
 
     def action_remove(self):
