@@ -590,7 +590,7 @@ class GConfig:
 
     def save_profile(self, name, profile):
         filters_str = ' #& '.join(('#='.join((filter_config_str(f) for f in l)) for l in profile['filter']))
-        profile_str = filters_str + '#=' + sort_config_str(profile['sort'][0])
+        profile_str = filters_str + '#=' + sort_config_str(profile['sort'])
         self.config.set('Profiles', 'profile' + name, profile_str)
 
     def save_config(self):
@@ -5316,10 +5316,10 @@ def save_config(filepath, config, force=False):
             return 0
     return -1
 
-def sort_config_str(f):
-    s = ':' if f['reverse'] else ''
-    s += f['name']
-    return s
+def sort_config_str(sorts):
+    if sorts:
+        return ','.join([(':' if f['reverse'] else '') + f['name'] for f in sorts])
+    return "name"
 
 def filter_config_str(f):
     s = ':' if f['inverse'] else ''
