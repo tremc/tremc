@@ -2818,8 +2818,8 @@ class Interface:
                     uploaded = scale_bytes(torrent['uploadedEver'])
                     parts.append("%7s uploaded" % ('nothing', uploaded)[uploaded != '0B'])
 
-                if self.torrent_title_width - sum([len(x) for x in parts]) - len(peers) > 22:
-                    parts.append("%4s peer%s connected" % (torrent['peersConnected'],
+                if self.torrent_title_width - sum([len(x) for x in parts]) - len(peers) > 12:
+                    parts.append("%4s peer%s" % (torrent['peersConnected'],
                                                            ('s', ' ')[torrent['peersConnected'] == 1]))
 
         if focused:
