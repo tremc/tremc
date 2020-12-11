@@ -454,6 +454,7 @@ class GConfig:
             'select_file': [3, ['SPACE'], 'Select/unselect file'],
             'file_info': [3, ['x'], 'Show file info'],
             'remove_tracker': [4, ['DC', 'r'], 'Remove tracker'],
+            'remove_all_trackers': [0, [], 'Remove all trackers from torrent'],
             'page_up': [16, ['PPAGE', '^b'], 'Page Up'],
             'page_down': [16, ['NPAGE', '^f'], 'Page Down'],
             'line_up': [16, ['UP', 'k', '^p'], 'Up'],
@@ -1285,8 +1286,8 @@ class Transmission:
         return response['result'] if response['result'] != 'success' else ''
 
     def remove_torrent_tracker(self, t_id, tracker):
-        data = {'ids': [t_id],
-                'trackerRemove': [tracker]}
+        data = {'ids': t_id,
+                'trackerRemove': tracker}
         request = TransmissionRequest(self.url, 'torrent-set', 1, data, server=self)
         request.send_request()
         response = request.get_response()
@@ -2161,6 +2162,14 @@ class Interface:
                 msg = wrap("Couldn't add tracker: %s" % response)
                 self.dialog_ok("\n".join(msg))
 
+    def action_remove_all_trackers(self):
+        ids = self.selected_ids()
+        if ids:
+            response = self.server.remove_torrent_tracker(ids, list(range(100)))
+            if response:
+                msg = wrap("Couldn't remove trackers: %s" % response)
+                self.dialog_ok("\n".join(msg))
+
     def action_remove_tracker(self):
         if self.details_category_focus == 3:
             if self.server.get_rpc_version() < 10:
@@ -2173,7 +2182,7 @@ class Interface:
                     and self.dialog_yesno("Do you want to remove this tracker?")):
 
                 tracker = t['trackerStats'][self.scrollpos_detaillist[3]]
-                response = self.server.remove_torrent_tracker(t['id'], tracker['id'])
+                response = self.server.remove_torrent_tracker([t['id']], [tracker['id']])
 
                 if response:
                     msg = wrap("Couldn't remove tracker: %s" % response)
