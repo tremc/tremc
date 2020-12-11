@@ -780,7 +780,7 @@ class Transmission:
                                   key=operator.itemgetter('tier', 'id'))
                 return urllib.parse.urlparse(trackers[0]['announce']).hostname
             # Trackerless torrents
-            return None
+            return "None"
 
         # response is a reply to torrent-get
         if response['tag'] == self.TAG_TORRENT_LIST or response['tag'] == self.TAG_TORRENT_DETAILS:
