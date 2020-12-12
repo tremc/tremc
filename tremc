@@ -605,6 +605,9 @@ class TransmissionRequest:
                 chunk = self.open_request.read()
             except ConnectionResetError:
                 return {'result': 'connection reset by peer'}
+            except Exception as e:
+                pdebug(str(e))
+                return {'result': 'Exception'}
             if not chunk:
                 break
             response += chunk
