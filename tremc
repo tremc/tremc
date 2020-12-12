@@ -1488,7 +1488,7 @@ class Interface:
 
         self.details_category_focus = 0  # overview/files/peers/tracker in details
         self.focus_detaillist = -1  # same as focus but for details
-        self.selected_files = []  # marked files in details
+        self.selected_files = set()  # marked files in details
         self.file_index_map = {}  # Maps local torrent's file indices to server file indices
         self.scrollpos_detaillist = [0] * 5  # same as scrollpos but for details
         self.max_overview_scroll = 0
@@ -1687,7 +1687,7 @@ class Interface:
         if self.focus_detaillist > -1:   # unfocus and deselect file
             self.focus_detaillist = -1
             self.scrollpos_detaillist = [0] * 5
-            self.selected_files = []
+            self.selected_files = set()
         else:  # return from details
             self.action_leave_details()
 
@@ -1703,7 +1703,7 @@ class Interface:
         self.selected_torrent = -1
         self.details_category_focus = 0
         self.scrollpos_detaillist = [0] * 5
-        self.selected_files = []
+        self.selected_files = set()
         self.vmode_id = -1
 
     def action_quit(self):
@@ -2264,9 +2264,9 @@ class Interface:
                 # visual mode
                 if self.vmode_id > -1:
                     if self.vmode_id < self.focus_detaillist:
-                        self.selected_files = list(range(self.vmode_id, self.focus_detaillist + 1))
+                        self.selected_files = {self.file_index_map[x] for x in range(self.vmode_id, self.focus_detaillist + 1)}
                     else:
-                        self.selected_files = list(range(self.focus_detaillist, self.vmode_id + 1))
+                        self.selected_files = {self.file_index_map[x] for x in range(self.focus_detaillist, self.vmode_id + 1)}
             list_len = 0
             ppage = 1
 
@@ -2317,7 +2317,7 @@ class Interface:
         if self.details_category_focus == 1 and \
                 (self.selected_files or self.focus_detaillist > -1):
             if self.selected_files:
-                files = {self.file_index_map[index] for index in self.selected_files}
+                files = self.selected_files
                 self.server.increase_file_priority(files)
             elif self.focus_detaillist > -1:
                 self.server.increase_file_priority([self.file_index_map[self.focus_detaillist]])
@@ -2329,7 +2329,7 @@ class Interface:
         if self.details_category_focus == 1 and \
                 (self.selected_files or self.focus_detaillist > -1):
             if self.selected_files:
-                files = {self.file_index_map[index] for index in self.selected_files}
+                files = self.selected_files
                 self.server.decrease_file_priority(files)
             elif self.focus_detaillist > -1:
                 self.server.decrease_file_priority([self.file_index_map[self.focus_detaillist]])
@@ -2404,48 +2404,38 @@ class Interface:
         if self.details_category_focus == 1 and self.focus_detaillist >= 0:
             # file selection with space
             if action == 'file':
-                try:
-                    self.selected_files.pop(self.selected_files.index(self.focus_detaillist))
-                except ValueError:
-                    self.selected_files.append(self.focus_detaillist)
+                self.selected_files.symmetric_difference_update({self.file_index_map[self.focus_detaillist]})
                 self.action_line_down()
             # (un)select directory
             elif action == 'dir':
                 file_id = self.file_index_map[self.focus_detaillist]
                 focused_dir = os.path.dirname(self.torrent_details['files'][file_id]['name'])
-                if self.selected_files.count(self.focus_detaillist):
+                if file_id in self.selected_files:
                     for focus in range(0, len(self.torrent_details['files'])):
                         file_id = self.file_index_map[focus]
                         if self.torrent_details['files'][file_id]['name'].startswith(focused_dir):
-                            try:
-                                while focus in self.selected_files:
-                                    self.selected_files.remove(focus)
-                            except ValueError:
-                                pass
+                            self.selected_files.discard(file_id)
                 else:
                     for focus in range(0, len(self.torrent_details['files'])):
                         file_id = self.file_index_map[focus]
                         if self.torrent_details['files'][file_id]['name'].startswith(focused_dir):
-                            self.selected_files.append(focus)
+                            self.selected_files.add(file_id)
                 self.action_move_to_next_directory()
             # (un)select all files
             elif action == 'all':
                 if self.selected_files:
-                    self.selected_files = []
+                    self.selected_files = set()
                 else:
-                    self.selected_files = list(range(0, len(self.torrent_details['files'])))
+                    self.selected_files = set(range(0, len(self.torrent_details['files'])))
             elif action == 'invert':
-                self.selected_files = [f for f in range(0, len(self.torrent_details['files'])) if f not in self.selected_files]
+                self.selected_files = set(range(0, len(self.torrent_details['files']))).difference(self.selected_files)
             elif action == 'visual':
                 if self.selected_files:
-                    self.selected_files = []
+                    self.selected_files = set()
                 if self.vmode_id != -1:
                     self.vmode_id = -1
                 else:
-                    try:
-                        self.selected_files.pop(self.selected_files.index(self.focus_detaillist))
-                    except ValueError:
-                        self.selected_files.append(self.focus_detaillist)
+                    self.selected_files.symmetric_difference_update({self.file_index_map[self.focus_detaillist]})
                     self.vmode_id = self.focus_detaillist
 
     def action_move_to_next_directory(self):
@@ -2509,7 +2499,7 @@ class Interface:
             if files:
                 pass
             elif gconfig.view_selected and self.selected_files:
-                files = [self.file_index_map[f] for f in self.selected_files]
+                files = self.selected_files
             elif self.focus_detaillist >= 0:
                 files = [self.file_index_map[self.focus_detaillist]]
             else:
@@ -3338,7 +3328,6 @@ class Interface:
                 # to facilitate movement and display. So save name in order to
                 # find the new position of the file later.
                 focused_filename = self.torrent_details['files'][self.file_index_map[self.focus_detaillist]]['name']
-            self.file_index_map = {}
             if gconfig.file_sort_key in ['name', 'length', 'bytesCompleted']:
                 self.sorted_files = sorted(self.torrent_details['files'], key=lambda x: x[gconfig.file_sort_key], reverse=gconfig.file_sort_reverse)
             elif gconfig.file_sort_key == 'progress':
@@ -3351,8 +3340,7 @@ class Interface:
                     self.sorted_files = list(reversed(self.torrent_details['files']))
                 else:
                     self.sorted_files = self.torrent_details['files'][:]
-            for index, file in enumerate(self.sorted_files):
-                self.file_index_map[index] = self.torrent_details['files'].index(file)
+            self.file_index_map = {i: self.torrent_details['files'].index(f) for i, f in enumerate(self.sorted_files)}
             # Find the focused file in new sorted list. First check if it is in
             # the same index, as that is the most common case.
             if self.focus_detaillist > -1 and focused_filename != self.torrent_details['files'][self.file_index_map[self.focus_detaillist]]['name']:
@@ -3400,7 +3388,7 @@ class Interface:
         for i in range(start, end):
             ret.append((
                 self.filelist_cache[i],
-                i in self.filelist_cache_pos_dict and self.filelist_cache_pos_dict[i] in self.selected_files,
+                i in self.filelist_cache_pos_dict and self.file_index_map[self.filelist_cache_pos_dict[i]] in self.selected_files,
                 i == line_to_show
             ))
         return ret
@@ -4410,7 +4398,8 @@ class Interface:
         elif search == 'regex':
             try:
                 regex = re.compile(pattern, re.I)
-                matched_files = [i for i in range(len(self.sorted_files)) if regex.search(os.path.basename(self.sorted_files[i]['name']))]
+                matched_files = {self.file_map_index[i] for i in range(len(self.sorted_files))
+                                    if regex.search(os.path.basename(self.sorted_files[i]['name']))}
             except Exception:
                 return True
         else:
@@ -4418,9 +4407,9 @@ class Interface:
         if inc == 1:
             self.selected_files = matched_files
         elif inc == 0:
-            self.selected_files = [f for f in self.selected_files if f in matched_files]
+            self.selected_files.intersection_uodate(matched_files)
         elif inc == -1:
-            self.selected_files = list(set(self.selected_files).union(set(matched_files)))
+            self.selected_files.update(matched_files)
         return True
 
     def dialog_input_number(self, message, current_value,
