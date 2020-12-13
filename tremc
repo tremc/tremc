@@ -3101,7 +3101,7 @@ class Interface:
 
         wanted = 0
         for i, _ in enumerate(t['files']):
-            if t['wanted'][i] is True:
+            if t['wanted'][i]:
                 wanted += t['files'][i]['length']
 
         sizes = ['Size: ', "%s;  " % scale_bytes(t['totalSize'], long=True),
