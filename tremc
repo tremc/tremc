@@ -4391,11 +4391,11 @@ class Interface:
 
     def select_pattern_files(self, pattern, inc=1, search=None):
         if search == 'pattern':
-            matched_files = [i for i in range(len(self.sorted_files)) if pattern.lower() in os.path.basename(self.sorted_files[i]['name'].lower())]
+            matched_files = {self.file_index_map[i] for i in range(len(self.sorted_files)) if pattern.lower() in os.path.basename(self.sorted_files[i]['name'].lower())}
         elif search == 'regex':
             try:
                 regex = re.compile(pattern, re.I)
-                matched_files = {self.file_map_index[i] for i in range(len(self.sorted_files))
+                matched_files = {self.file_index_map[i] for i in range(len(self.sorted_files))
                                     if regex.search(os.path.basename(self.sorted_files[i]['name']))}
             except Exception:
                 return True
