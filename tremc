@@ -3719,7 +3719,7 @@ class Interface:
                     else:
                         filter_param = ''
                         not_str = ('', strings[5])[gconfig.filters[0][0]['inverse']]
-                    self.screen.addstr(not_str + gconfig.filters[0][0]['name'] + filter_param,
+                    safe_addstr(self.screen, not_str + gconfig.filters[0][0]['name'] + filter_param,
                                        gconfig.element_attr('filter_status' if len(gconfig.filters[0]) <= 1 else 'multi_filter_status')
                                        ^ (curses.A_REVERSE if self.filters_inverted else 0))
 
@@ -3733,10 +3733,7 @@ class Interface:
                         self.screen.addch(curses.ACS_DARROW, curses_tags)
                     else:
                         self.screen.addch(curses.ACS_UARROW, curses_tags)
-                    try:  # 'name' may be too long
-                        self.screen.addstr(name, curses_tags)
-                    except curses.error:
-                        pass
+                    safe_addstr(self.screen, name, curses_tags)
 
                 if self.selected and self.width - self.screen.getyx()[1] > 20:
                     self.screen.addstr(strings[7] % len(self.selected), gconfig.element_attr('bottom_line'))
@@ -4962,6 +4959,10 @@ def show_cursor():
         curses.curs_set(1)
     except curses.error:
         pass
+
+
+def safe_addstr(win, string, attr):
+    win.addstr(string[:win.getmaxyx()[1] - win.getyx()[1] - 1], attr)
 
 
 def wrap_multiline(text, width, initial_indent='', subsequent_indent=' '):
