@@ -1751,6 +1751,7 @@ class Interface:
             self.selected_torrent = self.focus
             self.server.set_torrent_details_id(self.torrents[self.focus]['id'])
             self.server.wait_for_details_update()
+            self.screen_files = -1
 
     def action_show_torrent_sort_order_menu(self):
         if self.selected_torrent == -1:
@@ -2251,11 +2252,11 @@ class Interface:
                 elif action == 'page_up':
                     self.focus_detaillist, self.scrollpos_detaillist[1] = \
                         self.move_page_up(self.focus_detaillist, self.scrollpos_detaillist[1], 1,
-                                          self.detaillines_per_page)
+                                          self.screen_files if self.screen_files > 0 else self.detaillines_per_page)
                 elif action == 'page_down':
                     self.focus_detaillist, self.scrollpos_detaillist[1] = \
                         self.move_page_down(self.focus_detaillist, self.scrollpos_detaillist[1], 1,
-                                            self.detaillines_per_page, len(self.torrent_details['files']))
+                                            self.screen_files if self.screen_files > 0 else self.detaillines_per_page, len(self.torrent_details['files']))
                 elif action == 'home':
                     self.focus_detaillist, self.scrollpos_detaillist[1] = self.move_to_top()
                 elif action == 'end':
@@ -3285,6 +3286,7 @@ class Interface:
         column_names = '   #  Progress    Size  Priority  Filename'
         self.pad.addstr(ypos, 0, column_names.ljust(self.width), curses.A_UNDERLINE)
         ypos += 1
+        numfiles = 0
 
         for line, priority, sel, focus in self.create_filelist():
             curses_tags = 0
@@ -3302,6 +3304,7 @@ class Interface:
             priority_end = priority_start + len(priority)
             if priority:
                 priority_tag = curses_tags + gconfig.element_attr('file_prio_' + priority)
+                numfiles = numfiles + 1
             else:
                 priority_tag = curses_tags
             self.pad.addstr(ypos, 0, line[0:priority_start], curses_tags)
@@ -3311,8 +3314,9 @@ class Interface:
             if needclrtoeol:
                 self.pad.addstr(' ' * (self.width - self.pad.getyx()[1]), curses_tags)
             ypos += 1
-            if ypos > self.height:
-                break
+            if ypos > self.height - 3:
+                self.screen_files = numfiles
+                return
 
     def create_filelist(self):
         # Build new mapping between sorted local files and transmission-daemon's unsorted files.
