@@ -3385,7 +3385,7 @@ class Interface:
         self.pad.addstr(ypos, 0, column_names.ljust(self.width), curses.A_UNDERLINE)
         ypos += 1
 
-        for line, sel, focus in self.create_filelist():
+        for line, priority, sel, focus in self.create_filelist():
             curses_tags = 0
             # highlight focused/selected line(s)
             if sel:
@@ -3397,11 +3397,6 @@ class Interface:
             except Exception as e:
                 pdebug('caught %s in draw_filelist(): %s\n' % (type(e), str(e)))
 
-            # 25 chars before priority, 6 chars priority, 2 chars skipped
-            priority = line[25:31].strip()
-            # Except if the file index has more than 4 digits:
-            if priority[:4] == 'norm':
-                priority = 'normal'
             priority_start = 28 - (len(priority) + 1) // 2
             priority_end = priority_start + len(priority)
             if priority:
@@ -3460,8 +3455,9 @@ class Interface:
                 if f[:f_len] != current_folder:
                     [current_depth, pos] = self.create_filelist_transition(f, current_folder, self.filelist_cache, current_depth, pos)
                     current_folder = f[:f_len]
-                self.filelist_cache.append(self.create_filelist_line(f[-1], index, percent(file['length'], file['bytesCompleted']),
-                                                                     file['length'], current_depth))
+                priority = self.server.get_file_priority(self.torrent_details['id'], self.file_index_map[index])
+                self.filelist_cache.append((self.create_filelist_line(f[-1], index, percent(file['length'], file['bytesCompleted']),
+                                                                     file['length'], current_depth, priority), priority))
                 self.filelist_cache_pos.append(pos)
                 self.filelist_cache_pos_dict[index + pos] = index
                 index += 1
@@ -3483,14 +3479,10 @@ class Interface:
             else:
                 end = len(self.filelist_cache)
                 start = end - self.detaillines_per_page if end >= self.detaillines_per_page else 0
-        ret = []
         for i in range(start, end):
-            ret.append((
-                self.filelist_cache[i],
+            yield (*self.filelist_cache[i],
                 i in self.filelist_cache_pos_dict and self.file_index_map[self.filelist_cache_pos_dict[i]] in self.selected_files,
-                i == line_to_show
-            ))
-        return ret
+                i == line_to_show)
 
     def create_filelist_transition(self, f, current_folder, filelist, current_depth, pos):
         """ Create directory transition from <current_folder> to <f>,
@@ -3521,15 +3513,15 @@ class Interface:
         # Increase depth for each new directory that appears in f,
         # but not in current_directory
         while current_depth < f_len:
-            filelist.append('%s\\ %s' % ('  ' * current_depth + ' ' * 34, f[current_depth]))
+            filelist.append(('%s\\ %s' % ('  ' * current_depth + ' ' * 34, f[current_depth]), ''))
             current_depth += 1
             pos += 1
         return [current_depth, pos]
 
-    def create_filelist_line(self, name, index, percent, length, current_depth):
+    def create_filelist_line(self, name, index, percent, length, current_depth, priority):
         line = "%s  %6.2f%%" % (str(index + 1).rjust(4), percent) + \
             '  ' + scale_bytes(length).rjust(7) + \
-            '  ' + self.server.get_file_priority(self.torrent_details['id'], self.file_index_map[index]).center(8) + \
+            '  ' + priority.center(8) + \
             " %s| %s" % ('  ' * current_depth, name[0:self.width - 34 - current_depth])
         return line
 
