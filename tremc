@@ -2482,6 +2482,7 @@ class Interface:
         self.view_file(gconfig.file_viewer, gconfig.file_open_in_terminal)
 
     def view_file(self, file_viewer, file_open_in_terminal):
+        torrent = None
         if self.selected_torrent == -1:
             if self.focus == -1:
                 return
