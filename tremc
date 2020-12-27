@@ -509,6 +509,8 @@ class GConfig:
             'dialog_text': 'dialog,a:*r',
             'dialog_text_important': 'dialog_important,a:*r',
             'menu_focused': 'dialog,a:*r',
+            'file_line': '',
+            'dir_line': '',
             'file_prio_high': 'fg:red,bg:default',
             'file_prio_normal': 'fg:default,bg:default',
             'file_prio_low': 'fg:yellow,bg:default',
@@ -524,6 +526,14 @@ class GConfig:
         curses.start_color()
         if self.term_has_colors:
             curses.use_default_colors()
+        # file list attributes: generate focused and selected attributes if they are not defined by the user
+        for attr in ('file_line', 'file_prio_high', 'file_prio_normal', 'file_prio_low', 'file_prio_off'):
+            if attr + '_f' not in colors:
+                colors[attr + '_f'] = attr + ',a:*r'
+            if attr + '_s' not in colors:
+                colors[attr + '_s'] = attr + ',a:*b*i'
+            if attr + '_f_s' not in colors:
+                colors[attr + '_f_s'] = attr + '_f' + ',a:*b*i'
         for name in list(colors.keys()):
             self.colors[name] = self._parse_color_pair(colors[name])
             if self.term_has_colors:
@@ -3378,41 +3388,32 @@ class Interface:
         else:
             self.search_focus = 0
             self.highlight_dialog = False
-        self.draw_filelist(5, needclrtoeol=True)
+        self.draw_filelist(5)
         self.pad.refresh(0, 0, 1, 0, self.mainview_height, self.width)
         self.screen.refresh()
 
-    def draw_filelist(self, ypos, needclrtoeol=False):
+    def draw_filelist(self, ypos):
         column_names = '   #  Progress    Size  Priority  Filename'
         self.pad.addstr(ypos, 0, column_names.ljust(self.width), curses.A_UNDERLINE)
         ypos += 1
         numfiles = 0
 
         for line, priority, sel, focus in self.create_filelist():
-            curses_tags = 0
-            # highlight focused/selected line(s)
-            if sel:
-                curses_tags = gconfig.selected_file_attr
-            if focus:
-                curses_tags += curses.A_REVERSE
-            try:
-                self.pad.addstr(ypos, 0, ' ' * self.width, curses_tags)
-            except Exception as e:
-                pdebug('caught %s in draw_filelist(): %s\n' % (type(e), str(e)))
-
-            priority_start = 28 - (len(priority) + 1) // 2
-            priority_end = priority_start + len(priority)
             if priority:
-                priority_tag = curses_tags + gconfig.element_attr('file_prio_' + priority)
+                attr_suffix = ('', '_f')[focus] + ('', '_s')[sel]
+                curses_tags = gconfig.element_attr('file_line' + attr_suffix)
+                priority_start = 28 - (len(priority) + 1) // 2
+                priority_end = priority_start + len(priority)
+                priority_tag = gconfig.element_attr('file_prio_' + priority + attr_suffix)
+                self.pad.addstr(ypos, 0, line[0:priority_start], curses_tags)
+                self.pad.addstr(ypos, priority_start, line[priority_start:priority_end], priority_tag)
+                self.pad.addstr(ypos, priority_end, line[priority_end:33], curses_tags)
+                self.pad.addstr(ypos, 33, line[33:], curses_tags)
                 numfiles = numfiles + 1
             else:
-                priority_tag = curses_tags
-            self.pad.addstr(ypos, 0, line[0:priority_start], curses_tags)
-            self.pad.addstr(ypos, priority_start, line[priority_start:priority_end], priority_tag)
-            self.pad.addstr(ypos, priority_end, line[priority_end:33], curses_tags)
-            self.pad.addstr(ypos, 33, line[33:], curses_tags)
-            if needclrtoeol:
-                self.pad.addstr(' ' * (self.width - self.pad.getyx()[1]), curses_tags)
+                curses_tags = gconfig.element_attr('dir_line')
+                self.pad.addstr(ypos, 0, line, curses_tags)
+            self.pad.addstr(' ' * (self.width - self.pad.getyx()[1]), curses_tags)
             ypos += 1
             if ypos > self.height - 3:
                 self.screen_files = numfiles
