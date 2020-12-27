@@ -2625,7 +2625,7 @@ class Interface:
         if ids:
             focused, extraline = self.get_focused(ids)
             msg = ('Set labels of "%s"' % focused['name']) + extraline + '\nto:'
-            labels_str = self.dialog_input_text(msg, '')
+            labels_str = self.dialog_input_text(msg, '', history=gconfig.histories['labels'], fixed_history=list(self.server.labels))
             labels = [s.strip() for s in labels_str.split(',')]
             if labels:
                 self.server.set_labels(ids, labels)
@@ -4892,7 +4892,7 @@ def load_history(filename):
             history = {}
     else:
         history = {}
-    for i in ['label', 'location', 'tracker', 'command', 'search', 'regex']:
+    for i in ['label', 'labels', 'location', 'tracker', 'command', 'search', 'regex']:
         if i not in history:
             history[i] = []
     if 'types' not in history:
