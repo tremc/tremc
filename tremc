@@ -490,6 +490,7 @@ class GConfig:
             'title_paused_incomp': 'a:r',
             'title_paused_done_incomp': 'title_paused_incomp',
             'title_error_incomp': 'a:r',
+            'title_other': 'bg:default,fg:default',
             'download_rate': 'bg:default,fg:blue,a:b',
             'upload_rate': 'bg:black,fg:red,a:b',
             'eta+ratio': 'bg:default,fg:default,a:b',
@@ -2952,7 +2953,7 @@ class Interface:
         elif torrent['percentDone'] < 100:
             element_name = 'title_download'
         else:
-            color = 0
+            element_name = 'title_other'
 
         tag = gconfig.element_attr(element_name+'_incomp')
         tag_done = gconfig.element_attr(element_name)
