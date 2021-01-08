@@ -1709,24 +1709,27 @@ class Interface:
             else:
                 if choice in ['tracker', 'location', 'label']:
                     if choice == 'tracker':
-                        select = self.server.trackers
+                        select = sorted(self.server.trackers)
                         min_select = 2
                     elif choice == 'location':
-                        select = self.server.locations
+                        select = sorted(self.server.locations)
                         min_select = 2
                     elif choice == 'label':
-                        select = self.server.labels
+                        select = sorted(self.server.labels)
                         min_select = 1
                     current_choice = new_filter[choice] if choice in new_filter else ''
                     if len(select) < min_select:
                         # Nothing to select
                         return None
-                    indexes = 'abcdefghijklmnopqrstuvwxyz'
+                    indexes = 'abcdefghijklmnopqrstuvwxyz1234567890'
                     select_list = []
                     i = 0
                     for x in select:
-                        select_list.append((x, '_' + indexes[i] + '. ' + x))
-                        i = i + 1
+                        if i < len(indexes):
+                            select_list.append((x, '_' + indexes[i] + '. ' + x))
+                            i = i + 1
+                        else:
+                            select_list.append((x, '   ' + x))
                     try:
                         s = list(map(lambda x: x[0] == current_choice, select_list)).index(True) + 1
                     except Exception:
