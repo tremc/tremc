@@ -326,7 +326,9 @@ class GConfig:
             ('rateUpload', '_Upload Speed'), ('rateDownload', '_Download Speed'),
             ('uploadRatio', '_Ratio'), ('peersConnected', 'P_eers'),
             ('downloadDir', 'L_ocation'), ('mainTrackerDomain', 'Trac_ker'),
-            ('queuePosition', '_Queue Position'), ('reverse', 'Re_verse') ]
+            ('queuePosition', '_Queue Position'),
+            ('activityDate', 'Last activit_y'),
+            ('reverse', 'Re_verse') ]
         self.file_sort_options = [
             ('name', '_Name'), ('progress', '_Progress'),
             ('length', 'Si_ze'), ('bytesCompleted', '_Downloaded'),
@@ -810,10 +812,11 @@ class Transmission:
                    'peersSendingToUs', 'peersGettingFromUs', 'totalSize',
                    'seedRatioLimit', 'seedRatioMode', 'isPrivate', 'magnetLink',
                    'honorsSessionLimits', 'metadataPercentComplete',
+                   'activityDate',
                    ]
 
     DETAIL_FIELDS = ['files', 'priorities', 'wanted', 'peers', 'trackers',
-                     'activityDate', 'dateCreated', 'startDate', 'doneDate',
+                     'dateCreated', 'startDate', 'doneDate',
                      'leftUntilDone', 'comment', 'creator',
                      'hashString', 'pieceCount', 'pieceSize', 'pieces',
                      'downloadedEver', 'corruptEver', 'peersFrom'] + LIST_FIELDS
