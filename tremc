@@ -3359,7 +3359,12 @@ class Interface:
             ypos += 7
 
     def draw_pieces_map(self, ypos):
-        if self.torrent_details['haveValid'] / self.torrent_details['totalSize'] < 0.5:
+        if self.torrent_details['totalSize'] == 0:
+            default_attr = 0
+            new_attr = curses.A_REVERSE
+            change_attr = 0x80
+            skip_run = 0
+        elif self.torrent_details['haveValid'] / self.torrent_details['totalSize'] < 0.5:
             default_attr = 0
             new_attr = curses.A_REVERSE
             change_attr = 0x80
