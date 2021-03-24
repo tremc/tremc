@@ -59,7 +59,7 @@ Create configuration file with default values.
   *NOTE:* A config file won't be created unless you provide this option at
 least once. After that, it is rewritten whenever tremc exits.
 * **`-f CONFIGFILE --config=CONFIGFILE`**
-Set path to configuration file. if not creating a config file, and CONFIGFILE
+Set path to configuration file. If not creating a config file, and CONFIGFILE
 does not exist (and contains no slashes), the config directory is also
 searched for CONFIGFILE or CONFIGFILE.cfg.
 
@@ -253,7 +253,7 @@ In all text input dialogs, edit text with Left, Right, Home, End, Backspace, Del
   Pressing Esc leaves filter unchanged.
 * Filters lists edit
 
-  Filtering is done by a list of sublists of filters. For an item to satisfy the list, it has to satisfies all filters in at least one sublist (DNF).
+  Filtering is done by a list of sublists of filters. For an item to satisfy the list, it has to satisfy all filters in at least one sublist (DNF).
 
   Move the cursor by using the arrow keys, d to remove marked filter, f to edit marked filter (including empty one).
 
@@ -298,11 +298,11 @@ The following sections are read:
   eight curses colors, or default.
 
   Allowed elements are header, footer, title_seed, title_download, title_idle, title_incomplete, title_verify,
-  title_paused, title_error, download_rate, upload_rate, eta+ratio, filter_status, multi_filter_status, 
+  title_paused, title_error, download_rate, upload_rate, eta+ratio, filter_status, multi_filter_status, selection
   window, dialog, dialog_important, file_prio_high, file_prio_normal, file_prio_low, file_prio_off.
 
   Note that what the colors mean actually depends on the terminal. In some
-  cases 'white' is darker then the white that the terminal displays, and
+  cases 'white' is darker than the white that the terminal displays, and
   similarly, 'black' is lighter. Setting 'default' selects the respective
   background or foreground coloe of the terminal.
 
