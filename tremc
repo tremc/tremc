@@ -442,6 +442,7 @@ config.set('Colors', 'file_prio_high', 'fg:red,bg:default')
 config.set('Colors', 'file_prio_normal', 'fg:default,bg:default')
 config.set('Colors', 'file_prio_low', 'fg:yellow,bg:default')
 config.set('Colors', 'file_prio_off', 'fg:blue,bg:default')
+config.set('Colors', 'selection', 'bg:default,fg:default')
 
 
 class ColorManager:
@@ -2702,6 +2703,7 @@ class Interface:
         tag = curses.color_pair(self.colors.ind('title_incomplete')) + curses.A_REVERSE
         tag_done = color
         if focused:
+            tag += curses.color_pair(self.colors.ind('selection'))
             tag += curses.A_BOLD
             tag_done += curses.A_BOLD
 
@@ -2771,6 +2773,7 @@ class Interface:
 
         if focused:
             tags = curses.A_REVERSE + curses.A_BOLD
+            tags += curses.color_pair(self.colors.ind('selection'))
         else:
             tags = 0
 
@@ -2798,7 +2801,7 @@ class Interface:
             self.pad.move(3, xpos)
             tags = curses.A_BOLD
             if menu_items.index(item) == self.details_category_focus:
-                tags += curses.A_REVERSE
+                tags += curses.color_pair(self.colors.ind('selection')) + curses.A_REVERSE
             title = item.split('_')
             self.pad.addstr(title[0], tags)
             self.pad.addstr(title[1][0], tags + curses.A_UNDERLINE)
@@ -3047,7 +3050,7 @@ class Interface:
                     curses_tags = gconfig.selected_file_attr
                     line = line[2:]
                 if line[1] == 'F':
-                    curses_tags += curses.A_REVERSE
+                    curses_tags += curses.color_pair(self.colors.ind('selection')) + curses.A_REVERSE
                     line = line[2:]
                 try:
                     self.pad.addstr(ypos, 0, ' ' * self.width, curses_tags)
@@ -3059,16 +3062,16 @@ class Interface:
             for part in re.split('(high|normal|low|off)', line[0:33], 1):
                 if part == 'high':
                     self.pad.addstr(ypos, xpos, part,
-                                    curses_tags + curses.color_pair(self.colors.ind('file_prio_high')))
+                                    curses.A_REVERSE + curses.color_pair(self.colors.ind('file_prio_high')))
                 elif part == 'normal':
                     self.pad.addstr(ypos, xpos, part,
-                                    curses_tags + curses.color_pair(self.colors.ind('file_prio_normal')))
+                                    curses.A_REVERSE + curses.color_pair(self.colors.ind('file_prio_normal')))
                 elif part == 'low':
                     self.pad.addstr(ypos, xpos, part,
-                                    curses_tags + curses.color_pair(self.colors.ind('file_prio_low')))
+                                    curses.A_REVERSE + curses.color_pair(self.colors.ind('file_prio_low')))
                 elif part == 'off':
                     self.pad.addstr(ypos, xpos, part,
-                                    curses_tags + curses.color_pair(self.colors.ind('file_prio_off')))
+                                    curses.A_REVERSE + curses.color_pair(self.colors.ind('file_prio_off')))
                 else:
                     self.pad.addstr(ypos, xpos, part, curses_tags)
                 xpos += len(part)
@@ -3312,7 +3315,7 @@ class Interface:
             if current_tier != t['tier']:
                 current_tier = t['tier']
 
-                tiercolor = curses.A_BOLD + curses.A_REVERSE \
+                tiercolor = curses.color_pair(self.colors.ind('selection')) + curses.A_BOLD + curses.A_REVERSE \
                     if selected else curses.A_REVERSE
                 addstr(ypos, 0, ("Tier %d" % (current_tier + 1)).ljust(self.width), tiercolor)
                 ypos += 1
