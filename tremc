@@ -634,7 +634,7 @@ class Transmission:
     LIST_FIELDS = ['id', 'name', 'downloadDir', 'status', 'trackerStats', 'desiredAvailable',
                    'rateDownload', 'rateUpload', 'eta', 'uploadRatio',
                    'sizeWhenDone', 'haveValid', 'haveUnchecked', 'addedDate',
-                   'uploadedEver', 'errorString', 'recheckProgress',
+                   'uploadedEver', 'error', 'errorString', 'recheckProgress',
                    'peersConnected', 'uploadLimit', 'downloadLimit',
                    'uploadLimited', 'downloadLimited', 'bandwidthPriority',
                    'peersSendingToUs', 'peersGettingFromUs', 'totalSize',
@@ -1695,6 +1695,7 @@ class Interface:
                    ('selected', 'S_elected'),
                    ('honors', '_Honors limits'),
                    ('partwanted', 'Part _wanted'),
+                   ('error', 'Error/Warnin_g'),
                    ('invert', 'In_vert'), ('', '_All')]
         if self.server.get_rpc_version() >= 16:
             options.insert(-2, ('label', 'La_bel'))
@@ -2542,6 +2543,8 @@ class Interface:
             return filtr['inverse'] != (filtr['label'] in t['labels'])
         if filtr['name'] == 'partwanted':
             return filtr['inverse'] != (t['totalSize'] > t['sizeWhenDone'])
+        if filtr['name'] == 'error':
+            return filtr['inverse'] != (t['error'] > 0)
 
         return True  # Unknown filter does not filter anything
 
