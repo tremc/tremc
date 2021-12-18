@@ -3072,7 +3072,7 @@ class Interface:
                 else:
                     self.pad.addstr(ypos, xpos, part, curses_tags)
                 xpos += len(part)
-            self.pad.addstr(ypos, xpos, line[33:], curses_tags)
+            self.pad.addstr(ypos, xpos, line[34:], curses_tags)
             if needclrtoeol:
                 self.pad.addstr(' ' * (self.width - self.pad.getyx()[1]), curses_tags)
             ypos += 1
@@ -3190,7 +3190,7 @@ class Interface:
         line = "%s  %6.2f%%" % (str(index + 1).rjust(4), percent) + \
             '  ' + scale_bytes(length).rjust(7) + \
             '  ' + self.server.get_file_priority(self.torrent_details['id'], self.file_index_map[index]).center(8) + \
-            " %s| %s" % ('  ' * current_depth, name[0:self.width - 34 - current_depth])
+            " %s| %s" % ('  ' * current_depth, name[0:self.width - 34 - 2 * current_depth])
         return line
 
     def draw_peerlist(self, ypos):
