@@ -4219,6 +4219,8 @@ class Interface:
         if not isinstance(text, str):
             text = str(text, gconfig.ENCODING)
         index = len(text)
+        initial_text = text
+        tab_count = 0
         while True:
             # Cut the text into pages, each as long as the text field
             # The current page is determined by index position
@@ -4257,6 +4259,7 @@ class Interface:
             elif (c in (curses.KEY_BACKSPACE, K.DEL)) and index > 0:
                 text = text[:index - 1] + (index < len(text) and text[index:] or '')
                 index -= 1
+                tab_count = 0
             elif index < len(text) and (c in (curses.KEY_DC, K.D_)):
                 text = text[:index] + text[index + 1:]
             elif index < len(text) and c == K.K_:
@@ -4296,6 +4299,10 @@ class Interface:
                 text = text[:index] + chr(c) + (index < len(text) and text[index:] or '')
                 index += 1
             elif c == K.TAB and tab_complete:
+                if tab_count == 0:
+                    initial_text = text
+                else:
+                    text = initial_text
                 possible_choices = []
                 if tab_complete in ('files', 'dirs'):
                     (dirname, filename) = os.path.split(tilde2homedir(text))
@@ -4304,6 +4311,7 @@ class Interface:
                     try:
                         possible_choices = [os.path.join(dirname, choice) for choice in os.listdir(dirname)
                                             if choice.startswith(filename)]
+                        possible_choices.sort()
                     except OSError:
                         continue
                     if tab_complete == 'dirs':
@@ -4325,8 +4333,14 @@ class Interface:
                 if possible_choices:
                     text = os.path.commonprefix(possible_choices)
                     if tab_complete in ('files', 'dirs'):
-                        if len(possible_choices) == 1 and os.path.isdir(text) and not text.endswith(os.sep):
+                        num_possible_choices = len(possible_choices)
+                        if num_possible_choices == 1 and os.path.isdir(text) and not text.endswith(os.sep):
                             text += os.sep
+                        elif tab_count <= num_possible_choices:
+                            if tab_count == num_possible_choices:
+                                tab_count = 0
+                            text = possible_choices[tab_count]
+                            tab_count += 1
                         text = homedir2tilde(text)
                     index = len(text)
             if on_change:
