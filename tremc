@@ -194,7 +194,7 @@ class GConfig:
         JSON_ERROR = 2
         CONFIGFILE_ERROR = 3
 
-    FILTERS_WITH_PARAM = ['tracker', 'regex', 'location', 'label']
+    FILTERS_WITH_PARAM = ['tracker', 'regex', 'location', 'label', 'group']
 
     speed_k = 1024
 
@@ -907,6 +907,7 @@ class Transmission:
         self.trackers = set()
         self.locations = set()
         self.labels = set()
+        self.groups = set()
         self.status_cache = dict()
         self.torrent_details_cache = dict()
         self.peer_progress_cache = dict()
@@ -983,6 +984,8 @@ class Transmission:
                 if self.rpc_version >= 16:
                     for l in t['labels']:
                         self.labels.add(l)
+                if self.rpc_version >= 17:
+                    self.groups.add(t['group'])
 
             if response['tag'] == self.TAG_TORRENT_LIST:
                 self.torrent_cache = response['arguments']['torrents']
@@ -1905,6 +1908,8 @@ class Interface:
                    ('invert', 'In_vert'), ('', '_All')]
         if self.server.get_rpc_version() >= 16:
             options.insert(-2, ('label', 'La_bel'))
+        if self.server.get_rpc_version() >= 16:
+            options.insert(-2, ('group', 'Ba_ndwidth group'))
         try:
             s = list(map(lambda x: x[0] == oldfilter['name'], options)).index(True) + 1
         except Exception:
@@ -1914,7 +1919,7 @@ class Interface:
             if choice == 'invert':
                 new_filter['inverse'] = not new_filter['inverse']
             else:
-                if choice in ['tracker', 'location', 'label']:
+                if choice in ['tracker', 'location', 'label', 'group']:
                     if choice == 'tracker':
                         select = sorted(self.server.trackers)
                         min_select = 2
@@ -1923,6 +1928,9 @@ class Interface:
                         min_select = 2
                     elif choice == 'label':
                         select = sorted(self.server.labels)
+                        min_select = 1
+                    elif choice == 'group':
+                        select = sorted(self.server.groups)
                         min_select = 1
                     current_choice = new_filter[choice] if choice in new_filter else ''
                     if len(select) < min_select:
@@ -2808,6 +2816,8 @@ class Interface:
             return filtr['inverse'] != (homedir2tilde(t['downloadDir']) == filtr['location'])
         if filtr['name'] == 'label':
             return filtr['inverse'] != (filtr['label'] in t['labels'])
+        if filtr['name'] == 'group':
+            return filtr['inverse'] != (filtr['group'] == t['group'])
         if filtr['name'] == 'partwanted':
             return filtr['inverse'] != (t['totalSize'] > t['sizeWhenDone'])
         if filtr['name'] == 'error':
