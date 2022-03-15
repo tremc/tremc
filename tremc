@@ -180,7 +180,7 @@ class GConfig:
     VERSION = '0.9.3'
 
     TRNSM_VERSION_MIN = '1.90'
-    TRNSM_VERSION_MAX = '3.0.0'
+    TRNSM_VERSION_MAX = '3.1.0'
     RPC_VERSION_MIN = 8
     RPC_VERSION_MAX = 17
 
@@ -892,6 +892,8 @@ class Transmission:
         if self.rpc_version >= 16:
             self.LIST_FIELDS.append('labels')
             self.DETAIL_FIELDS.append('labels')
+
+        if self.rpc_version >= 17:
             self.LIST_FIELDS.append('group')
             self.DETAIL_FIELDS.append('group')
 
