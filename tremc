@@ -402,13 +402,13 @@ class GConfig:
             'remove_focused_data': [0, ['SDC', 'R'], 'Remove torrent and content'],
             'remove_selected_data': [1, [], 'Remove selected torrents and content'],
             'copy_magnet_link': [0, ['M'], 'Copy Magnet Link to the System Clipboard'],
-            'remove_labels': [256, ['^l'], 'Remove labels'],
-            'add_label': [256, ['b'], 'Add label'],
-            'set_labels': [256, ['B'], 'Set labels'],
-            'move_queue_down': [513, ['J'], 'Move torrent down in queue'],
-            'move_queue_up': [513, ['K'], 'Move torrent up in queue'],
+            'remove_labels': [512, ['^l'], 'Remove labels'],
+            'add_label': [512, ['b'], 'Add label'],
+            'set_labels': [512, ['B'], 'Set labels'],
             'set_group': [1024, [], 'Set group'],
             'group_get': [1024, [], 'Get group list'],
+            'move_queue_down': [257, ['J'], 'Move torrent down in queue'],
+            'move_queue_up': [257, ['K'], 'Move torrent up in queue'],
             'profile_menu': [1, ['e'], 'Profile menu'],
             'save_profile': [1, ['E'], 'Save profile'],
             'search_torrent': [1, ['/'], 'Find torrent'],
@@ -4073,9 +4073,11 @@ class Interface:
             movement_keys = True
             for a, d in gconfig.actions.items():
                 if d[1] and d[0] & 15 in categories:
-                    if d[0] & 512 and self.server.get_rpc_version() < 14:
+                    if d[0] & 256 and self.server.get_rpc_version() < 14:
                         continue
-                    if d[0] & 256 and self.server.get_rpc_version() < 16:
+                    if d[0] & 512 and self.server.get_rpc_version() < 16:
+                        continue
+                    if d[0] & 1024 and self.server.get_rpc_version() < 17:
                         continue
                     if d[0] == 16 and movement_keys:
                         movement_keys = False
