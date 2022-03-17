@@ -1402,13 +1402,13 @@ class Transmission:
         return '?'
 
     def wait_for_torrentlist_update(self):
-        self.wait_for_update(7)
+        self.wait_for_update(self.TAG_TORRENT_LIST)
 
     def wait_for_details_update(self):
         self.wait_for_update(self.TAG_TORRENT_DETAILS)
 
     def wait_for_status_update(self):
-        self.wait_for_update(22)
+        self.wait_for_update(self.TAG_SESSION_GET)
 
     def wait_for_update(self, update_id):
         self.update(0)  # send request
