@@ -3415,7 +3415,8 @@ class Interface:
             else:
                 curses_tags = gconfig.element_attr('dir_line')
                 self.pad.addstr(ypos, 0, line, curses_tags)
-            self.pad.addstr(' ' * (self.width - self.pad.getyx()[1]), curses_tags)
+            if self.pad.getyx()[1] > 0:
+                self.pad.addstr(' ' * (self.width - self.pad.getyx()[1]), curses_tags)
             ypos += 1
             if ypos > self.height - 3:
                 self.screen_files = numfiles
