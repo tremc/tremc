@@ -363,7 +363,7 @@ class GConfig:
 
         self.actions = {
             # First in list: 0=all 1=list 2=details 3=files 4=tracker 16=movement
-            # +256 for RPC>=14, +512 for RPC>=16
+            # +256 for RPC>=14, +512 for RPC>=16, +1024 for RPC>=17
             'list_key_bindings': [0, ['F1', '?'], 'List key bindings'],
             'quit_now': [0, ['^w'], 'Quit immediately'],
             'quit': [1, ['q'], 'Quit'],
@@ -405,9 +405,10 @@ class GConfig:
             'remove_labels': [256, ['^l'], 'Remove labels'],
             'add_label': [256, ['b'], 'Add label'],
             'set_labels': [256, ['B'], 'Set labels'],
-            'set_group': [256, [], 'Set group'],
             'move_queue_down': [513, ['J'], 'Move torrent down in queue'],
             'move_queue_up': [513, ['K'], 'Move torrent up in queue'],
+            'set_group': [1024, [], 'Set group'],
+            'group_get': [1024, [], 'Get group list'],
             'profile_menu': [1, ['e'], 'Profile menu'],
             'save_profile': [1, ['E'], 'Save profile'],
             'search_torrent': [1, ['/'], 'Find torrent'],
@@ -805,6 +806,7 @@ class Transmission:
     TAG_SESSION_STATS = 21
     TAG_SESSION_GET = 22
     TAG_SESSION_CLOSE = 23
+    TAG_GROUP_GET = 80
 
     LIST_FIELDS = ['id', 'name', 'downloadDir', 'status', 'trackerStats', 'desiredAvailable',
                    'rateDownload', 'rateUpload', 'eta', 'uploadRatio',
@@ -1498,6 +1500,14 @@ class Transmission:
         response = request.get_response()
         return response['arguments']
 
+    def group_get(self):
+        request = TransmissionRequest(self.url, 'group-get', self.TAG_GROUP_GET, server=self)
+        request.send_request()
+        response = request.get_response()
+        if 'arguments' in response and 'group' in response['arguments']:
+            return response['arguments']['group']
+        return None
+
 # End of Class Transmission
 
 
@@ -2006,6 +2016,19 @@ class Interface:
 
     def action_group_download(self):
         self.group_set_limit('down')
+
+    def action_group_get(self):
+        gs = self.server.group_get()
+        if gs:
+            namewidth = max((len(g['name']) for g in gs))
+            groups_str = "name".rjust(4 + namewidth) + ":      down,        up ignores session\n\n"
+            for g in gs:
+                groups_str += (g['name'].rjust(4 + namewidth) + ": " +
+                    ("{:9}, ".format(g['downloadLimit']) if g['downloadLimited'] else "unlimited, ") +
+                    ("{:9}".format(g['uploadLimit']) if g['uploadLimited'] else "unlimited") +
+                    ("\n" if g['honorsSessionLimits'] else " *\n"))
+            self.dialog_ok(groups_str)
+
 
     def group_set_limit(self, direction):
         group = ''
