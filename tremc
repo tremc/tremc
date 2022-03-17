@@ -3528,8 +3528,8 @@ class Interface:
         line = "%s  %6.2f%%" % (str(index + 1).rjust(4), percent) + \
             '  ' + scale_bytes(length).rjust(7) + \
             '  ' + priority.center(8) + \
-            " %s| %s" % ('  ' * current_depth, name[0:self.width - 34 - current_depth])
-        return line
+            " %s| %s" % ('  ' * current_depth, name)
+        return line[:self.width]
 
     def draw_peerlist(self, ypos):
         # Start drawing list either at the "selected" index, or at the index
