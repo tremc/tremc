@@ -328,6 +328,7 @@ class GConfig:
             ('downloadDir', 'L_ocation'), ('mainTrackerDomain', 'Trac_ker'),
             ('queuePosition', '_Queue Position'),
             ('activityDate', 'Last activit_y'),
+            ('eta', 'Time Le_ft'),
             ('reverse', 'Re_verse') ]
         self.file_sort_options = [
             ('name', '_Name'), ('progress', '_Progress'),
