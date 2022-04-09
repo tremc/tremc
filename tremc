@@ -933,7 +933,7 @@ class Transmission:
                 gconfig.geoip = False
 
         # make sure there are no undefined values
-        self.wait_for_torrentlist_update()
+        self.wait_for_torrentlist_update(True)
         self.requests['torrent-details'] = TransmissionRequest(self.url, server=self)
 
     def update(self, delay, tag_waiting_for=0):
@@ -1402,8 +1402,11 @@ class Transmission:
             return 'high'
         return '?'
 
-    def wait_for_torrentlist_update(self):
-        self.wait_for_update(self.TAG_TORRENT_LIST)
+    def wait_for_torrentlist_update(self, wait=False):
+        if wait:
+            self.wait_for_update(self.TAG_TORRENT_LIST)
+        else:
+            threading.Thread(target=self.wait_for_update, args=[self.TAG_TORRENT_LIST], daemon=True).start()
 
     def wait_for_details_update(self):
         self.wait_for_update(self.TAG_TORRENT_DETAILS)
