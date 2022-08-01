@@ -3434,7 +3434,7 @@ class Interface:
             elif gconfig.file_sort_key == 'progress':
                 self.sorted_files = sorted(self.torrent_details['files'], key=lambda x: x['bytesCompleted'] / x['length'] if x['length'] > 0 else 0, reverse=gconfig.file_sort_reverse)
             elif gconfig.file_sort_key == 'priority':
-                positions = sorted(range(len(self.torrent_details['files'])), key=lambda x: self.server.get_num_file_priority(self.torrent_details['id'], x))
+                positions = sorted(range(len(self.torrent_details['files'])), key=lambda x: self.server.get_num_file_priority(self.torrent_details['id'], x), reverse=gconfig.file_sort_reverse)
                 self.sorted_files = [self.torrent_details['files'][x] for x in positions]
             else:
                 if gconfig.file_sort_reverse:
