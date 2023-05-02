@@ -194,7 +194,7 @@ An action marked with + acts on:
 * r, Del	: Remove torrent, keeping data
 * ^r	: Remove selected torrents, keeping data
 * e		: Profile selection menu
-* C		: Change betweem 1,2,3 lines per torrent modes
+* C		: Change between 1,2,3 lines per torrent modes
 * a		: Add torrent dialog
 * ^a	: Add torrent (in paused mode) dialog
 * /		: Search for torrents matching pattern
