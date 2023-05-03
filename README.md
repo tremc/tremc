@@ -294,12 +294,23 @@ The following sections are read:
 
   Allows for setting (some of) the interface colors.
 
-  The format of a color is 'fg:color,bg:color', where each color is one of the
-  eight curses colors, or default.
+  The format of a color is `<element> = [<base>,][fg:<color>,][bg:<color>,][a:<attr>]`,
+  where
+  - `<base>` is another element that was already defined. Its color is
+  copied to `<element>`, modified the by `<fb>`, `<bg>`, `<attr>`.
+  - Each `<color>` is one of the eight curses colors, or `default`.
+  - `<attr>` is a string of characters from 'rbikdu' for reverse, bold, italic, blink, dim, underlind.
+    Each character may be prefixed by `\*` or `-`.
+    Unprefixed sets the attribute, `-` resets it, and `\*` toggles.
 
-  Allowed elements are title_seed, title_download, title_idle, title_verify, title_paused, title_error,
-  download_rate, upload_rate, eta+ratio, filter_status, multi_filter_status, dialog, dialog_important,
-  file_prio_high, file_prio_normal, file_prio_low, file_prio_off.
+  Allowed elements are 'title_seed', 'title_download', 'title_idle', 'title_verify', 'title_paused', 'title_paused_done', 'title_error',
+  'title_seed_incomp', 'title_download_incomp', 'title_idle_incomp', 'title_verify_incomp', 'title_paused_incomp', 'title_paused_done_incomp',
+  'title_error_incomp', 'download_rate', 'upload_rate', 'eta+ratio', 'filter_status', 'sort_status', 'multi_filter_status', 'dialog',
+  'dialog_important', 'dialog_text', 'dialog_text_important', 'menu_focused', 'file_prio_high', 'file_prio_normal', 'file_prio_low',
+  'file_prio_off', 'top_line', 'bottom_line', 'chunk_have', 'chunk_dont_have'.
+
+  Names for elements which may be selected (torrent titles and file lines) may also be prefixed by `st_` for
+  the attributes of the element when selected. The default is reversed.
 
   Note that what the colors mean actually depends on the terminal. In some
   cases 'white' is darker then the white that the terminal displays, and
