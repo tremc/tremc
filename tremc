@@ -421,12 +421,9 @@ config.set('Misc', 'torrentname_is_progressbar', 'True')
 config.set('Misc', 'file_viewer', 'xdg-open %%s')
 config.set('Misc', 'file_open_in_terminal', 'True')
 config.add_section('Colors')
-config.set('Colors', 'header', 'bg:default,fg:default')
-config.set('Colors', 'footer', 'bg:default,fg:default')
 config.set('Colors', 'title_seed', 'bg:green,fg:black')
 config.set('Colors', 'title_download', 'bg:blue,fg:black')
 config.set('Colors', 'title_idle', 'bg:cyan,fg:black')
-config.set('Colors', 'title_incomplete', 'bg:default,fg:default')
 config.set('Colors', 'title_verify', 'bg:magenta,fg:black')
 config.set('Colors', 'title_paused', 'bg:default,fg:default')
 config.set('Colors', 'title_error', 'bg:red,fg:default')
@@ -435,7 +432,6 @@ config.set('Colors', 'upload_rate', 'bg:black,fg:red')
 config.set('Colors', 'eta+ratio', 'bg:default,fg:default')
 config.set('Colors', 'filter_status', 'bg:red,fg:black')
 config.set('Colors', 'multi_filter_status', 'bg:blue,fg:black')
-config.set('Colors', 'window', 'bg:default,fg:default')
 config.set('Colors', 'dialog', 'bg:default,fg:default')
 config.set('Colors', 'dialog_important', 'bg:default,fg:red')
 config.set('Colors', 'file_prio_high', 'fg:red,bg:default')
@@ -2699,7 +2695,7 @@ class Interface:
         else:
             color = 0
 
-        tag = curses.color_pair(self.colors.ind('title_incomplete')) + curses.A_REVERSE
+        tag = curses.A_REVERSE
         tag_done = color
         if focused:
             tag += curses.A_BOLD
@@ -3519,7 +3515,7 @@ class Interface:
 
     def draw_stats(self):
         try:
-            self.screen.addstr(self.height - 1, 0, ' '.center(self.width), curses.color_pair(self.colors.ind('footer')) + curses.A_REVERSE)
+            self.screen.addstr(self.height - 1, 0, ' '.center(self.width), curses.A_REVERSE)
         except curses.error:
             # curses can print to the last char (bottom right corner), but it raises an exception.
             pass
@@ -3537,9 +3533,9 @@ class Interface:
                                 + "PEX:%d " % self.torrent_details['peersFrom']['fromPex']
                                 + "Incoming:%d " % self.torrent_details['peersFrom']['fromIncoming']
                                 + "Cache:%d)" % self.torrent_details['peersFrom']['fromCache'])[:self.width-1],
-                               curses.color_pair(self.colors.ind('footer')) + curses.A_REVERSE)
+                               curses.A_REVERSE)
         elif self.vmode_id > -1:
-            self.screen.addstr((self.height - 1), 0, "-- VISUAL --", curses.color_pair(self.colors.ind('footer')) + curses.A_REVERSE)
+            self.screen.addstr((self.height - 1), 0, "-- VISUAL --", curses.A_REVERSE)
         else:
             if self.narrow:
                 strings = ['T', 'D', 'S', 'P', '', '!', ' ', ' S:%d', ' F:%d']
@@ -3547,24 +3543,24 @@ class Interface:
                 strings = ["Torrent%s:" % ('s', '')[len(self.torrents) == 1], "Downloading:", "Seeding:", "Paused:",
                            "Filter:", "not ", " Sort by:", " Selected:%d", " Files:%d"]
             self.screen.addstr((self.height - 1), 0, strings[0],
-                               curses.color_pair(self.colors.ind('footer')) + curses.A_REVERSE)
-            self.screen.addstr("%d (" % len(self.torrents), curses.color_pair(self.colors.ind('footer')) + curses.A_REVERSE)
+                               curses.A_REVERSE)
+            self.screen.addstr("%d (" % len(self.torrents), curses.A_REVERSE)
 
             downloading = len([x for x in self.torrents if x['status'] == Transmission.STATUS_DOWNLOAD])
             seeding = len([x for x in self.torrents if x['status'] == Transmission.STATUS_SEED])
             paused = len([x for x in self.torrents if x['status'] in [Transmission.STATUS_STOPPED, Transmission.STATUS_CHECK_WAIT,
                                                                       Transmission.STATUS_CHECK, Transmission.STATUS_DOWNLOAD_WAIT, Transmission.STATUS_SEED_WAIT]])
 
-            self.screen.addstr(strings[1], curses.color_pair(self.colors.ind('footer')) + curses.A_REVERSE)
-            self.screen.addstr("%d " % downloading, curses.color_pair(self.colors.ind('footer')) + curses.A_REVERSE)
-            self.screen.addstr(strings[2], curses.color_pair(self.colors.ind('footer')) + curses.A_REVERSE)
-            self.screen.addstr("%d " % seeding, curses.color_pair(self.colors.ind('footer')) + curses.A_REVERSE)
-            self.screen.addstr(strings[3], curses.color_pair(self.colors.ind('footer')) + curses.A_REVERSE)
-            self.screen.addstr("%d) " % paused, curses.color_pair(self.colors.ind('footer')) + curses.A_REVERSE)
+            self.screen.addstr(strings[1], curses.A_REVERSE)
+            self.screen.addstr("%d " % downloading, curses.A_REVERSE)
+            self.screen.addstr(strings[2], curses.A_REVERSE)
+            self.screen.addstr("%d " % seeding, curses.A_REVERSE)
+            self.screen.addstr(strings[3], curses.A_REVERSE)
+            self.screen.addstr("%d) " % paused, curses.A_REVERSE)
 
             if self.selected_torrent == -1:
                 if gconfig.filters[0][0]['name']:
-                    self.screen.addstr(strings[4], curses.color_pair(self.colors.ind('footer')) + curses.A_REVERSE)
+                    self.screen.addstr(strings[4], curses.A_REVERSE)
                     if not self.narrow and gconfig.filters[0][0]['name'] in gconfig.FILTERS_WITH_PARAM:
                         filter_param = ('=', '!=')[gconfig.filters[0][0]['inverse']] + gconfig.filters[0][0][gconfig.filters[0][0]['name']][-16:]
                         not_str = ''
@@ -3573,11 +3569,11 @@ class Interface:
                         not_str = ('', strings[5])[gconfig.filters[0][0]['inverse']]
                     self.screen.addstr(not_str + gconfig.filters[0][0]['name'] + filter_param,
                                        curses.color_pair(self.colors.ind('filter_status' if len(gconfig.filters[0]) <= 1 else 'multi_filter_status')) +
-                                       + (curses.color_pair(self.colors.ind('footer')) + curses.A_REVERSE if not self.invert_filters else 0))
+                                       + (curses.A_REVERSE if not self.invert_filters else 0))
 
                 # show last sort order (if terminal size permits it)
                 if gconfig.sort_orders and self.width - self.screen.getyx()[1] > 20:
-                    self.screen.addstr(strings[6], curses.color_pair(self.colors.ind('footer')) + curses.A_REVERSE)
+                    self.screen.addstr(strings[6], curses.A_REVERSE)
                     name = [name[1] for name in gconfig.sort_options if name[0] == gconfig.sort_orders[-1]['name']][0]
                     name = name.replace('_', '').lower()
                     curses_tags = curses.color_pair(self.colors.ind('filter_status')) + curses.A_REVERSE
@@ -3591,12 +3587,12 @@ class Interface:
                         pass
 
                 if self.selected and self.width - self.screen.getyx()[1] > 20:
-                    self.screen.addstr(strings[7] % len(self.selected), curses.color_pair(self.colors.ind('footer')) + curses.A_REVERSE)
+                    self.screen.addstr(strings[7] % len(self.selected), curses.A_REVERSE)
 
             else:
                 if self.details_category_focus == 1:
                     if gconfig.file_sort_key and self.width - self.screen.getyx()[1] > 20:
-                        self.screen.addstr(strings[6], curses.color_pair(self.colors.ind('footer')) + curses.A_REVERSE)
+                        self.screen.addstr(strings[6], curses.A_REVERSE)
                         name = [name[1] for name in gconfig.file_sort_options if name[0] == gconfig.file_sort_key][0]
                         name = name.replace('_', '').lower()
                         curses_tags = curses.color_pair(self.colors.ind('filter_status')) + curses.A_REVERSE
@@ -3606,9 +3602,9 @@ class Interface:
                             self.screen.addch(curses.ACS_UARROW, curses_tags)
                         self.screen.addstr(name[:10], curses_tags)
                     if self.width - self.screen.getyx()[1] > 20 and len(self.torrent_details['files']) > 1:
-                        self.screen.addstr(strings[8] % len(self.torrent_details['files']), curses.color_pair(self.colors.ind('footer')) + curses.A_REVERSE)
+                        self.screen.addstr(strings[8] % len(self.torrent_details['files']), curses.A_REVERSE)
                     if self.width - self.screen.getyx()[1] > 20 and self.selected_files:
-                        self.screen.addstr(strings[7] % len(self.selected_files), curses.color_pair(self.colors.ind('footer')) + curses.A_REVERSE)
+                        self.screen.addstr(strings[7] % len(self.selected_files), curses.A_REVERSE)
 
     def draw_global_rates(self):
         # ↑1.2K ↓3.4M
@@ -3628,30 +3624,30 @@ class Interface:
         if self.stats['alt-speed-enabled']:
             if self.narrow:
                 self.screen.move(self.height - 1, self.width - rates_width - limits_width - 1)
-                self.screen.addch(curses.ACS_TTEE, curses.color_pair(self.colors.ind('footer')) + curses.A_REVERSE + curses.A_BOLD)
+                self.screen.addch(curses.ACS_TTEE, curses.A_REVERSE + curses.A_BOLD)
             else:
                 self.screen.move(self.height - 1, self.width - rates_width - limits_width - len('Turtle mode '))
-                self.screen.addstr('Turtle mode ', curses.color_pair(self.colors.ind('footer')) + curses.A_REVERSE + curses.A_BOLD)
+                self.screen.addstr('Turtle mode ', curses.A_REVERSE + curses.A_BOLD)
 
         self.screen.move(self.height - 1, self.width - rates_width - limits_width)
-        self.screen.addch(curses.ACS_DARROW, curses.color_pair(self.colors.ind('footer')) + curses.A_REVERSE)
+        self.screen.addch(curses.ACS_DARROW, curses.A_REVERSE)
         self.screen.addstr(scale_bytes(self.stats['downloadSpeed']).rjust(self.rateDownload_width)[:self.rateDownload_width],
                            curses.color_pair(self.colors.ind('download_rate'))
                            + curses.A_BOLD)
-        self.screen.addstr(limits['dn_limit'], curses.color_pair(self.colors.ind('footer')) + curses.A_REVERSE)
-        self.screen.addch(' ', curses.color_pair(self.colors.ind('footer')) + curses.A_REVERSE)
-        self.screen.addch(curses.ACS_UARROW, curses.color_pair(self.colors.ind('footer')) + curses.A_REVERSE)
+        self.screen.addstr(limits['dn_limit'], curses.A_REVERSE)
+        self.screen.addch(' ', curses.A_REVERSE)
+        self.screen.addch(curses.ACS_UARROW, curses.A_REVERSE)
         try:
             self.screen.addstr(scale_bytes(self.stats['uploadSpeed']).rjust(self.rateUpload_width)[:self.rateUpload_width],
                                curses.color_pair(self.colors.ind('upload_rate'))
                                + curses.A_BOLD)
-            self.screen.addstr(limits['up_limit'], curses.color_pair(self.colors.ind('footer')) + curses.A_REVERSE)
+            self.screen.addstr(limits['up_limit'], curses.A_REVERSE)
         except curses.error:
             # curses can print to the last char (bottom right corner), but it raises an exception.
             pass
 
     def draw_title_bar(self):
-        self.screen.addstr(0, 0, ' '.center(self.width), curses.color_pair(self.colors.ind('header')) + curses.A_REVERSE)
+        self.screen.addstr(0, 0, ' '.center(self.width), curses.A_REVERSE)
         w = self.draw_connection_status()
         self.draw_quick_help(self.width - w - 2)
 
@@ -3660,7 +3656,7 @@ class Interface:
             status = "V.%s@%s:%s" % (self.server.version, gconfig.host, gconfig.port)
         else:
             status = "Transmission %s@%s:%s" % (self.server.version, gconfig.host, gconfig.port)
-        self.screen.addstr(0, 0, status, curses.color_pair(self.colors.ind('header')) + curses.A_REVERSE)
+        self.screen.addstr(0, 0, status, curses.A_REVERSE)
         return len(status)
 
     def draw_quick_help(self, maxwidth):
@@ -3690,7 +3686,7 @@ class Interface:
             t = "%s:%s" % (x[0], x[1])
             if len(line) + len(t) + 1 <= maxwidth:
                 line = line + ' ' + t
-        self.screen.addstr(0, self.width - len(line), line, curses.color_pair(self.colors.ind('header')) + curses.A_REVERSE)
+        self.screen.addstr(0, self.width - len(line), line, curses.A_REVERSE)
 
     def action_list_key_bindings(self):
         def key_name(k):
@@ -3803,7 +3799,7 @@ class Interface:
         else:
             win.erase()
         win.box()
-        win.bkgd(' ', curses.color_pair(self.colors.ind('window')) + curses.A_REVERSE + curses.A_BOLD)
+        win.bkgd(' ', curses.A_REVERSE + curses.A_BOLD)
 
         if width >= 20:
             win.addch(height - 1, width - 19, curses.ACS_RTEE)
