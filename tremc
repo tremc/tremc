@@ -1348,7 +1348,7 @@ class Transmission:
         current_priority = self.torrent_details_cache['priorities'][ref_num]
         if not self.torrent_details_cache['wanted'][ref_num]:
             self.set_file_priority(self.torrent_details_cache['id'], file_nums, 'low')
-        elif current_priority == -1:
+        elif current_priority <= -1:
             self.set_file_priority(self.torrent_details_cache['id'], file_nums, 'normal')
         elif current_priority == 0:
             self.set_file_priority(self.torrent_details_cache['id'], file_nums, 'high')
@@ -1365,7 +1365,7 @@ class Transmission:
             self.set_file_priority(self.torrent_details_cache['id'], file_nums, 'normal')
         elif current_priority == 0:
             self.set_file_priority(self.torrent_details_cache['id'], file_nums, 'low')
-        elif current_priority == -1:
+        elif current_priority <= -1:
             self.set_file_priority(self.torrent_details_cache['id'], file_nums, 'off')
 
     def set_file_priority(self, torrent_id, file_nums, priority):
