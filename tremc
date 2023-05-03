@@ -1851,12 +1851,12 @@ class Interface:
                        "  Uploaded:   {t_ul}\n"
                        "  Downloaded: {t_dl}\n"
                        "  Ratio:      {t_ratio}\n"
-                       "  Duration:   {t_duration}\n").format(s_ul=scale_bytes(session_ul),
-                                                              s_dl=scale_bytes(session_dl),
+                       "  Duration:   {t_duration}\n").format(s_ul=scale_bytes(session_ul, digits=2),
+                                                              s_dl=scale_bytes(session_dl, digits=2),
                                                               s_ratio=session_ratio,
                                                               s_duration=scale_time(session_time, long=True),
-                                                              t_ul=scale_bytes(total_ul),
-                                                              t_dl=scale_bytes(total_dl),
+                                                              t_ul=scale_bytes(total_ul, digits=2),
+                                                              t_dl=scale_bytes(total_dl, digits=2),
                                                               t_ratio=total_ratio,
                                                               t_duration=scale_time(total_time, long=True))
 
@@ -5126,18 +5126,18 @@ def timestamp(timestamp, time_format="%x %X", narrow=False):
     return "%s (%s)" % (absolute, relative)
 
 
-def scale_bytes(num=0, long=False, k=1024):
+def scale_bytes(num=0, long=False, k=1024, digits=1):
     if num >= k * k * k * k:
-        scaled_num = round((num / k / k / k / k), 1)
+        scaled_num = round((num / k / k / k / k), digits)
         unit = 'T'
     elif num >= k * k * k:
-        scaled_num = round((num / k / k / k), 1)
+        scaled_num = round((num / k / k / k), digits)
         unit = 'G'
     elif num >= k * k:
-        scaled_num = round((num / k / k), 1)
+        scaled_num = round((num / k / k), digits)
         unit = 'M'
     else:
-        scaled_num = round((num / k), 1)
+        scaled_num = round((num / k), digits)
         unit = 'K'
 
     # handle 0 num special
