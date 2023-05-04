@@ -633,12 +633,13 @@ class Transmission:
         skip_msg = "Proceeding anyway because of --skip-version-check.\n"
 
         min_msg = "Please install Transmission version " + gconfig.TRNSM_VERSION_MIN + " or higher.\n"
+        alternative_msg = "Alternatively start the program with the option '--skip-version-check', '--permissive', or '-X' to inhibit version checking\n"
         try:
             if response['arguments']['rpc-version'] < gconfig.RPC_VERSION_MIN:
                 if gconfig.PERMISSIVE:
                     pdebug(version_error + skip_msg)
                 else:
-                    exit_prog(version_error + min_msg)
+                    exit_prog(version_error + min_msg + alternative_msg)
         except KeyError:
             exit_prog(version_error + min_msg)
 
@@ -647,7 +648,7 @@ class Transmission:
             if gconfig.PERMISSIVE:
                 pdebug(version_error + skip_msg)
             else:
-                exit_prog(version_error + "Please install Transmission version " + gconfig.TRNSM_VERSION_MAX + " or lower.\n")
+                exit_prog(version_error + "Please install Transmission version " + gconfig.TRNSM_VERSION_MAX + " or lower.\n" + alternative_msg)
 
         # setup compatibility to Transmission <2.40
         if self.rpc_version < 14:
