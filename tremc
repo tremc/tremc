@@ -206,6 +206,7 @@ class GConfig:
         self.filters[0][0]['location'] = ''
         self.histories = load_history(self.history_file)
         self.tlist_item_height = config.getint('Misc', 'lines_per_torrent')
+        self.narrow_threshold = config.getint('Misc', 'narrow_threshold', fallback=73)
         self.torrentname_is_progressbar = config.getboolean('Misc', 'torrentname_is_progressbar')
         self.file_viewer = config.get('Misc', 'file_viewer')
         self.file_open_in_terminal = config.getboolean('Misc', 'file_open_in_terminal')
@@ -1373,6 +1374,7 @@ class Interface:
         self.exit_now = False
         self.vmode_id = -1
         self.filters_inverted = False
+        self.force_narrow = None
 
         self.common_keybindings = {
             K.n0: self.action_profile_selected,
@@ -1479,7 +1481,7 @@ class Interface:
     def manage_layout(self):
         self.recalculate_torrents_per_page()
         self.detaillines_per_page = self.height - 8
-        self.narrow = self.width < 73
+        self.narrow = self.width < gconfig.narrow_threshold if self.force_narrow is None else self.force_narrow
 
         if self.selected_torrent > -1:
             self.rateDownload_width = self.get_rateDownload_width([self.torrent_details])
@@ -2907,8 +2909,8 @@ class Interface:
                     uploaded = scale_bytes(torrent['uploadedEver'])
                     parts.append("%7s uploaded" % ('nothing', uploaded)[uploaded != '0B'])
 
-                if self.torrent_title_width - sum([len(x) for x in parts]) - len(peers) > 22:
-                    parts.append("%4s peer%s connected" % (torrent['peersConnected'],
+                if self.torrent_title_width - sum([len(x) for x in parts]) - len(peers) > 12:
+                    parts.append("%4s peer%s" % (torrent['peersConnected'],
                                                            ('s', ' ')[torrent['peersConnected'] == 1]))
 
         if focused:
@@ -3049,11 +3051,12 @@ class Interface:
 
         info.append(['Ratio: ', '%.2f copies distributed' % copies_distributed])
         norm_upload_rate = norm.add('%s:rateUpload' % t['id'], t['rateUpload'], 50)
+        format_str = "%X" if self.narrow else "%x %X"
         if norm_upload_rate > 0:
             target_ratio = self.get_target_ratio()
             bytes_left = (max(t['downloadedEver'], t['sizeWhenDone']) * target_ratio) - t['uploadedEver']
             time_left = bytes_left / norm_upload_rate
-            info.append(' Approaching %.2f ... %s' % (target_ratio, timestamp(time.time() + time_left, "%x %X")))
+            info.append(' Approaching %.2f ... %s' % (target_ratio, timestamp(time.time() + time_left, narrow=self.narrow, time_format=format_str)))
 
         info.append(['Seed limit: '])
         if t['seedRatioMode'] == 0:
@@ -3114,7 +3117,6 @@ class Interface:
 
         info.append([''])
 
-        format_str = "%X" if self.narrow else "%x %X"
         info.append(['Created: ', "%s" % timestamp(t['dateCreated'], narrow=self.narrow, time_format=format_str)])
         info.append(['Added: ', "%s" % timestamp(t['addedDate'], narrow=self.narrow, time_format=format_str)])
         info.append(['Started: ', "%s" % timestamp(t['startDate'], narrow=self.narrow, time_format=format_str)])
@@ -4631,6 +4633,7 @@ class Interface:
             options.append(("View _files", ('focused', 'selected')[gconfig.view_selected]))
             options.append(("Show peers' _reverse DNS", ('no', 'yes')[gconfig.rdns]))
             options.append(("Show torrent _numbers", ('no', 'yes')[gconfig.torrent_numbers]))
+            options.append(("_Display format", ('wide', 'narrow')[self.narrow]))
 
             if first_time:
                 first_time = False
@@ -4672,6 +4675,8 @@ class Interface:
                 return
             if key == K.b:
                 gconfig.torrentname_is_progressbar = not gconfig.torrentname_is_progressbar
+            elif key == K.d:
+                self.force_narrow = not self.narrow
             elif key == K.f:
                 gconfig.view_selected = not gconfig.view_selected
             elif key == K.r:
