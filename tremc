@@ -68,7 +68,7 @@ class GConfig:
         JSON_ERROR = 2
         CONFIGFILE_ERROR = 3
 
-    FILTERS_WITH_PARAM = ['tracker', 'regex', 'location', 'label']
+    FILTERS_WITH_PARAM = ['tracker', 'regex', 'location', 'label', 'group']
 
     def __init__(self):
         default_config_path = xdg_config_home(PROG + '/settings.cfg')
@@ -220,7 +220,7 @@ class GConfig:
 
         self.actions = {
             # First in list: 0=all 1=list 2=details 3=files 4=tracker 16=movement
-            # +256 for RPC>=14, +512 for RPC>=16
+            # +256 for RPC>=14, +512 for RPC>=16, +1024 for RPC>=17
             'list_key_bindings': [0, ['F1', '?'], 'List key bindings'],
             'quit_now': [0, ['^w'], 'Quit immediately'],
             'quit': [1, ['q'], 'Quit'],
@@ -237,6 +237,8 @@ class GConfig:
             'global_download': [0, ['d'], 'Set global download limit'],
             'torrent_upload': [0, ['U'], 'Set torrent maximum upload rate'],
             'torrent_download': [0, ['D'], 'Set torrent maximum download rate'],
+            'group_upload': [0, [], 'Set group maximum upload rate'],
+            'group_download': [0, [], 'Set group maximum download rate'],
             'seed_ratio': [0, ['L'], 'Set seed ratio limit for focused torrent'],
             'bandwidth_priority_inc': [0, ['+'], 'Increase torrent bandwidth priority'],
             'bandwidth_priority_dec': [0, ['-'], 'Decrease torrent bandwidth priority'],
@@ -261,6 +263,8 @@ class GConfig:
             'set_labels': [256, ['B'], 'Set labels'],
             'move_queue_down': [513, ['J'], 'Move torrent down in queue'],
             'move_queue_up': [513, ['K'], 'Move torrent up in queue'],
+            'set_group': [1024, [], 'Set group'],
+            'group_get': [1024, [], 'Get group list'],
             'profile_menu': [1, ['e'], 'Profile menu'],
             'save_profile': [1, ['E'], 'Save profile'],
             'search_torrent': [1, ['/'], 'Find torrent'],
@@ -640,6 +644,7 @@ class Transmission:
     TAG_SESSION_STATS = 21
     TAG_SESSION_GET = 22
     TAG_SESSION_CLOSE = 23
+    TAG_GROUP_GET = 80
 
     LIST_FIELDS = ['id', 'name', 'downloadDir', 'status', 'trackerStats', 'desiredAvailable',
                    'rateDownload', 'rateUpload', 'eta', 'uploadRatio',
@@ -723,6 +728,8 @@ class Transmission:
         if self.rpc_version >= 16:
             self.LIST_FIELDS.append('labels')
             self.DETAIL_FIELDS.append('labels')
+            self.LIST_FIELDS.append('group')
+            self.DETAIL_FIELDS.append('group')
 
         # set up request list
         self.requests = {'torrent-list':
@@ -738,6 +745,7 @@ class Transmission:
         self.trackers = set()
         self.locations = set()
         self.labels = set()
+        self.groups = set()
         self.status_cache = dict()
         self.torrent_details_cache = dict()
         self.peer_progress_cache = dict()
@@ -814,6 +822,8 @@ class Transmission:
                 if self.rpc_version >= 16:
                     for l in t['labels']:
                         self.labels.add(l)
+                if self.rpc_version >= 17:
+                    self.groups.add(t['group'])
 
             if response['tag'] == self.TAG_TORRENT_LIST:
                 self.torrent_cache = response['arguments']['torrents']
@@ -956,7 +966,7 @@ class Transmission:
         self.wait_for_status_update()
 
     # torrent_id is -1 for global or a non-empty list of ids
-    def set_rate_limit(self, direction, new_limit, torrent_id=-1):
+    def set_rate_limit(self, direction, new_limit, torrent_id=-1, group = None):
         data = dict()
         if new_limit <= -1:
             new_limit = None
@@ -964,7 +974,12 @@ class Transmission:
         else:
             limit_enabled = True
 
-        if torrent_id == -1:
+        if group is not None:
+            request_type = 'group-set'
+            data['name'] = group
+            data['speed-limit-' + direction] = new_limit
+            data['speed-limit-' + direction + '-enabled'] = limit_enabled
+        elif torrent_id == -1:
             request_type = 'session-set'
             data['speed-limit-' + direction] = new_limit
             data['speed-limit-' + direction + '-enabled'] = limit_enabled
@@ -1103,6 +1118,16 @@ class Transmission:
         request.send_request()
         response = request.get_response()
         return response['result']
+
+    def set_group(self, ids, group):
+        data = {
+            'ids': ids,
+            'group': group
+        }
+        request = TransmissionRequest(self.url, 'torrent-set', 1, data, server=self)
+        request.send_request()
+        response = request.get_response()
+        return response['result'] if response['result'] != 'success' else ''
 
     def set_labels(self, ids, labels):
         data = {
@@ -1303,6 +1328,14 @@ class Transmission:
         request.send_request()
         response = request.get_response()
         return response['arguments']
+
+    def group_get(self):
+        request = TransmissionRequest(self.url, 'group-get', self.TAG_GROUP_GET, server=self)
+        request.send_request()
+        response = request.get_response()
+        if 'arguments' in response and 'group' in response['arguments']:
+            return response['arguments']['group']
+        return None
 
 # End of Class Transmission
 
@@ -1708,6 +1741,8 @@ class Interface:
                    ('invert', 'In_vert'), ('', '_All')]
         if self.server.get_rpc_version() >= 16:
             options.insert(-2, ('label', 'La_bel'))
+        if self.server.get_rpc_version() >= 16:
+            options.insert(-2, ('group', 'Ba_ndwidth group'))
         try:
             s = list(map(lambda x: x[0] == oldfilter['name'], options)).index(True) + 1
         except Exception:
@@ -1717,7 +1752,7 @@ class Interface:
             if choice == 'invert':
                 new_filter['inverse'] = not new_filter['inverse']
             else:
-                if choice in ['tracker', 'location', 'label']:
+                if choice in ['tracker', 'location', 'label', 'group']:
                     if choice == 'tracker':
                         select = sorted(self.server.trackers)
                         min_select = 2
@@ -1726,6 +1761,9 @@ class Interface:
                         min_select = 2
                     elif choice == 'label':
                         select = sorted(self.server.labels)
+                        min_select = 1
+                    elif choice == 'group':
+                        select = sorted(self.server.groups)
                         min_select = 1
                     current_choice = new_filter[choice] if choice in new_filter else ''
                     if len(select) < min_select:
@@ -1795,6 +1833,39 @@ class Interface:
         if limit == -128:
             return
         self.server.set_rate_limit('down', limit)
+
+    def action_group_upload(self):
+        self.group_set_limit('up')
+
+    def action_group_download(self):
+        self.group_set_limit('down')
+
+    def action_group_get(self):
+        gs = self.server.group_get()
+        if gs:
+            namewidth = max((len(g['name']) for g in gs))
+            groups_str = "name".rjust(4 + namewidth) + ":      down,        up ignores session\n\n"
+            for g in gs:
+                groups_str += (g['name'].rjust(4 + namewidth) + ": " +
+                    ("{:9}, ".format(g['downloadLimit']) if g['downloadLimited'] else "unlimited, ") +
+                    ("{:9}".format(g['uploadLimit']) if g['uploadLimited'] else "unlimited") +
+                    ("\n" if g['honorsSessionLimits'] else " *\n"))
+            self.dialog_ok(groups_str)
+
+
+    def group_set_limit(self, direction):
+        group = ''
+        if self.selected_torrent > -1:
+            group = self.torrent_details['group']
+        elif self.focus > -1:
+            group = self.torrents[self.focus]['group']
+        if not group:
+            return
+        current_limit = (-1, self.stats['speed-limit-'+direction])[self.stats['speed-limit-'+direction+'-enabled']]
+        limit = self.dialog_input_number(direction.title()+'load limit in kilobytes per second for group '+group, current_limit)
+        if limit == -128:
+            return
+        self.server.set_rate_limit(direction, limit, group=group)
 
     def selected_ids(self):
         # If viewing torrent details, act on viewed torrent, even if there is a
@@ -2429,6 +2500,17 @@ class Interface:
             if self.dialog_yesno("Remove labels from %s?" % name + extraline):
                 self.server.set_labels(ids, [])
 
+    def action_set_group(self):
+        if self.server.get_rpc_version() < 16:
+            return
+        ids = self.selected_ids()
+        if ids:
+            focused, extraline = self.get_focused(ids)
+            msg = ('Set group of "%s"' % focused['name']) + extraline + '\nto:'
+            group = self.dialog_input_text(msg, '')
+            if group:
+                self.server.set_group(ids, group)
+
     def action_set_labels(self):
         if self.server.get_rpc_version() < 16:
             return
@@ -2548,6 +2630,8 @@ class Interface:
             return filtr['inverse'] != (homedir2tilde(t['downloadDir']) == filtr['location'])
         if filtr['name'] == 'label':
             return filtr['inverse'] != (filtr['label'] in t['labels'])
+        if filtr['name'] == 'group':
+            return filtr['inverse'] != (filtr['group'] == t['group'])
         if filtr['name'] == 'partwanted':
             return filtr['inverse'] != (t['totalSize'] > t['sizeWhenDone'])
         if filtr['name'] == 'error':
@@ -3024,6 +3108,9 @@ class Interface:
             info.append(['Labels: '])
             info[-1].extend([s + '; ' for s in t['labels'][:-1]])
             info[-1].append(t['labels'][-1])
+
+        if 'group' in t and t['group']:
+            info.append(['Group: ', t['group']])
 
         info.append([''])
 
