@@ -345,6 +345,7 @@ class GConfig:
             'title_paused_incomp': 'a:r',
             'title_paused_done_incomp': 'title_paused_incomp',
             'title_error_incomp': 'a:r',
+            'title_other': 'bg:default,fg:default',
             'download_rate': 'bg:default,fg:blue,a:b',
             'upload_rate': 'bg:black,fg:red,a:b',
             'eta+ratio': 'bg:default,fg:default,a:b',
@@ -424,11 +425,17 @@ class GConfig:
         return color_pair
 
     def element_attr(self, name, st=False):
-        if st:
-            name = 'st_' + name
-            if name not in self.colors:
-                return curses.A_REVERSE
-        return curses.color_pair(self.colors[name]['ind']) + self.colors[name]['at']
+        try:
+            if st:
+                name = 'st_' + name
+                if name not in self.colors:
+                    return curses.A_REVERSE
+            return curses.color_pair(self.colors[name]['ind']) + self.colors[name]['at']
+        except:
+            # This only happens if when a bug manifests, but it's better to not
+            # crach even in this situation.
+            pdebug('element_attr', name, st)
+            return 0
 
 
 class Keys:
@@ -600,6 +607,9 @@ class TransmissionRequest:
                 chunk = self.open_request.read()
             except ConnectionResetError:
                 return {'result': 'connection reset by peer'}
+            except Exception as e:
+                pdebug(str(e))
+                return {'result': 'Exception'}
             if not chunk:
                 break
             response += chunk
@@ -1519,9 +1529,7 @@ class Interface:
             self.scrollpos_detaillist = [0] * 5
             self.selected_files = []
         else:  # return from details
-            self.details_category_focus = 0
-            self.selected_torrent = -1
-            self.selected_files = []
+            self.action_leave_details()
 
     def action_unfocus_torrent(self):
         if self.focus > -1:
@@ -1536,6 +1544,7 @@ class Interface:
         self.details_category_focus = 0
         self.scrollpos_detaillist = [0] * 5
         self.selected_files = []
+        self.vmode_id = -1
 
     def action_quit(self):
         self.exit_now = True
@@ -1932,10 +1941,8 @@ class Interface:
             question = "Remove AND DELETE" if data else "Remove"
             if self.dialog_yesno(question + " %s?" % name + extraline, hard=hard, important=data):
                 self.server.remove_torrent(ids, data=data)
-                if self.selected_torrent > -1:  # leave details
-                    self.server.set_torrent_details_id(-1)
-                    self.selected_torrent = -1
-                    self.details_category_focus = 0
+                if self.selected_torrent > -1:
+                    self.action_leave_details()
                 self.focus_next_after_delete()
 
     def action_remove(self):
@@ -2748,7 +2755,7 @@ class Interface:
         elif torrent['percentDone'] < 100:
             element_name = 'title_download'
         else:
-            color = 0
+            element_name = 'title_other'
 
         tag = gconfig.element_attr(element_name+'_incomp')
         tag_done = gconfig.element_attr(element_name)
@@ -2909,7 +2916,7 @@ class Interface:
 
         wanted = 0
         for i, _ in enumerate(t['files']):
-            if t['wanted'][i] is True:
+            if t['wanted'][i]:
                 wanted += t['files'][i]['length']
 
         sizes = ['Size: ', "%s;  " % scale_bytes(t['totalSize'], long=True),
@@ -3104,6 +3111,9 @@ class Interface:
 
             # 25 chars before priority, 6 chars priority, 2 chars skipped
             priority = line[25:31].strip()
+            # Except if the file index has more than 4 digits:
+            if priority[:4] == 'norm':
+                priority = 'normal'
             priority_start = 28 - (len(priority) + 1) // 2
             priority_end = priority_start + len(priority)
             if priority:
@@ -3401,10 +3411,8 @@ class Interface:
 
     def draw_pieces_map(self, ypos):
         if self.torrent_details['totalSize'] == 0:
-            default_attr = 0
-            new_attr = curses.A_REVERSE
-            change_attr = 0x80
-            skip_run = 0
+            # No pieces in file of size 0
+            return
         elif self.torrent_details['haveValid'] / self.torrent_details['totalSize'] < 0.5:
             default_attr = gconfig.element_attr('chunk_dont_have')
             new_attr = gconfig.element_attr('chunk_have')
