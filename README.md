@@ -309,8 +309,10 @@ The following sections are read:
   'dialog_important', 'dialog_text', 'dialog_text_important', 'menu_focused', 'file_prio_high', 'file_prio_normal', 'file_prio_low',
   'file_prio_off', 'top_line', 'bottom_line', 'chunk_have', 'chunk_dont_have'.
 
-  Names for elements which may be selected (torrent titles and file lines) may also be prefixed by `st_` for
-  the attributes of the element when selected. The default is reversed.
+  Names for elements in torrent list may also be prefixed by `st_` for
+  the attributes of the element when selected. The default is reversed. Names
+  for elements in file list may bu suffixes by _f, _s, or _f_s, for focused,
+  selected, or focused and selected.
 
   Note that what the colors mean actually depends on the terminal. In some
   cases 'white' is darker then the white that the terminal displays, and
