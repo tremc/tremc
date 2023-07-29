@@ -3784,6 +3784,8 @@ class Interface:
             for v in i[1:]:
                 if xp + len(v) >= self.width - 1:
                     yp += 1
+                    if yp > self.mainview_height:
+                        return yp
                     if yp >= ypos:
                         self.pad.move(yp, value_x)
                     xp = value_x
