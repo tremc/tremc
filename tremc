@@ -2357,7 +2357,7 @@ class Interface:
                 if self.vmode_id > -1:
                     if self.vmode_id < self.focus_detaillist:
                         self.selected_files = {self.file_index_map[x] for x in range(self.vmode_id, self.focus_detaillist + 1)}
-                    else:
+                    elif self.focus_detaillist > -1:
                         self.selected_files = {self.file_index_map[x] for x in range(self.focus_detaillist, self.vmode_id + 1)}
             list_len = 0
             ppage = 1
