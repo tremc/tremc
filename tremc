@@ -2619,7 +2619,7 @@ class Interface:
                 if file_path:
                     file_names.append(file_path)
 
-            if not file_names:
+            if " %t" not in file_viewer and not file_names:
                 self.dialog_ok("Could not find file:\n%s" % (file_name))
                 return
 
@@ -2627,6 +2627,12 @@ class Interface:
             for argstr in file_viewer.split(" "):
                 if argstr == '%s':
                     viewer_cmd.extend(file_names)
+                elif argstr == '%t':
+                    viewer_cmd.append(gconfig.host)
+                    viewer_cmd.append(download_dir)
+                    viewer_cmd.append(incomplete_dir)
+                    for file_server_index in files:
+                        viewer_cmd.append(details['files'][file_server_index]['name'])
                 else:
                     viewer_cmd.append(argstr)
             try:
