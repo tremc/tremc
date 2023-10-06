@@ -3259,7 +3259,7 @@ class Interface:
             copies_distributed = (float(t['uploadedEver']) / float(t['sizeWhenDone']))
         except ZeroDivisionError:
             copies_distributed = 0
-        info.append(['Upload: ', "%s (%.2f%%) transmitted" %
+        info.append(['Upload: ', "%s (%.0f%%) transmitted" %
                      (scale_bytes(t['uploadedEver'], long=True), t['uploadRatio'] * 100)])
         if t['rateUpload']:
             info.append(" Sending %s per second" % scale_bytes(t['rateUpload'], long=True))
