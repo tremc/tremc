@@ -1545,6 +1545,7 @@ class Interface:
         self.vmode_id = -1
         self.filters_inverted = False
         self.force_narrow = None
+        self.beeped = False
 
         self.common_keybindings = {
             K.n0: self.action_profile_selected,
@@ -2931,7 +2932,7 @@ class Interface:
                 self.highlight_dialog = False
             else:
                 self.highlight_dialog = True
-                curses.beep()
+                self.beep()
         else:
             self.search_focus = 0
             self.highlight_dialog = False
@@ -3390,7 +3391,7 @@ class Interface:
                 self.highlight_dialog = False
             else:
                 self.highlight_dialog = True
-                curses.beep()
+                self.beep()
         else:
             self.search_focus = 0
             self.highlight_dialog = False
@@ -4111,10 +4112,17 @@ class Interface:
                     return
                 self.update_torrent_list([win])
 
+    def beep(self):
+        if not self.beeped:
+            curses.beep()
+            self.beeped = True
+
     def wingetch(self, win):
         c = win.getch()
         if c == K.W_:
             self.exit_now = True
+        if c > -1:
+            self.beeped = False
         return c
 
     def win_message(self, win, height, width, message, first=0):
@@ -4583,7 +4591,7 @@ class Interface:
             elif c in (K.U_, K.X_):
                 value = ''
             elif len(value) >= width - 5:
-                curses.beep()
+                self.beep()
             elif K.n1 <= c <= K.n9:
                 value += chr(c)
             elif allow_zero and c == K.n0 and value != '-' and not value.startswith('0'):
