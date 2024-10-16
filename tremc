@@ -1633,7 +1633,10 @@ class Interface:
     def get_screen_size(self):
         time.sleep(0.1)  # prevents curses.error on rapid resizing
         while True:
-            curses.endwin()
+            try:
+                curses.endwin()
+            except curses.error:
+                pass
             self.screen.refresh()
             self.height, self.width = self.screen.getmaxyx()
             # Tracker list breaks if width smaller than 73
