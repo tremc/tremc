@@ -329,6 +329,7 @@ class GConfig:
             ('queuePosition', '_Queue Position'),
             ('activityDate', 'Last activit_y'),
             ('eta', 'Time Le_ft'),
+            ('doneDate', 'Time Do_ne'),
             ('reverse', 'Re_verse') ]
         self.file_sort_options = [
             ('name', '_Name'), ('progress', '_Progress'),
@@ -813,11 +814,11 @@ class Transmission:
                    'peersSendingToUs', 'peersGettingFromUs', 'totalSize',
                    'seedRatioLimit', 'seedRatioMode', 'isPrivate', 'magnetLink',
                    'honorsSessionLimits', 'metadataPercentComplete',
-                   'activityDate',
+                   'activityDate', 'doneDate',
                    ]
 
     DETAIL_FIELDS = ['files', 'priorities', 'wanted', 'peers', 'trackers',
-                     'dateCreated', 'startDate', 'doneDate',
+                     'dateCreated', 'startDate',
                      'leftUntilDone', 'comment', 'creator',
                      'hashString', 'pieceCount', 'pieceSize', 'pieces',
                      'downloadedEver', 'corruptEver', 'peersFrom'] + LIST_FIELDS
