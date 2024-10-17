@@ -194,7 +194,7 @@ class GConfig:
         JSON_ERROR = 2
         CONFIGFILE_ERROR = 3
 
-    FILTERS_WITH_PARAM = ['tracker', 'regex', 'location', 'label', 'group']
+    FILTERS_WITH_PARAM = ['tracker', 'regex', 'location', 'locationsubs', 'label', 'group']
 
     speed_k = 1024
 
