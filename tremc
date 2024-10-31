@@ -1971,7 +1971,7 @@ class Interface:
                     new_filter[choice] = selected
                 elif choice == 'regex':
                     regex = self.dialog_input_text('Regular expression to filter (case insensitive):',
-                                                   new_filter['regex'] if 'regex' in new_filter else '', winstack=winstack + [win])
+                                                   new_filter['regex'] if 'regex' in new_filter else '', winstack=winstack + [win], history=gconfig.histories['regex'])
                     if regex == '':
                         return None
                     new_filter['regex'] = regex
