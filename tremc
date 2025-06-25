@@ -329,7 +329,7 @@ class GConfig:
             ('queuePosition', '_Queue Position'),
             ('activityDate', 'Last activit_y'),
             ('eta', 'Time Le_ft'),
-            ('doneDate', 'Time Do_ne'),
+            ('doneDate', 'T_ime Done'),
             ('reverse', 'Re_verse') ]
         self.file_sort_options = [
             ('name', '_Name'), ('progress', '_Progress'),
