@@ -357,6 +357,8 @@ class GConfig:
         self.torrent_numbers = config.getboolean('Misc', 'torrent_numbers', fallback=False)
         self.save_conf = config.getboolean('Misc', 'save_conf', fallback=False)
         self.profiles = parse_config_profiles(config, [x[0] for x in self.sort_options])
+        if self.profile not in self.profiles:
+            self.profile = config.get('Misc', 'profile', fallback=self.profile)
 
         self.actions = {
             # First in list: 0=all 1=list 2=details 3=files 4=tracker 16=movement
