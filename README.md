@@ -324,19 +324,26 @@ The following sections are read:
   are exchanged.
 * [Profiles]
 
-  The key is `profile\<name\>`. The value is `<filters>#=<sort>`
+  The key is `profile<name>`. The value is `<filters>#=<sort>`
 
-  <sort> is the name of the torrent sort order, preceded by : for reversed
-  order.
+  `<sort>` is the name of the torrent sort order, preceded by : for reversed order.
 
-  <filters> is `<filters.1> #& ... #& <filters.n>` (the separators are space, hash, ampersand space
+  `<filters>` is `<filters.1> #& ... #& <filters.n>` (the separators are space, hash, ampersand, space)
 
   Each <filters.i> is of the format `<filter.1>#=<param.1>#=...#=<filter.k>#=<param.k>`
 
-  <filter.j> is the name of a torrent filter, preceded by : for inverted. <param.j>
-  is the parameter of the filter if needed, it is ignored otherwise. <param.j> may be empty, but the separators must appear.
+  `<filter.j>` is the name of a torrent filter, preceded by : for inverted. `<param.j>` is the parameter of the filter if needed, it is ignored otherwise. `<param.j>` may be empty, but the separators must appear.
 
-  A torrent satisfies a list of filters if for at least one of the <filters.i>, it satisfies each <filter.j>.
+  A torrent satisfies a list of filters if for at least one of the `<filters.i>`, it satisfies each `<filter.j>`.
+
+  For example:
+
+  `profilet1 = tracker#=torrent.ubuntu.com#=name`
+
+  `profilexyz = tracker#=torrent.ubuntu.com#=incomplete#= #& :regex#=ubuntu#=sizeWhenDone`
+
+  The profile `t1` shows only torrents with tracker torrent.ubuntu.com, sorted by name.
+  The profile `xyz` shows torrents which are either with tracker torrent.ubuntu.com and incomplete, or with a name that does not contain the string ubuntu (case insensitive). The torrents are sorted by size.
 * [CommonKeys], [DetailsKeys], [ListKeys]
 
   Map keys to actions. ListKeys section is for keys pressed in torrent list display, DetailsKeys for torrent details display, and CommonKeys for both.
