@@ -338,15 +338,21 @@ class GConfig:
             ('none', '_Torrent order'),
             ('reverse', 'Re_verse')
         ]
+        filter_string = config.get('Filtering', 'filter', fallback='')
         self.filters = [[{}]]
-        self.filters[0][0]['name'] = config.get('Filtering', 'filter', fallback='')
-        self.filters[0][0]['inverse'] = config.getboolean('Filtering', 'invert', fallback=False)
+        if '#=' in filter_string:
+            self.filters[0] = parse_single_filter_str(filter_string)
+        else:
+            self.filters[0][0]['name'] = filter_string
+            self.filters[0][0]['inverse'] = config.getboolean('Filtering', 'invert', fallback=False)
+            self.filters[0][0]['label'] = ''
+            self.filters[0][0]['group'] = ''
+            self.filters[0][0]['regex'] = ''
+            self.filters[0][0]['tracker'] = ''
+            self.filters[0][0]['location'] = ''
         self.sort_orders = parse_sort_str(config.get('Sorting', 'order', fallback='name'), [x[0] for x in self.sort_options])
         self.file_sort_key = 'name'
         self.file_sort_reverse = False
-        self.filters[0][0]['regex'] = ''
-        self.filters[0][0]['tracker'] = ''
-        self.filters[0][0]['location'] = ''
         self.histories = load_history(self.history_file)
         self.narrow_threshold = config.getint('Misc', 'narrow_threshold', fallback=73)
         self.lines_per_torrent = config.getint('Misc', 'lines_per_torrent', fallback=3)
