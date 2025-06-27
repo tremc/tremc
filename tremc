@@ -363,6 +363,7 @@ class GConfig:
         self.torrent_numbers = config.getboolean('Misc', 'torrent_numbers', fallback=False)
         self.save_conf = config.getboolean('Misc', 'save_conf', fallback=False)
         self.profiles = parse_config_profiles(config, [x[0] for x in self.sort_options])
+        self.x_selection = config.get('Misc', 'x_selection', fallback='clipboard')
         if self.profile not in self.profiles:
             self.profile = config.get('Misc', 'profile', fallback=self.profile)
 
@@ -2132,7 +2133,12 @@ class Interface:
         if self.focus > -1 and gconfig.clipboard:
             magnet = self.torrents[self.focus]['magnetLink']
             try:
-                pyperclip.copy(magnet)
+                ## Initialize clipboard
+                pyperclip.copy("")
+                if gconfig.x_selection == "clipboard":
+                    pyperclip.copy(magnet)
+                elif gconfig.x_selection == "primary":
+                    pyperclip.copy(magnet, primary=True)
             except Exception as e:
                 self.dialog_ok(str(e))
 
