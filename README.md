@@ -290,6 +290,7 @@ The following sections are read:
   * cancel, List of keys that act as cancel key in dialog windows. Printable characters are allowed, but act as cancel key only when not entering text.
 
     Default is Escape, Break and q.
+  * x_selection, on Linux, set to `primary` to copy magnet links to S selection instead of the clipboard. Default is `clipboard`.
 * [Colors]
 
   Allows for setting (some of) the interface colors.
