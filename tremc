@@ -37,6 +37,7 @@ import urllib.error
 import urllib.parse
 import configparser
 import enum
+import io
 try:
     import IPy
 except ImportError:
@@ -49,12 +50,137 @@ except ImportError:
 locale.setlocale(locale.LC_ALL, '')
 PROG = 'tremc'
 
+class ConfigParserUpdate(configparser.ConfigParser):
+
+    def update_file(self, fp, add_missing=True):
+        """Update the specified configuration file to match the current
+        configuration data.
+
+        Ordering (including blank lines) and comments are preserved.
+
+        Minor whitespace normalisation (that preceding continuation lines
+        and inline comments) does occur.
+
+        If add_missing is True, then new options are added to the end of
+        sections (if a section is in a file twice, the last section will be
+        used); new sections are added to the end of the file.  This
+        does mean that if the configuration was read from multiple files,
+        the file that is output to will contain the options from all of
+        those files.  To avoid this, use add_missing=False, and update each
+        of the input files.
+
+        Default values are not added; nor are the __name__ options.
+        """
+        sections = {}
+        current = io.StringIO()
+        replacement = [current]
+        sect = None
+        opt = None
+        written = []
+        # Default to " = " to match write(), but use the most recent
+        # separator found if the file has any options.
+        vi = " = "
+        while True:
+            line = fp.readline()
+            if not line:
+                break
+            # Comment or blank line?
+            if line.strip() == '' or line[0] in '#;' or \
+               (line.split(None, 1)[0].lower() == 'rem' and \
+                line[0] in "rR"):
+                current.write(line)
+                continue
+            # Continuation line?
+            if line[0].isspace() and sect is not None and opt:
+                if ';' in line:
+                    # ';' is a comment delimiter only if it follows
+                    # a spacing character
+                    pos = line.find(';')
+                    if line[pos-1].isspace():
+                        comment = line[pos-1:]
+                        # Get rid of the newline, and put in the comment.
+                        current.seek(-1, 1)
+                        current.write(comment + "\n")
+                continue
+            # A section header or option header?
+            else:
+                # Is it a section header?
+                mo = self.SECTCRE.match(line)
+                if mo:
+                    # Remember the most recent section with this name,
+                    # so that any missing options can be added to it.
+                    if sect:
+                        sections[sect] = current
+                    sect = mo.group('header')
+                    current = StringIO.StringIO()
+                    replacement.append(current)
+                    if sect in self.sections():
+                        current.write(line)
+                    # So sections can't start with a continuation line:
+                    opt = None
+                # An option line?
+                else:
+                    mo = self.OPTCRE.match(line)
+                    if mo:
+                        opt, vi, value = mo.group('option', 'vi', 'value')
+                        comment = ""
+                        if vi in ('=', ':') and ';' in value:
+                            # ';' is a comment delimiter only if it follows
+                            # a spacing character
+                            pos = value.find(';')
+                            if value[pos-1].isspace():
+                                comment = value[pos-1:]
+                        opt = opt.rstrip().lower()
+                        if self.has_option(sect, opt):
+                            value = self.get(sect, opt)
+                            # Fix continuations.
+                            value = value.replace("\n", "\n\t")
+                            current.write("%s%s%s%s\n" % (opt, vi, value.replace('%','%%'),
+                                                          comment))
+                            written.append((sect, opt))
+        if sect:
+            sections[sect] = current
+        if add_missing:
+            # Add any new sections.
+            sects = [configparser.DEFAULTSECT]
+            sects.extend(self.sections())
+            #sects.sort()
+            for sect in sects:
+                if sect == configparser.DEFAULTSECT:
+                    opts = self._defaults.keys()
+                else:
+                    # Must use _section here to avoid defaults.
+                    opts = self._sections[sect].keys()
+                #opts.sort()
+                if sect in sections:
+                    output = sections[sect] or current
+                else:
+                    output = current
+                    output.write("[%s]\n" % (sect,))
+                    sections[sect] = None
+                for opt in opts:
+                    if opt != "__name__" and not (sect, opt) in written:
+                        value = self.get(sect, opt)
+                        # Fix continuations.
+                        value = value.replace("\n", "\n\t")
+                        output.write("%s%s%s\n" % (opt, vi, value.replace('%','%%')))
+                        written.append((sect, opt))
+                output.write("\n")
+        # Copy across the new file.
+        fp.seek(0)
+        fp.truncate()
+        for sect in replacement:
+            if sect is not None:
+                fp.write(sect.getvalue())
+        fp.write("\n")
+
+
 # Global constants and constant configuration
 class GConfig:
     VERSION = '0.9.3'
 
     TRNSM_VERSION_MIN = '1.90'
-    TRNSM_VERSION_MAX = '3.0.0'
+    TRNSM_VERSION_MAX = '4'
     RPC_VERSION_MIN = 8
     RPC_VERSION_MAX = 17
 
@@ -68,7 +194,9 @@ class GConfig:
         JSON_ERROR = 2
         CONFIGFILE_ERROR = 3
 
-    FILTERS_WITH_PARAM = ['tracker', 'regex', 'location', 'label', 'group']
+    FILTERS_WITH_PARAM = ['tracker', 'regex', 'location', 'locationsubs', 'label', 'group']
+
+    speed_k = 1024
 
     def __init__(self):
         default_config_path = xdg_config_home(PROG + '/settings.cfg')
@@ -121,6 +249,15 @@ class GConfig:
             elif os.path.isfile(xdg_config_home(PROG + '/' + self.configfile + '.cfg')):
                 self.configfile = xdg_config_home(PROG + '/' + self.configfile + '.cfg')
         self.configfile = self.configfile
+        config = ConfigParserUpdate()
+        self.config = config
+        config.optionxform = lambda option: option
+        config.add_section('Connection')
+        config.add_section('Sorting')
+        config.add_section('Filtering')
+        config.add_section('Misc')
+        config.add_section('Colors')
+        config.add_section('Profiles')
         config.read(self.configfile)
         self.history_file = ''
         if PROG in os.path.dirname(self.configfile):
@@ -170,7 +307,8 @@ class GConfig:
             config.set('Connection', 'path', self.path)
             config.set('Connection', 'username', self.username)
             config.set('Connection', 'password', self.password)
-            create_config(self.configfile, self.connection)
+            config.set('Connection', 'ssl', self.ssl)
+            create_config(self.configfile, self.connection, config)
 
         try:
             self.ipy = True  # extract ipv4 from ipv6 addresses
@@ -191,36 +329,42 @@ class GConfig:
             ('queuePosition', '_Queue Position'),
             ('activityDate', 'Last activit_y'),
             ('eta', 'Time Le_ft'),
+            ('doneDate', 'T_ime Done'),
             ('reverse', 'Re_verse') ]
         self.file_sort_options = [
             ('name', '_Name'), ('progress', '_Progress'),
             ('length', 'Si_ze'), ('bytesCompleted', '_Downloaded'),
+            ('priority', 'P_riority'),
             ('none', '_Torrent order'),
             ('reverse', 'Re_verse')
         ]
+        filter_string = config.get('Filtering', 'filter', fallback='')
         self.filters = [[{}]]
-        self.filters[0][0]['name'] = config.get('Filtering', 'filter', fallback='')
-        self.filters[0][0]['inverse'] = config.getboolean('Filtering', 'invert', fallback=False)
-        self.sort_orders = parse_sort_str(config.get('Sorting', 'order', fallback=''), [x[0] for x in self.sort_options])
+        if '#=' in filter_string:
+            self.filters[0] = parse_single_filter_str(filter_string)
+        else:
+            self.filters[0][0]['name'] = filter_string
+            self.filters[0][0]['inverse'] = config.getboolean('Filtering', 'invert', fallback=False)
+            self.filters[0][0]['label'] = ''
+            self.filters[0][0]['group'] = ''
+            self.filters[0][0]['regex'] = ''
+            self.filters[0][0]['tracker'] = ''
+            self.filters[0][0]['location'] = ''
+        self.sort_orders = parse_sort_str(config.get('Sorting', 'order', fallback='name'), [x[0] for x in self.sort_options])
         self.file_sort_key = 'name'
         self.file_sort_reverse = False
-        self.filters[0][0]['regex'] = ''
-        self.filters[0][0]['tracker'] = ''
-        self.filters[0][0]['location'] = ''
         self.histories = load_history(self.history_file)
-        self.tlist_item_height = config.getint('Misc', 'lines_per_torrent')
         self.narrow_threshold = config.getint('Misc', 'narrow_threshold', fallback=73)
-        self.torrentname_is_progressbar = config.getboolean('Misc', 'torrentname_is_progressbar')
-        self.file_viewer = config.get('Misc', 'file_viewer')
-        self.file_open_in_terminal = config.getboolean('Misc', 'file_open_in_terminal')
+        self.lines_per_torrent = config.getint('Misc', 'lines_per_torrent', fallback=3)
+        self.torrentname_is_progressbar = config.getboolean('Misc', 'torrentname_is_progressbar', fallback=True)
+        self.file_viewer = config.get('Misc', 'file_viewer', fallback='xdg-open %%s')
+        self.file_open_in_terminal = config.getboolean('Misc', 'file_open_in_terminal', fallback=True)
         self.view_selected = config.getboolean('Misc', 'view_selected', fallback=False)
         self.torrent_numbers = config.getboolean('Misc', 'torrent_numbers', fallback=False)
+        self.save_conf = config.getboolean('Misc', 'save_conf', fallback=False)
         self.profiles = parse_config_profiles(config, [x[0] for x in self.sort_options])
-
-        try:
-            self.selected_file_attr = curses.A_BOLD + curses.A_ITALIC
-        except AttributeError:
-            self.selected_file_attr = curses.A_BOLD
+        if self.profile not in self.profiles:
+            self.profile = config.get('Misc', 'profile', fallback=self.profile)
 
         self.actions = {
             # First in list: 0=all 1=list 2=details 3=files 4=tracker 16=movement
@@ -232,6 +376,7 @@ class GConfig:
             'go_back_or_unfocus': [2, ['ESC', 'BREAK'], 'Unfocus or back to torrent list'],
             'daemon_quit': [0, ['X'], 'Ask daemon to quit'],
             'options_dialog': [0, ['O'], PROG + ' options menu'],
+            'save_config': [0, [], 'Save config file'],
             'server_options_dialog': [1, ['o'], 'Server options menu'],
             'toggle_compact_torrentlist': [1, ['C'], 'Cycle torrent line height'],
             'toggle_torrent_numbers': [1, [], 'Toggle torrent number in list'],
@@ -304,6 +449,8 @@ class GConfig:
             'add_tracker_or_select_all_files': [2, ['a'], 'Select/Deselect all files or add torrent'],
             'view_file': [3, ['ENTER'], 'View file'],
             'view_file_command': [3, ['|'], 'Run command on file'],
+            'view_torrent': [1, [], "View torrent's single file"],
+            'view_torrent_command': [1, [], "Run command on torrent's single file"],
             'move_to_next_directory': [3, ['J'], 'Next diectory'],
             'move_to_previous_directory': [3, ['K'], 'Previous directory'],
             'show_file_sort_order_menu': [3, ['s'], 'Sort file list'],
@@ -318,6 +465,7 @@ class GConfig:
             'select_file': [3, ['SPACE'], 'Select/unselect file'],
             'file_info': [3, ['x'], 'Show file info'],
             'remove_tracker': [4, ['DC', 'r'], 'Remove tracker'],
+            'remove_all_trackers': [0, [], 'Remove all trackers from torrent'],
             'page_up': [16, ['PPAGE', '^b'], 'Page Up'],
             'page_down': [16, ['NPAGE', '^f'], 'Page Down'],
             'line_up': [16, ['UP', 'k', '^p'], 'Up'],
@@ -365,6 +513,8 @@ class GConfig:
             'dialog_text': 'dialog,a:*r',
             'dialog_text_important': 'dialog_important,a:*r',
             'menu_focused': 'dialog,a:*r',
+            'file_line': '',
+            'dir_line': '',
             'file_prio_high': 'fg:red,bg:default',
             'file_prio_normal': 'fg:default,bg:default',
             'file_prio_low': 'fg:yellow,bg:default',
@@ -380,6 +530,14 @@ class GConfig:
         curses.start_color()
         if self.term_has_colors:
             curses.use_default_colors()
+        # file list attributes: generate focused and selected attributes if they are not defined by the user
+        for attr in ('file_line', 'file_prio_high', 'file_prio_normal', 'file_prio_low', 'file_prio_off'):
+            if attr + '_f' not in colors:
+                colors[attr + '_f'] = attr + ',a:*r'
+            if attr + '_s' not in colors:
+                colors[attr + '_s'] = attr + ',a:*b*i'
+            if attr + '_f_s' not in colors:
+                colors[attr + '_f_s'] = attr + '_f' + ',a:*b*i'
         for name in list(colors.keys()):
             self.colors[name] = self._parse_color_pair(colors[name])
             if self.term_has_colors:
@@ -444,6 +602,25 @@ class GConfig:
             # crach even in this situation.
             pdebug('element_attr', name, st)
             return 0
+
+    def save_profile(self, name, profile):
+        filters_str = ' #& '.join(('#='.join((filter_config_str(f) for f in l)) for l in profile['filter']))
+        profile_str = filters_str + '#=' + sort_config_str(profile['sort'])
+        self.config.set('Profiles', 'profile' + name, profile_str)
+
+    def save_config(self):
+        save_keys = {
+            'Connection': ['host', 'port', 'path', 'username', 'password', 'ssl'],
+            'Misc': ['lines_per_torrent', 'torrentname_is_progressbar', 'file_viewer', 'file_open_in_terminal',
+                     'view_selected', 'rdns', 'geoip2_database', 'torrent_numbers', 'save_conf']
+        }
+        for section, keys in save_keys.items():
+            for key in keys:
+                self.config.set(section, key, str(getattr(self, key)).replace('%','%%'))
+        for name, profile in self.profiles.items():
+            self.save_profile(name, profile)
+        fp = open(self.configfile,"w+")
+        self.config.update_file(fp)
 
 
 class Keys:
@@ -524,20 +701,6 @@ def pdebug(*argv):
 
 
 # define config defaults
-config = configparser.ConfigParser()
-config.optionxform = lambda option: option
-config.add_section('Connection')
-config.add_section('Sorting')
-config.set('Sorting', 'order', 'name')
-config.add_section('Filtering')
-config.set('Filtering', 'filter', '')
-config.set('Filtering', 'invert', 'False')
-config.add_section('Misc')
-config.set('Misc', 'lines_per_torrent', '2')
-config.set('Misc', 'torrentname_is_progressbar', 'True')
-config.set('Misc', 'file_viewer', 'xdg-open %%s')
-config.set('Misc', 'file_open_in_terminal', 'True')
-config.add_section('Colors')
 
 class Normalizer:
     def __init__(self):
@@ -659,11 +822,11 @@ class Transmission:
                    'peersSendingToUs', 'peersGettingFromUs', 'totalSize',
                    'seedRatioLimit', 'seedRatioMode', 'isPrivate', 'magnetLink',
                    'honorsSessionLimits', 'metadataPercentComplete',
-                   'activityDate',
+                   'activityDate', 'doneDate',
                    ]
 
     DETAIL_FIELDS = ['files', 'priorities', 'wanted', 'peers', 'trackers',
-                     'dateCreated', 'startDate', 'doneDate',
+                     'dateCreated', 'startDate',
                      'leftUntilDone', 'comment', 'creator',
                      'hashString', 'pieceCount', 'pieceSize', 'pieces',
                      'downloadedEver', 'corruptEver', 'peersFrom'] + LIST_FIELDS
@@ -733,6 +896,8 @@ class Transmission:
         if self.rpc_version >= 16:
             self.LIST_FIELDS.append('labels')
             self.DETAIL_FIELDS.append('labels')
+
+        if self.rpc_version >= 17:
             self.LIST_FIELDS.append('group')
             self.DETAIL_FIELDS.append('group')
 
@@ -773,7 +938,7 @@ class Transmission:
                 gconfig.geoip = False
 
         # make sure there are no undefined values
-        self.wait_for_torrentlist_update()
+        self.wait_for_torrentlist_update(True)
         self.requests['torrent-details'] = TransmissionRequest(self.url, server=self)
 
     def update(self, delay, tag_waiting_for=0):
@@ -1171,8 +1336,8 @@ class Transmission:
         return response['result'] if response['result'] != 'success' else ''
 
     def remove_torrent_tracker(self, t_id, tracker):
-        data = {'ids': [t_id],
-                'trackerRemove': [tracker]}
+        data = {'ids': t_id,
+                'trackerRemove': tracker}
         request = TransmissionRequest(self.url, 'torrent-set', 1, data, server=self)
         request.send_request()
         response = request.get_response()
@@ -1192,7 +1357,7 @@ class Transmission:
         current_priority = self.torrent_details_cache['priorities'][ref_num]
         if not self.torrent_details_cache['wanted'][ref_num]:
             self.set_file_priority(self.torrent_details_cache['id'], file_nums, 'low')
-        elif current_priority == -1:
+        elif current_priority <= -1:
             self.set_file_priority(self.torrent_details_cache['id'], file_nums, 'normal')
         elif current_priority == 0:
             self.set_file_priority(self.torrent_details_cache['id'], file_nums, 'high')
@@ -1209,7 +1374,7 @@ class Transmission:
             self.set_file_priority(self.torrent_details_cache['id'], file_nums, 'normal')
         elif current_priority == 0:
             self.set_file_priority(self.torrent_details_cache['id'], file_nums, 'low')
-        elif current_priority == -1:
+        elif current_priority <= -1:
             self.set_file_priority(self.torrent_details_cache['id'], file_nums, 'off')
 
     def set_file_priority(self, torrent_id, file_nums, priority):
@@ -1223,6 +1388,13 @@ class Transmission:
         request.send_request()
         self.wait_for_details_update()
 
+    def get_num_file_priority(self, torrent_id, file_num):
+        if self.torrent_details_cache['wanted'][file_num]:
+            return self.torrent_details_cache['priorities'][file_num]
+        else:
+            # Small enough ?
+            return -999
+
     def get_file_priority(self, torrent_id, file_num):
         priority = self.torrent_details_cache['priorities'][file_num]
         if not self.torrent_details_cache['wanted'][file_num]:
@@ -1235,14 +1407,17 @@ class Transmission:
             return 'high'
         return '?'
 
-    def wait_for_torrentlist_update(self):
-        self.wait_for_update(7)
+    def wait_for_torrentlist_update(self, wait=False):
+        if wait:
+            self.wait_for_update(self.TAG_TORRENT_LIST)
+        else:
+            threading.Thread(target=self.wait_for_update, args=[self.TAG_TORRENT_LIST], daemon=True).start()
 
     def wait_for_details_update(self):
         self.wait_for_update(self.TAG_TORRENT_DETAILS)
 
     def wait_for_status_update(self):
-        self.wait_for_update(22)
+        self.wait_for_update(self.TAG_SESSION_GET)
 
     def wait_for_update(self, update_id):
         self.update(0)  # send request
@@ -1371,7 +1546,7 @@ class Interface:
 
         self.details_category_focus = 0  # overview/files/peers/tracker in details
         self.focus_detaillist = -1  # same as focus but for details
-        self.selected_files = []  # marked files in details
+        self.selected_files = set()  # marked files in details
         self.file_index_map = {}  # Maps local torrent's file indices to server file indices
         self.scrollpos_detaillist = [0] * 5  # same as scrollpos but for details
         self.max_overview_scroll = 0
@@ -1379,6 +1554,7 @@ class Interface:
         self.vmode_id = -1
         self.filters_inverted = False
         self.force_narrow = None
+        self.beeped = False
 
         self.common_keybindings = {
             K.n0: self.action_profile_selected,
@@ -1405,7 +1581,7 @@ class Interface:
         self.filelist_needs_refresh = False
         self.sorted_files = None
         self.action_keys = {a:set(d[1]) for a, d in gconfig.actions.items()}
-        parse_config_key(self, config, gconfig, self.common_keybindings, self.details_keybindings, self.list_keybindings, self.action_keys)
+        parse_config_key(self, gconfig.config, gconfig, self.common_keybindings, self.details_keybindings, self.list_keybindings, self.action_keys)
 
         try:
             self.init_screen()
@@ -1415,6 +1591,9 @@ class Interface:
             raise
         else:
             self.restore_screen()
+
+    def action_save_config(self):
+        gconfig.save_config()
 
     def apply_profile(self, profile):
         gconfig.sort_orders = [s.copy() for s in profile['sort']]
@@ -1445,7 +1624,7 @@ class Interface:
         self.screen.keypad(1)
         curses.halfdelay(10)  # STDIN timeout
         hide_cursor()
-        gconfig.init_colors(dict(config.items('Colors')))
+        gconfig.init_colors(dict(gconfig.config.items('Colors')))
 
         # http://bugs.python.org/issue2675
         try:
@@ -1463,7 +1642,10 @@ class Interface:
     def get_screen_size(self):
         time.sleep(0.1)  # prevents curses.error on rapid resizing
         while True:
-            curses.endwin()
+            try:
+                curses.endwin()
+            except curses.error:
+                pass
             self.screen.refresh()
             self.height, self.width = self.screen.getmaxyx()
             # Tracker list breaks if width smaller than 73
@@ -1496,7 +1678,7 @@ class Interface:
                 self.torrent_title_width -= self.rateDownload_width + 2
 
         elif self.torrents:
-            self.visible_torrents_start = self.scrollpos // gconfig.tlist_item_height
+            self.visible_torrents_start = self.scrollpos // gconfig.lines_per_torrent
             self.visible_torrents = self.torrents[self.visible_torrents_start: self.visible_torrents_start + self.torrents_per_page]
             self.rateDownload_width = self.get_rateDownload_width(self.visible_torrents)
             self.rateUpload_width = self.get_rateUpload_width(self.visible_torrents)
@@ -1528,7 +1710,8 @@ class Interface:
 
     def recalculate_torrents_per_page(self):
         self.mainview_height = self.height - 2
-        self.torrents_per_page = (self.mainview_height + gconfig.tlist_item_height - 1) // gconfig.tlist_item_height
+        self.torrents_per_page = (self.mainview_height + gconfig.lines_per_torrent - 1) // gconfig.lines_per_torrent
+        self.last_torrent_partial = self.torrents_per_page * gconfig.lines_per_torrent - self.mainview_height > max(0, gconfig.lines_per_torrent - 2)
 
     def run(self):
         self.draw_title_bar()
@@ -1566,7 +1749,7 @@ class Interface:
         if self.focus_detaillist > -1:   # unfocus and deselect file
             self.focus_detaillist = -1
             self.scrollpos_detaillist = [0] * 5
-            self.selected_files = []
+            self.selected_files = set()
         else:  # return from details
             self.action_leave_details()
 
@@ -1582,7 +1765,7 @@ class Interface:
         self.selected_torrent = -1
         self.details_category_focus = 0
         self.scrollpos_detaillist = [0] * 5
-        self.selected_files = []
+        self.selected_files = set()
         self.vmode_id = -1
 
     def action_quit(self):
@@ -1630,6 +1813,7 @@ class Interface:
             self.selected_torrent = self.focus
             self.server.set_torrent_details_id(self.torrents[self.focus]['id'])
             self.server.wait_for_details_update()
+            self.screen_files = -1
 
     def action_show_torrent_sort_order_menu(self):
         if self.selected_torrent == -1:
@@ -1664,29 +1848,29 @@ class Interface:
 
             total_ul = stats['cumulative-stats']['uploadedBytes']
             total_dl = stats['cumulative-stats']['downloadedBytes']
-            total_ratio = 'Inf' if not total_dl else round(float(total_ul) / float(total_dl), 2)
+            total_ratio = 'Inf' if not total_dl else str(round(float(total_ul) / float(total_dl), 2))
             total_time = stats['cumulative-stats']['secondsActive']
 
             session_ul = stats['current-stats']['uploadedBytes']
             session_dl = stats['current-stats']['downloadedBytes']
-            session_ratio = 'Inf' if not session_dl else round(float(session_ul) / float(session_dl), 2)
+            session_ratio = 'Inf' if not session_dl else str(round(float(session_ul) / float(session_dl), 2))
             session_time = stats['current-stats']['secondsActive']
 
             message = ("CURRENT SESSION\n"
-                       "  Uploaded:   {s_ul}\n"
-                       "  Downloaded: {s_dl}\n"
-                       "  Ratio:      {s_ratio}\n"
-                       "  Duration:   {s_duration}\n\n"
+                       "  Uploaded:   {s_ul:7}\n"
+                       "  Downloaded: {s_dl:7}\n"
+                       "  Ratio:      {s_ratio:7}\n"
+                       "  Duration:   {s_duration:7}\n\n"
                        "TOTAL\n"
-                       "  Uploaded:   {t_ul}\n"
-                       "  Downloaded: {t_dl}\n"
-                       "  Ratio:      {t_ratio}\n"
-                       "  Duration:   {t_duration}\n").format(s_ul=scale_bytes(session_ul),
-                                                              s_dl=scale_bytes(session_dl),
+                       "  Uploaded:   {t_ul:7}\n"
+                       "  Downloaded: {t_dl:7}\n"
+                       "  Ratio:      {t_ratio:7}\n"
+                       "  Duration:   {t_duration:7}\n").format(s_ul=scale_bytes(session_ul, digits=2),
+                                                              s_dl=scale_bytes(session_dl, digits=2),
                                                               s_ratio=session_ratio,
                                                               s_duration=scale_time(session_time, long=True),
-                                                              t_ul=scale_bytes(total_ul),
-                                                              t_dl=scale_bytes(total_dl),
+                                                              t_ul=scale_bytes(total_ul, digits=2),
+                                                              t_dl=scale_bytes(total_dl, digits=2),
                                                               t_ratio=total_ratio,
                                                               t_duration=scale_time(total_time, long=True))
 
@@ -1740,6 +1924,7 @@ class Interface:
                    ('tracker', 'Trac_ker'),
                    ('regex', 'Regular e_xpression'),
                    ('location', 'L_ocation'),
+                   ('locationsubs', '_Location (subdirectories)'),
                    ('selected', 'S_elected'),
                    ('honors', '_Honors limits'),
                    ('partwanted', 'Part _wanted'),
@@ -1758,11 +1943,11 @@ class Interface:
             if choice == 'invert':
                 new_filter['inverse'] = not new_filter['inverse']
             else:
-                if choice in ['tracker', 'location', 'label', 'group']:
+                if choice in ['tracker', 'location', 'locationsubs', 'label', 'group']:
                     if choice == 'tracker':
                         select = sorted(self.server.trackers)
                         min_select = 2
-                    elif choice == 'location':
+                    elif choice.startswith('location'):
                         select = sorted(self.server.locations)
                         min_select = 2
                     elif choice == 'label':
@@ -1794,7 +1979,7 @@ class Interface:
                     new_filter[choice] = selected
                 elif choice == 'regex':
                     regex = self.dialog_input_text('Regular expression to filter (case insensitive):',
-                                                   new_filter['regex'] if 'regex' in new_filter else '', winstack=winstack + [win])
+                                                   new_filter['regex'] if 'regex' in new_filter else '', winstack=winstack + [win], history=gconfig.histories['regex'])
                     if regex == '':
                         return None
                     new_filter['regex'] = regex
@@ -2076,7 +2261,7 @@ class Interface:
             self.dialog_ok("You need Transmission v2.10 or higher to add trackers.")
             return
 
-        tracker = self.dialog_input_text('Add tracker URL:', history=gconfig.histories['tracker'], history_max=10,
+        tracker = self.dialog_input_text('Add tracker URL:', history=gconfig.histories['tracker'],
                                          fixed_history=list(self.server.trackers))
         if tracker:
             t = self.torrent_details
@@ -2084,6 +2269,14 @@ class Interface:
 
             if response:
                 msg = wrap("Couldn't add tracker: %s" % response)
+                self.dialog_ok("\n".join(msg))
+
+    def action_remove_all_trackers(self):
+        ids = self.selected_ids()
+        if ids:
+            response = self.server.remove_torrent_tracker(ids, list(range(100)))
+            if response:
+                msg = wrap("Couldn't remove trackers: %s" % response)
                 self.dialog_ok("\n".join(msg))
 
     def action_remove_tracker(self):
@@ -2098,7 +2291,7 @@ class Interface:
                     and self.dialog_yesno("Do you want to remove this tracker?")):
 
                 tracker = t['trackerStats'][self.scrollpos_detaillist[3]]
-                response = self.server.remove_torrent_tracker(t['id'], tracker['id'])
+                response = self.server.remove_torrent_tracker([t['id']], [tracker['id']])
 
                 if response:
                     msg = wrap("Couldn't remove tracker: %s" % response)
@@ -2125,20 +2318,20 @@ class Interface:
     def movement_keys(self, action):
         if self.selected_torrent == -1 and len(self.torrents) > 0:
             if action == 'line_up':
-                self.focus, self.scrollpos = self.move_up(self.focus, self.scrollpos, gconfig.tlist_item_height)
+                self.focus, self.scrollpos = self.move_up(self.focus, self.scrollpos, gconfig.lines_per_torrent)
             elif action == 'line_down':
-                self.focus, self.scrollpos = self.move_down(self.focus, self.scrollpos, gconfig.tlist_item_height,
+                self.focus, self.scrollpos = self.move_down(self.focus, self.scrollpos, gconfig.lines_per_torrent,
                                                             self.torrents_per_page, len(self.torrents))
             elif action == 'page_up':
-                self.focus, self.scrollpos = self.move_page_up(self.focus, self.scrollpos, gconfig.tlist_item_height,
+                self.focus, self.scrollpos = self.move_page_up(self.focus, self.scrollpos, gconfig.lines_per_torrent,
                                                                self.torrents_per_page)
             elif action == 'page_down':
-                self.focus, self.scrollpos = self.move_page_down(self.focus, self.scrollpos, gconfig.tlist_item_height,
+                self.focus, self.scrollpos = self.move_page_down(self.focus, self.scrollpos, gconfig.lines_per_torrent,
                                                                  self.torrents_per_page, len(self.torrents))
             elif action == 'home':
                 self.focus, self.scrollpos = self.move_to_top()
             elif action == 'end':
-                self.focus, self.scrollpos = self.move_to_end(gconfig.tlist_item_height, self.torrents_per_page, len(self.torrents))
+                self.focus, self.scrollpos = self.move_to_end(gconfig.lines_per_torrent, self.torrents_per_page, len(self.torrents))
             self.focused_id = self.torrents[self.focus]['id']
         elif self.selected_torrent > -1:
             # overview
@@ -2164,11 +2357,11 @@ class Interface:
                 elif action == 'page_up':
                     self.focus_detaillist, self.scrollpos_detaillist[1] = \
                         self.move_page_up(self.focus_detaillist, self.scrollpos_detaillist[1], 1,
-                                          self.detaillines_per_page)
+                                          self.screen_files if self.screen_files > 0 else self.detaillines_per_page)
                 elif action == 'page_down':
                     self.focus_detaillist, self.scrollpos_detaillist[1] = \
                         self.move_page_down(self.focus_detaillist, self.scrollpos_detaillist[1], 1,
-                                            self.detaillines_per_page, len(self.torrent_details['files']))
+                                            self.screen_files if self.screen_files > 0 else self.detaillines_per_page, len(self.torrent_details['files']))
                 elif action == 'home':
                     self.focus_detaillist, self.scrollpos_detaillist[1] = self.move_to_top()
                 elif action == 'end':
@@ -2177,9 +2370,9 @@ class Interface:
                 # visual mode
                 if self.vmode_id > -1:
                     if self.vmode_id < self.focus_detaillist:
-                        self.selected_files = list(range(self.vmode_id, self.focus_detaillist + 1))
-                    else:
-                        self.selected_files = list(range(self.focus_detaillist, self.vmode_id + 1))
+                        self.selected_files = {self.file_index_map[x] for x in range(self.vmode_id, self.focus_detaillist + 1)}
+                    elif self.focus_detaillist > -1:
+                        self.selected_files = {self.file_index_map[x] for x in range(self.focus_detaillist, self.vmode_id + 1)}
             list_len = 0
             ppage = 1
 
@@ -2230,7 +2423,7 @@ class Interface:
         if self.details_category_focus == 1 and \
                 (self.selected_files or self.focus_detaillist > -1):
             if self.selected_files:
-                files = {self.file_index_map[index] for index in self.selected_files}
+                files = self.selected_files
                 self.server.increase_file_priority(files)
             elif self.focus_detaillist > -1:
                 self.server.increase_file_priority([self.file_index_map[self.focus_detaillist]])
@@ -2242,7 +2435,7 @@ class Interface:
         if self.details_category_focus == 1 and \
                 (self.selected_files or self.focus_detaillist > -1):
             if self.selected_files:
-                files = {self.file_index_map[index] for index in self.selected_files}
+                files = self.selected_files
                 self.server.decrease_file_priority(files)
             elif self.focus_detaillist > -1:
                 self.server.decrease_file_priority([self.file_index_map[self.focus_detaillist]])
@@ -2317,48 +2510,38 @@ class Interface:
         if self.details_category_focus == 1 and self.focus_detaillist >= 0:
             # file selection with space
             if action == 'file':
-                try:
-                    self.selected_files.pop(self.selected_files.index(self.focus_detaillist))
-                except ValueError:
-                    self.selected_files.append(self.focus_detaillist)
+                self.selected_files.symmetric_difference_update({self.file_index_map[self.focus_detaillist]})
                 self.action_line_down()
             # (un)select directory
             elif action == 'dir':
                 file_id = self.file_index_map[self.focus_detaillist]
                 focused_dir = os.path.dirname(self.torrent_details['files'][file_id]['name'])
-                if self.selected_files.count(self.focus_detaillist):
+                if file_id in self.selected_files:
                     for focus in range(0, len(self.torrent_details['files'])):
                         file_id = self.file_index_map[focus]
                         if self.torrent_details['files'][file_id]['name'].startswith(focused_dir):
-                            try:
-                                while focus in self.selected_files:
-                                    self.selected_files.remove(focus)
-                            except ValueError:
-                                pass
+                            self.selected_files.discard(file_id)
                 else:
                     for focus in range(0, len(self.torrent_details['files'])):
                         file_id = self.file_index_map[focus]
                         if self.torrent_details['files'][file_id]['name'].startswith(focused_dir):
-                            self.selected_files.append(focus)
+                            self.selected_files.add(file_id)
                 self.action_move_to_next_directory()
             # (un)select all files
             elif action == 'all':
                 if self.selected_files:
-                    self.selected_files = []
+                    self.selected_files = set()
                 else:
-                    self.selected_files = list(range(0, len(self.torrent_details['files'])))
+                    self.selected_files = set(range(0, len(self.torrent_details['files'])))
             elif action == 'invert':
-                self.selected_files = [f for f in range(0, len(self.torrent_details['files'])) if f not in self.selected_files]
+                self.selected_files = set(range(0, len(self.torrent_details['files']))).difference(self.selected_files)
             elif action == 'visual':
                 if self.selected_files:
-                    self.selected_files = []
+                    self.selected_files = set()
                 if self.vmode_id != -1:
                     self.vmode_id = -1
                 else:
-                    try:
-                        self.selected_files.pop(self.selected_files.index(self.focus_detaillist))
-                    except ValueError:
-                        self.selected_files.append(self.focus_detaillist)
+                    self.selected_files.symmetric_difference_update({self.file_index_map[self.focus_detaillist]})
                     self.vmode_id = self.focus_detaillist
 
     def action_move_to_next_directory(self):
@@ -2400,13 +2583,30 @@ class Interface:
     def action_view_file(self):
         self.view_file(gconfig.file_viewer, gconfig.file_open_in_terminal)
 
+    def action_view_torrent(self):
+        self.view_file(gconfig.file_viewer, gconfig.file_open_in_terminal)
+
     def view_file(self, file_viewer, file_open_in_terminal):
-        if self.details_category_focus == 1:
+        torrent = None
+        if self.selected_torrent == -1:
+            if self.focus == -1:
+                return
+            torrent = self.torrents[self.focus]['id']
+            self.server.set_torrent_details_id(torrent)
+            self.server.wait_for_details_update()
+            self.server.set_torrent_details_id(-1)
+            if len(self.server.get_torrent_details()['files']) > 1:
+                return
+            files = [0]
+        else:
+            files = []
+        if self.details_category_focus == 1 or torrent:
             details = self.server.get_torrent_details()
             stats = self.server.get_global_stats()
-
-            if gconfig.view_selected and self.selected_files:
-                files = [self.file_index_map[f] for f in self.selected_files]
+            if files:
+                pass
+            elif gconfig.view_selected and self.selected_files:
+                files = self.selected_files
             elif self.focus_detaillist >= 0:
                 files = [self.file_index_map[self.focus_detaillist]]
             else:
@@ -2433,7 +2633,7 @@ class Interface:
                 if file_path:
                     file_names.append(file_path)
 
-            if not file_names:
+            if " %t" not in file_viewer and not file_names:
                 self.dialog_ok("Could not find file:\n%s" % (file_name))
                 return
 
@@ -2441,6 +2641,12 @@ class Interface:
             for argstr in file_viewer.split(" "):
                 if argstr == '%s':
                     viewer_cmd.extend(file_names)
+                elif argstr == '%t':
+                    viewer_cmd.append(gconfig.host)
+                    viewer_cmd.append(download_dir)
+                    viewer_cmd.append(incomplete_dir)
+                    for file_server_index in files:
+                        viewer_cmd.append(details['files'][file_server_index]['name'])
                 else:
                     viewer_cmd.append(argstr)
             try:
@@ -2457,20 +2663,37 @@ class Interface:
                 self.dialog_ok("%s:\n%s" % (" ".join(viewer_cmd), err))
             hide_cursor()
             if gconfig.file_viewer != file_viewer:
-                file_type = self.server.get_torrent_details()['files'][self.file_index_map[self.focus_detaillist]]['name'].split('.')[-1]
+                if self.selected_torrent == -1:
+                    file_type = self.torrents[self.focus]['name'].split('.')[-1].lower()
+                else:
+                    file_type = self.server.get_torrent_details()['files'][self.file_index_map[self.focus_detaillist]]['name'].split('.')[-1].lower()
                 gconfig.histories['types'][file_type] = file_viewer
 
-    def action_view_file_command(self):
-        file_type = self.server.get_torrent_details()['files'][self.file_index_map[self.focus_detaillist]]['name'].split('.')[-1]
-        if file_type in gconfig.histories['types']:
-            command = gconfig.histories['types'][file_type]
-        else:
-            command = ''
-        self.dialog_input_text('Command to run (%s will be replaced by file name)', command,
-                               tab_complete='executable',
-                               on_enter=self.view_file_command,
-                               history=gconfig.histories['command'], history_max=10,
-                               fixed_history=[gconfig.file_viewer])
+    def action_view_torrent_command(self):
+        if self.focus >= 0:
+            torrent = self.torrents[self.focus]['id']
+            self.server.set_torrent_details_id(torrent)
+            self.server.wait_for_details_update()
+            self.server.set_torrent_details_id(-1)
+            if len(self.server.get_torrent_details()['files']) > 1:
+                return
+            self.action_view_file_command(torrent=self.torrents[self.focus])
+
+    def action_view_file_command(self, torrent=None):
+        if torrent or (self.details_category_focus == 1 and self.focus_detaillist > -1):
+            if torrent:
+                file_type = torrent['name'].split('.')[-1].lower()
+            else:
+                file_type = self.server.get_torrent_details()['files'][self.file_index_map[self.focus_detaillist]]['name'].split('.')[-1].lower()
+            if file_type in gconfig.histories['types']:
+                command = gconfig.histories['types'][file_type]
+            else:
+                command = ''
+            self.dialog_input_text('Command to run (%s will be replaced by file name)', command,
+                                   tab_complete='executable',
+                                   on_enter=self.view_file_command,
+                                   history=gconfig.histories['command'],
+                                   fixed_history=[gconfig.file_viewer])
 
     def view_file_command(self, pattern, inc=1, search=None):
         self.view_file(pattern, gconfig.file_open_in_terminal if inc == 1 else not inc)
@@ -2524,7 +2747,7 @@ class Interface:
         if ids:
             focused, extraline = self.get_focused(ids)
             msg = ('Set labels of "%s"' % focused['name']) + extraline + '\nto:'
-            labels_str = self.dialog_input_text(msg, '')
+            labels_str = self.dialog_input_text(msg, '', history=gconfig.histories['labels'], fixed_history=list(self.server.labels))
             labels = [s.strip() for s in labels_str.split(',')]
             if labels:
                 self.server.set_labels(ids, labels)
@@ -2536,12 +2759,12 @@ class Interface:
         if ids:
             focused, extraline = self.get_focused(ids)
             msg = ('Label to add to "%s"' % focused['name']) + extraline
-            label = self.dialog_input_text(msg, '', history=gconfig.histories['label'], history_max=10, fixed_history=list(self.server.labels))
+            label = self.dialog_input_text(msg, '', history=gconfig.histories['label'], fixed_history=list(self.server.labels))
             if label:
                 self.server.add_label(ids, label)
 
     def action_toggle_compact_torrentlist(self):
-        gconfig.tlist_item_height = gconfig.tlist_item_height % 3 + 1
+        gconfig.lines_per_torrent = gconfig.lines_per_torrent % 3 + 1
         self.recalculate_torrents_per_page()
         self.follow_list_focus()
 
@@ -2555,7 +2778,7 @@ class Interface:
             location = homedir2tilde(self.torrents[self.focus]['downloadDir'])
             msg = ('Move "%s"' % focused['name']) + extraline + '\nfrom %s to' % location
             path = self.dialog_input_text(msg, location, tab_complete='dirs',
-                                          history=gconfig.histories['location'], history_max=10, fixed_history=list(self.server.locations))
+                                          history=gconfig.histories['location'], fixed_history=list(self.server.locations))
             if path:
                 self.server.move_torrent(ids, tilde2homedir(path))
 
@@ -2634,6 +2857,8 @@ class Interface:
             return filtr['inverse'] != bool(re.search(filtr['regex'], t['name'], flags=re.I))
         if filtr['name'] == 'location':
             return filtr['inverse'] != (homedir2tilde(t['downloadDir']) == filtr['location'])
+        if filtr['name'] == 'locationsubs':
+            return filtr['inverse'] != (homedir2tilde(t['downloadDir']).startswith(filtr['locationsubs']))
         if filtr['name'] == 'label':
             return filtr['inverse'] != (filtr['label'] in t['labels'])
         if filtr['name'] == 'group':
@@ -2669,13 +2894,13 @@ class Interface:
                     break
 
         # make sure the focus is not above the visible area
-        while self.focus < (self.scrollpos / gconfig.tlist_item_height):
-            self.scrollpos -= gconfig.tlist_item_height
+        while self.focus < (self.scrollpos / gconfig.lines_per_torrent):
+            self.scrollpos -= gconfig.lines_per_torrent
         # make sure the focus is not below the visible area
-        while self.focus > (self.scrollpos / gconfig.tlist_item_height) + self.torrents_per_page - 1:
-            self.scrollpos += gconfig.tlist_item_height
+        while self.focus > (self.scrollpos / gconfig.lines_per_torrent) + self.torrents_per_page - 1 - int(self.last_torrent_partial):
+            self.scrollpos += gconfig.lines_per_torrent
         # keep min and max bounds
-        self.scrollpos = min(self.scrollpos, (len(self.torrents) - self.torrents_per_page) * gconfig.tlist_item_height)
+        self.scrollpos = min(self.scrollpos, (len(self.torrents) - self.torrents_per_page + int(self.last_torrent_partial)) * gconfig.lines_per_torrent)
         self.scrollpos = max(0, self.scrollpos)
 
     def torrent_text(self, t, search, details=[]):
@@ -2722,7 +2947,7 @@ class Interface:
                 self.highlight_dialog = False
             else:
                 self.highlight_dialog = True
-                curses.beep()
+                self.beep()
         else:
             self.search_focus = 0
             self.highlight_dialog = False
@@ -2735,7 +2960,7 @@ class Interface:
         for i in range(len(self.visible_torrents)):
             ypos += self.draw_torrentlist_item(self.visible_torrents[i],
                                                (i == self.focus - self.visible_torrents_start),
-                                               gconfig.tlist_item_height == 1,
+                                               gconfig.lines_per_torrent == 1,
                                                ypos, i + self.visible_torrents_start)
         if refresh:
             self.pad.refresh(0, 0, 1, 0, self.mainview_height, self.width - 1)
@@ -2759,7 +2984,7 @@ class Interface:
             self.draw_ratio(torrent, y, False)
             self.draw_torrentlist_status(torrent, focused, y)
 
-            return gconfig.tlist_item_height  # number of lines that were used for drawing the list item
+            return gconfig.lines_per_torrent  # number of lines that were used for drawing the list item
         # Draw ratio in place of upload rate if upload rate = 0
         if not torrent['rateUpload']:
             self.draw_ratio(torrent, y - 1, selected)
@@ -3016,10 +3241,14 @@ class Interface:
         sizes.extend(["%s left" % scale_bytes(t['leftUntilDone'], long=True)])
         info.append(sizes)
 
-        info.append(['Files: ', "%d;  " % len(t['files'])])
+        nr_files = len(t['files'])
+        info.append(['Files: ', "%d;  " % nr_files])
         complete = list(map(lambda x: x['bytesCompleted'] == x['length'], t['files'])).count(True)
         not_complete = [x for x in t['files'] if x['bytesCompleted'] != x['length']]
         partial = list(map(lambda x: x['bytesCompleted'] > 0, not_complete)).count(True)
+        nr_wanted = t['wanted'].count(1)
+        if nr_wanted < nr_files:
+            info[-1].append("%d wanted;  " % nr_wanted)
         if complete == len(t['files']):
             info[-1].append("all complete")
         else:
@@ -3040,18 +3269,18 @@ class Interface:
             if t['rateDownload']:
                 info[-1].append("receiving %s per second" % scale_bytes(t['rateDownload'], long=True))
                 if t['downloadLimited']:
-                    info[-1][-1] += " (throttled to %s)" % scale_bytes(t['downloadLimit'] * 1024, long=True)
+                    info[-1][-1] += " (throttled to %s)" % scale_bytes(t['downloadLimit'] * gconfig.speed_k, long=True)
 
         try:
             copies_distributed = (float(t['uploadedEver']) / float(t['sizeWhenDone']))
         except ZeroDivisionError:
             copies_distributed = 0
-        info.append(['Upload: ', "%s (%.2f%%) transmitted" %
+        info.append(['Upload: ', "%s (%.0f%%) transmitted" %
                      (scale_bytes(t['uploadedEver'], long=True), t['uploadRatio'] * 100)])
         if t['rateUpload']:
             info.append(" Sending %s per second" % scale_bytes(t['rateUpload'], long=True))
             if t['uploadLimited']:
-                info[-1] += " (throttled to %s)" % scale_bytes(t['uploadLimit'] * 1024, long=True)
+                info[-1] += " (throttled to %s)" % scale_bytes(t['uploadLimit'] * gconfig.speed_k, long=True)
 
         info.append(['Ratio: ', '%.2f copies distributed' % copies_distributed])
         norm_upload_rate = norm.add('%s:rateUpload' % t['id'], t['rateUpload'], 50)
@@ -3075,8 +3304,8 @@ class Interface:
 
         info.append([strings[8]])
         unlimited = 'session' if t['honorsSessionLimits'] else 'unlimited'
-        info[-1].append(strings[9] + (scale_bytes(t['downloadLimit'] * 1024) if t['downloadLimited'] else unlimited) + ";  ")
-        info[-1].append(strings[10] + (scale_bytes(t['uploadLimit'] * 1024) if t['uploadLimited'] else unlimited))
+        info[-1].append(strings[9] + (scale_bytes(t['downloadLimit'] * gconfig.speed_k) if t['downloadLimited'] else unlimited) + ";  ")
+        info[-1].append(strings[10] + (scale_bytes(t['uploadLimit'] * gconfig.speed_k) if t['uploadLimited'] else unlimited))
 
         info.append(['Peers: ',
                      strings[0] + "%d;  " % t['peersConnected'],
@@ -3177,51 +3406,41 @@ class Interface:
                 self.highlight_dialog = False
             else:
                 self.highlight_dialog = True
-                curses.beep()
+                self.beep()
         else:
             self.search_focus = 0
             self.highlight_dialog = False
-        self.draw_filelist(5, needclrtoeol=True)
+        self.draw_filelist(5)
         self.pad.refresh(0, 0, 1, 0, self.mainview_height, self.width)
         self.screen.refresh()
 
-    def draw_filelist(self, ypos, needclrtoeol=False):
+    def draw_filelist(self, ypos):
         column_names = '   #  Progress    Size  Priority  Filename'
         self.pad.addstr(ypos, 0, column_names.ljust(self.width), curses.A_UNDERLINE)
         ypos += 1
+        numfiles = 0
 
-        for line, sel, focus in self.create_filelist():
-            curses_tags = 0
-            # highlight focused/selected line(s)
-            if sel:
-                curses_tags = gconfig.selected_file_attr
-            if focus:
-                curses_tags += curses.A_REVERSE
-            try:
-                self.pad.addstr(ypos, 0, ' ' * self.width, curses_tags)
-            except Exception as e:
-                pdebug('caught %s in draw_filelist(): %s\n' % (type(e), str(e)))
-
-            # 25 chars before priority, 6 chars priority, 2 chars skipped
-            priority = line[25:31].strip()
-            # Except if the file index has more than 4 digits:
-            if priority[:4] == 'norm':
-                priority = 'normal'
-            priority_start = 28 - (len(priority) + 1) // 2
-            priority_end = priority_start + len(priority)
+        for line, priority, sel, focus in self.create_filelist():
             if priority:
-                priority_tag = curses_tags + gconfig.element_attr('file_prio_' + priority)
+                attr_suffix = ('', '_f')[focus] + ('', '_s')[sel]
+                curses_tags = gconfig.element_attr('file_line' + attr_suffix)
+                priority_start = 28 - (len(priority) + 1) // 2
+                priority_end = priority_start + len(priority)
+                priority_tag = gconfig.element_attr('file_prio_' + priority + attr_suffix)
+                self.pad.addstr(ypos, 0, line[0:priority_start], curses_tags)
+                self.pad.addstr(ypos, priority_start, line[priority_start:priority_end], priority_tag)
+                self.pad.addstr(ypos, priority_end, line[priority_end:33], curses_tags)
+                self.pad.addstr(ypos, 33, line[33:], curses_tags)
+                numfiles = numfiles + 1
             else:
-                priority_tag = curses_tags
-            self.pad.addstr(ypos, 0, line[0:priority_start], curses_tags)
-            self.pad.addstr(ypos, priority_start, line[priority_start:priority_end], priority_tag)
-            self.pad.addstr(ypos, priority_end, line[priority_end:33], curses_tags)
-            self.pad.addstr(ypos, 33, line[33:], curses_tags)
-            if needclrtoeol:
+                curses_tags = gconfig.element_attr('dir_line')
+                self.pad.addstr(ypos, 0, line, curses_tags)
+            if self.pad.getyx()[1] > 0:
                 self.pad.addstr(' ' * (self.width - self.pad.getyx()[1]), curses_tags)
             ypos += 1
-            if ypos > self.height:
-                break
+            if ypos > self.height - 3:
+                self.screen_files = numfiles
+                return
 
     def create_filelist(self):
         # Build new mapping between sorted local files and transmission-daemon's unsorted files.
@@ -3232,18 +3451,19 @@ class Interface:
                 # to facilitate movement and display. So save name in order to
                 # find the new position of the file later.
                 focused_filename = self.torrent_details['files'][self.file_index_map[self.focus_detaillist]]['name']
-            self.file_index_map = {}
             if gconfig.file_sort_key in ['name', 'length', 'bytesCompleted']:
                 self.sorted_files = sorted(self.torrent_details['files'], key=lambda x: x[gconfig.file_sort_key], reverse=gconfig.file_sort_reverse)
             elif gconfig.file_sort_key == 'progress':
                 self.sorted_files = sorted(self.torrent_details['files'], key=lambda x: x['bytesCompleted'] / x['length'] if x['length'] > 0 else 0, reverse=gconfig.file_sort_reverse)
+            elif gconfig.file_sort_key == 'priority':
+                positions = sorted(range(len(self.torrent_details['files'])), key=lambda x: self.server.get_num_file_priority(self.torrent_details['id'], x), reverse=gconfig.file_sort_reverse)
+                self.sorted_files = [self.torrent_details['files'][x] for x in positions]
             else:
                 if gconfig.file_sort_reverse:
                     self.sorted_files = list(reversed(self.torrent_details['files']))
                 else:
                     self.sorted_files = self.torrent_details['files'][:]
-            for index, file in enumerate(self.sorted_files):
-                self.file_index_map[index] = self.torrent_details['files'].index(file)
+            self.file_index_map = {i: self.torrent_details['files'].index(f) for i, f in enumerate(self.sorted_files)}
             # Find the focused file in new sorted list. First check if it is in
             # the same index, as that is the most common case.
             if self.focus_detaillist > -1 and focused_filename != self.torrent_details['files'][self.file_index_map[self.focus_detaillist]]['name']:
@@ -3264,8 +3484,9 @@ class Interface:
                 if f[:f_len] != current_folder:
                     [current_depth, pos] = self.create_filelist_transition(f, current_folder, self.filelist_cache, current_depth, pos)
                     current_folder = f[:f_len]
-                self.filelist_cache.append(self.create_filelist_line(f[-1], index, percent(file['length'], file['bytesCompleted']),
-                                                                     file['length'], current_depth))
+                priority = self.server.get_file_priority(self.torrent_details['id'], self.file_index_map[index])
+                self.filelist_cache.append((self.create_filelist_line(f[-1], index, percent(file['length'], file['bytesCompleted']),
+                                                                     file['length'], current_depth, priority), priority))
                 self.filelist_cache_pos.append(pos)
                 self.filelist_cache_pos_dict[index + pos] = index
                 index += 1
@@ -3287,14 +3508,10 @@ class Interface:
             else:
                 end = len(self.filelist_cache)
                 start = end - self.detaillines_per_page if end >= self.detaillines_per_page else 0
-        ret = []
         for i in range(start, end):
-            ret.append((
-                self.filelist_cache[i],
-                i in self.filelist_cache_pos_dict and self.filelist_cache_pos_dict[i] in self.selected_files,
-                i == line_to_show
-            ))
-        return ret
+            yield (*self.filelist_cache[i],
+                i in self.filelist_cache_pos_dict and self.file_index_map[self.filelist_cache_pos_dict[i]] in self.selected_files,
+                i == line_to_show)
 
     def create_filelist_transition(self, f, current_folder, filelist, current_depth, pos):
         """ Create directory transition from <current_folder> to <f>,
@@ -3325,17 +3542,17 @@ class Interface:
         # Increase depth for each new directory that appears in f,
         # but not in current_directory
         while current_depth < f_len:
-            filelist.append('%s\\ %s' % ('  ' * current_depth + ' ' * 34, f[current_depth]))
+            filelist.append(('%s\\ %s' % ('  ' * current_depth + ' ' * 34, f[current_depth]), ''))
             current_depth += 1
             pos += 1
         return [current_depth, pos]
 
-    def create_filelist_line(self, name, index, percent, length, current_depth):
+    def create_filelist_line(self, name, index, percent, length, current_depth, priority):
         line = "%s  %6.2f%%" % (str(index + 1).rjust(4), percent) + \
             '  ' + scale_bytes(length).rjust(7) + \
-            '  ' + self.server.get_file_priority(self.torrent_details['id'], self.file_index_map[index]).center(8) + \
-            " %s| %s" % ('  ' * current_depth, name[0:self.width - 34 - current_depth])
-        return line
+            '  ' + priority.center(8) + \
+            " %s| %s" % ('  ' * current_depth, name)
+        return line[:self.width]
 
     def draw_peerlist(self, ypos):
         # Start drawing list either at the "selected" index, or at the index
@@ -3402,7 +3619,7 @@ class Interface:
 
             # ETA
             if self.width >= 55:
-                if peer['progress'] < 1 and peer['download_speed'] > 1024:
+                if peer['progress'] < 1 and peer['download_speed'] > gconfig.speed_k:
                     self.pad.addstr(" %8s %4s " %
                                     ('~' + scale_bytes(peer['download_speed']),
                                      '~' + scale_time(peer['time_left'])))
@@ -3504,9 +3721,9 @@ class Interface:
 
     def draw_pieces_map(self, ypos):
         if self.torrent_details['totalSize'] == 0:
-            # No pieces in file of size 0
+            # No pieces in file with no metadata
             return
-        elif self.torrent_details['haveValid'] / self.torrent_details['totalSize'] < 0.5:
+        if self.torrent_details['haveValid'] / self.torrent_details['totalSize'] < 0.5:
             default_attr = gconfig.element_attr('chunk_dont_have')
             new_attr = gconfig.element_attr('chunk_have')
             change_attr = 0x80
@@ -3589,6 +3806,8 @@ class Interface:
             for v in i[1:]:
                 if xp + len(v) >= self.width - 1:
                     yp += 1
+                    if yp > self.mainview_height:
+                        return yp
                     if yp >= ypos:
                         self.pad.move(yp, value_x)
                     xp = value_x
@@ -3908,10 +4127,17 @@ class Interface:
                     return
                 self.update_torrent_list([win])
 
+    def beep(self):
+        if not self.beeped:
+            curses.beep()
+            self.beeped = True
+
     def wingetch(self, win):
         c = win.getch()
         if c == K.W_:
             self.exit_now = True
+        if c > -1:
+            self.beeped = False
         return c
 
     def win_message(self, win, height, width, message, first=0):
@@ -4034,7 +4260,7 @@ class Interface:
             self.update_torrent_list([win])
 
     def dialog_input_text(self, message, text='', on_change=None, on_enter=None, tab_complete=None, maxwidth=9999,
-                          align='center', history=None, history_max=0, fixed_history=[], search='', winstack=[]):
+                          align='center', history=None, history_max=10, fixed_history=[], search='', winstack=[]):
         """tab_complete values:
                 'files': complete with any files/directories
                 'dirs': complete only with directories
@@ -4197,18 +4423,21 @@ class Interface:
         self.dialog_input_text('Search torrent by title:',
                                on_enter=self.increment_search,
                                tab_complete='torrent_list',
+                               history=gconfig.histories['search'],
                                maxwidth=60, align='right', search='pattern')
 
     def action_search_torrent_fulltext(self):
         self.dialog_input_text('Search torrent by title (full text):',
                                on_enter=self.increment_search,
                                tab_complete='torrent_list',
+                               history=gconfig.histories['search'],
                                maxwidth=60, align='right', search='fulltext')
 
     def action_search_torrent_regex(self):
         self.dialog_input_text('Regex search torrent by title:',
                                on_enter=self.increment_search,
                                tab_complete='torrent_list',
+                               history=gconfig.histories['regex'],
                                maxwidth=60, align='right', search='regex')
 
     def action_search_torrent_regex_fulltext(self):
@@ -4221,12 +4450,14 @@ class Interface:
         self.dialog_input_text('Search file by title:',
                                on_enter=self.increment_file_search,
                                tab_complete='file_list',
+                               history=gconfig.histories['search'],
                                maxwidth=60, align='right', search='pattern')
 
     def action_search_file_regex(self):
         self.dialog_input_text('Regex search file by title:',
                                on_enter=self.increment_file_search,
                                tab_complete='file_list',
+                               history=gconfig.histories['regex'],
                                maxwidth=60, align='right', search='regex')
 
     def increment_file_search(self, pattern, inc=1, search=None):
@@ -4239,6 +4470,7 @@ class Interface:
         self.dialog_input_text('Select torrents matching pattern',
                                on_enter=self.select_pattern_torrents,
                                tab_complete='torrent_list',
+                               history=gconfig.histories['search'],
                                maxwidth=60, align='right', search='pattern')
 
     def action_select_search_torrent_fulltext(self):
@@ -4248,30 +4480,35 @@ class Interface:
         self.dialog_input_text('Select torrents matching pattern (full text)',
                                on_enter=self.select_pattern_torrents,
                                tab_complete='torrent_list',
+                               history=gconfig.histories['search'],
                                maxwidth=60, align='right', search='fulltext')
 
     def action_select_search_torrent_regex(self):
         self.dialog_input_text('Select torrents matching regex',
                                on_enter=self.select_pattern_torrents,
                                tab_complete='torrent_list',
+                               history=gconfig.histories['regex'],
                                maxwidth=60, align='right', search='regex')
 
     def action_select_search_torrent_regex_fulltext(self):
         self.dialog_input_text('Select torrents matching regex (full text)',
                                on_enter=self.select_pattern_torrents,
                                tab_complete='torrent_list',
+                               history=gconfig.histories['regex'],
                                maxwidth=60, align='right', search='regex_fulltext')
 
     def action_select_search_file(self):
         self.dialog_input_text('Select files matching pattern',
                                on_enter=self.select_pattern_files,
                                tab_complete='file_list',
+                               history=gconfig.histories['search'],
                                maxwidth=60, align='right', search='pattern')
 
     def action_select_search_file_regex(self):
         self.dialog_input_text('Select files matching regex',
                                on_enter=self.select_pattern_files,
                                tab_complete='file_list',
+                               history=gconfig.histories['regex'],
                                maxwidth=60, align='right', search='regex')
 
     def select_pattern_torrents(self, pattern, inc=1, search=None):
@@ -4299,11 +4536,12 @@ class Interface:
 
     def select_pattern_files(self, pattern, inc=1, search=None):
         if search == 'pattern':
-            matched_files = [i for i in range(len(self.sorted_files)) if pattern.lower() in os.path.basename(self.sorted_files[i]['name'].lower())]
+            matched_files = {self.file_index_map[i] for i in range(len(self.sorted_files)) if pattern.lower() in os.path.basename(self.sorted_files[i]['name'].lower())}
         elif search == 'regex':
             try:
                 regex = re.compile(pattern, re.I)
-                matched_files = [i for i in range(len(self.sorted_files)) if regex.search(os.path.basename(self.sorted_files[i]['name']))]
+                matched_files = {self.file_index_map[i] for i in range(len(self.sorted_files))
+                                    if regex.search(os.path.basename(self.sorted_files[i]['name']))}
             except Exception:
                 return True
         else:
@@ -4311,9 +4549,9 @@ class Interface:
         if inc == 1:
             self.selected_files = matched_files
         elif inc == 0:
-            self.selected_files = [f for f in self.selected_files if f in matched_files]
+            self.selected_files.intersection_uodate(matched_files)
         elif inc == -1:
-            self.selected_files = list(set(self.selected_files).union(set(matched_files)))
+            self.selected_files.update(matched_files)
         return True
 
     def dialog_input_number(self, message, current_value,
@@ -4368,7 +4606,7 @@ class Interface:
             elif c in (K.U_, K.X_):
                 value = ''
             elif len(value) >= width - 5:
-                curses.beep()
+                self.beep()
             elif K.n1 <= c <= K.n9:
                 value += chr(c)
             elif allow_zero and c == K.n0 and value != '-' and not value.startswith('0'):
@@ -4637,6 +4875,7 @@ class Interface:
             options.append(("Show peers' _reverse DNS", ('no', 'yes')[gconfig.rdns]))
             options.append(("Show torrent _numbers", ('no', 'yes')[gconfig.torrent_numbers]))
             options.append(("_Display format", ('wide', 'narrow')[self.narrow]))
+            options.append(("Save _config on exit", ('no', 'yes')[gconfig.save_conf]))
 
             if first_time:
                 first_time = False
@@ -4680,6 +4919,8 @@ class Interface:
                 gconfig.torrentname_is_progressbar = not gconfig.torrentname_is_progressbar
             elif key == K.d:
                 self.force_narrow = not self.narrow
+            elif key == K.c:
+                gconfig.save_conf = not gconfig.save_conf
             elif key == K.f:
                 gconfig.view_selected = not gconfig.view_selected
             elif key == K.r:
@@ -4690,7 +4931,6 @@ class Interface:
                 viewer = self.dialog_input_text('File Viewer\nExample: xdg-viewer %s', gconfig.file_viewer,
                                                 tab_complete='executable', winstack=[win])
                 if viewer:
-                    config.set('Misc', 'file_viewer', viewer.replace('%s', '%%s'))
                     gconfig.file_viewer = viewer
             elif key == K.SPACE:
                 page = page + 1
@@ -4800,7 +5040,7 @@ def load_history(filename):
             history = {}
     else:
         history = {}
-    for i in ['label', 'location', 'tracker', 'command']:
+    for i in ['label', 'labels', 'location', 'tracker', 'command', 'search', 'regex']:
         if i not in history:
             history[i] = []
     if 'types' not in history:
@@ -4918,18 +5158,18 @@ def timestamp(timestamp, time_format="%x %X", narrow=False):
     return "%s (%s)" % (absolute, relative)
 
 
-def scale_bytes(num=0, long=False):
-    if num >= 1099511627776:
-        scaled_num = round((num / 1099511627776.0), 1)
+def scale_bytes(num=0, long=False, k=1024, digits=1):
+    if num >= k * k * k * k:
+        scaled_num = round((num / k / k / k / k), digits)
         unit = 'T'
-    elif num >= 1073741824:
-        scaled_num = round((num / 1073741824.0), 1)
+    elif num >= k * k * k:
+        scaled_num = round((num / k / k / k), digits)
         unit = 'G'
-    elif num >= 1048576:
-        scaled_num = round((num / 1048576.0), 1)
+    elif num >= k * k:
+        scaled_num = round((num / k / k), digits)
         unit = 'M'
     else:
-        scaled_num = round((num / 1024.0), 1)
+        scaled_num = round((num / k), digits)
         unit = 'K'
 
     # handle 0 num special
@@ -5045,6 +5285,9 @@ def exit_prog(msg='', exitcode=0):
         lastexitcode = exitcode
     elif exitcode == 0:
         exitcode = lastexitcode
+    if gconfig.save_conf:
+        gconfig.save_config()
+
     sys.exit(exitcode)
 
 
@@ -5072,7 +5315,7 @@ def read_netrc(file=os.environ['HOME'] + '/.netrc', hostname=None):
 
 
 # create initial config file
-def create_config(configfile, connection):
+def create_config(configfile, connection, config):
     # create directory if necessary
     config_dir = os.path.dirname(configfile)
     if config_dir != '' and not os.path.isdir(config_dir):
@@ -5083,13 +5326,13 @@ def create_config(configfile, connection):
             sys.exit(gconfig.errors.CONFIGFILE_ERROR)
 
     # write file
-    if not save_config(configfile, force=True):
+    if not save_config(configfile, config, force=True):
         sys.exit(gconfig.errors.CONFIGFILE_ERROR)
     print("Wrote config file: %s" % configfile)
     sys.exit(0)
 
 
-def save_config(filepath, force=False):
+def save_config(filepath, config, force=False):
     if force or os.path.isfile(filepath):
         try:
             config.write(open(filepath, 'w'))
@@ -5101,6 +5344,17 @@ def save_config(filepath, force=False):
             return 0
     return -1
 
+def sort_config_str(sorts):
+    if sorts:
+        return ','.join([(':' if f['reverse'] else '') + f['name'] for f in sorts])
+    return "name"
+
+def filter_config_str(f):
+    s = ':' if f['inverse'] else ''
+    s += f['name'] + '#='
+    if f['name'] in gconfig.FILTERS_WITH_PARAM:
+        s += f[f['name']]
+    return s
 
 def filter2string(f):
     s = '~' if f['inverse'] else ''
@@ -5108,7 +5362,6 @@ def filter2string(f):
     if f['name'] in gconfig.FILTERS_WITH_PARAM:
         s += '=' + f[f['name']]
     return s
-
 
 def parse_sort_str(sort_str, orders):
     sort_orders = []
@@ -5206,7 +5459,7 @@ def parse_config_key(interface, config, gconfig, common_keys, details_keys, list
                     set_key(key, sections[section], interface, config[section][key], common_keys if section != 'CommonKeys' else None)
                     for k in action_keys.values():
                         k.discard(key)
-    if 'cancel' in config['Misc']:
+    if 'Misc' in config and 'cancel' in config['Misc']:
         gconfig.esc_keys = tuple()
         for i in config['Misc']['cancel'].split(','):
             k = get_key(i)

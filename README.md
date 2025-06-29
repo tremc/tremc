@@ -275,7 +275,7 @@ The following sections are read:
   The key 'order' determines torrents sort order. Possible values are: name, addedDate, percentDone, seeders, leechers, sizeWhenDone, status, uploadedEver, rateUpload, rateDownload, uploadRatio, peersConnected, downloadDir, mainTrackerDomain.
 * [Filtering]
 
-  Keys are invert (boolean) and filter with possible values: uploading, downloading, active, paused, seeding, incomplete, verifying, private, isolated, tracker, regex, location, selected, honors, label. The filters tracker, regex, location, label need a parameter, so cannot be set in this way.
+  Keys are invert (boolean) and filter with possible values: uploading, downloading, active, paused, seeding, incomplete, verifying, private, isolated, tracker, regex, location, selected, honors, label. The filters tracker, regex, location, label need a parameter. The parameter is provided by using `#=` as a delimiter, see [Profile] section for an example.
 * [Misc]
 
   Keys are
@@ -309,8 +309,10 @@ The following sections are read:
   'dialog_important', 'dialog_text', 'dialog_text_important', 'menu_focused', 'file_prio_high', 'file_prio_normal', 'file_prio_low',
   'file_prio_off', 'top_line', 'bottom_line', 'chunk_have', 'chunk_dont_have'.
 
-  Names for elements which may be selected (torrent titles and file lines) may also be prefixed by `st_` for
-  the attributes of the element when selected. The default is reversed.
+  Names for elements in torrent list may also be prefixed by `st_` for
+  the attributes of the element when selected. The default is reversed. Names
+  for elements in file list may bu suffixes by _f, _s, or _f_s, for focused,
+  selected, or focused and selected.
 
   Note that what the colors mean actually depends on the terminal. In some
   cases 'white' is darker then the white that the terminal displays, and
@@ -322,19 +324,26 @@ The following sections are read:
   are exchanged.
 * [Profiles]
 
-  The key is `profile\<name\>`. The value is `<filters>#=<sort>`
+  The key is `profile<name>`. The value is `<filters>#=<sort>`
 
-  <sort> is the name of the torrent sort order, preceded by : for reversed
-  order.
+  `<sort>` is the name of the torrent sort order, preceded by : for reversed order.
 
-  <filters> is `<filters.1> #& ... #& <filters.n>` (the separators are space, hash, ampersand space
+  `<filters>` is `<filters.1> #& ... #& <filters.n>` (the separators are space, hash, ampersand, space)
 
   Each <filters.i> is of the format `<filter.1>#=<param.1>#=...#=<filter.k>#=<param.k>`
 
-  <filter.j> is the name of a torrent filter, preceded by : for inverted. <param.j>
-  is the parameter of the filter if needed, it is ignored otherwise. <param.j> may be empty, but the separators must appear.
+  `<filter.j>` is the name of a torrent filter, preceded by : for inverted. `<param.j>` is the parameter of the filter if needed, it is ignored otherwise. `<param.j>` may be empty, but the separators must appear.
 
-  A torrent satisfies a list of filters if for at least one of the <filters.i>, it satisfies each <filter.j>.
+  A torrent satisfies a list of filters if for at least one of the `<filters.i>`, it satisfies each `<filter.j>`.
+
+  For example:
+
+  `profilet1 = tracker#=torrent.ubuntu.com#=name`
+
+  `profilexyz = tracker#=torrent.ubuntu.com#=incomplete#= #& :regex#=ubuntu#=sizeWhenDone`
+
+  The profile `t1` shows only torrents with tracker torrent.ubuntu.com, sorted by name.
+  The profile `xyz` shows torrents which are either with tracker torrent.ubuntu.com and incomplete, or with a name that does not contain the string ubuntu (case insensitive). The torrents are sorted by size.
 * [CommonKeys], [DetailsKeys], [ListKeys]
 
   Map keys to actions. ListKeys section is for keys pressed in torrent list display, DetailsKeys for torrent details display, and CommonKeys for both.
