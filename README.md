@@ -291,6 +291,7 @@ The following sections are read:
 
     Default is Escape, Break and q.
   * x_selection, on Linux, set to `primary` to copy magnet links to S selection instead of the clipboard. Default is `clipboard`.
+  * save_conf when enabled `tremc` save the config file on exit. Default: False.
 * [Colors]
 
   Allows for setting (some of) the interface colors.
