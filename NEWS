@@ -1,3 +1,16 @@
 0.9.0  2016-10-09
     - Arbitrary version to start new python3 fork
     - The chunks screen can sometimes cause a segfault
+
+0.9.4 2025-07-00
+    - Work with RPC version 17 (transmisssion 4)
+    - Support transmission bandwidth groups
+    - Make color of more elements configurable, and allow configuring attributes, as well as colors
+    - tremc can now save config file, while retaining its structure and comments. Saving can be done manually, or automatically on exit (configurable)
+    - Tab cycles through possible choices in many text input fields
+    - New torrent list filters: bandwidth group, part wanted, error and location including subdirectories
+    - New torrent list sort orders: last activity, time left, time done
+    - New file sort order: priority
+    - Narrow screen mode more useful and configurable
+    - Many bugs fixed
+    - UI improvements
