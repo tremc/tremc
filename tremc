@@ -182,7 +182,7 @@ class ConfigParserUpdate(configparser.ConfigParser):
 
 # Global constants and constant configuration
 class GConfig:
-    VERSION = '0.9.3'
+    VERSION = '0.9.4'
 
     TRNSM_VERSION_MIN = '1.90'
     TRNSM_VERSION_MAX = '4'
