@@ -285,7 +285,7 @@ The following sections are read:
 
     The string %%s is replaced by the file name.
   * file_open_in_terminal (boolean).
-  * rdns (boolean), the value True enables showing the reverse DNS of connected peers.
+  * rdns (boolean), the value True enables showing the reverse DNS of connected peers. This requires the `threading` module.
   * geoip2_database, The location of the Python-GeoIP2 database file. If this key does not exist, or does not point to a file, the database is also searched for in some commonly used locations.
   * cancel, List of keys that act as cancel key in dialog windows. Printable characters are allowed, but act as cancel key only when not entering text.
 

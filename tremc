@@ -39,6 +39,11 @@ import configparser
 import enum
 import io
 try:
+    # Threading was optional until python 3.7, so work without it.
+    import threading
+except ImportError:
+    threading = None
+try:
     import IPy
 except ImportError:
     pass
@@ -1408,7 +1413,7 @@ class Transmission:
         return '?'
 
     def wait_for_torrentlist_update(self, wait=False):
-        if wait:
+        if wait or not threading:
             self.wait_for_update(self.TAG_TORRENT_LIST)
         else:
             threading.Thread(target=self.wait_for_update, args=[self.TAG_TORRENT_LIST], daemon=True).start()
@@ -4872,7 +4877,8 @@ class Interface:
             options.append(('Title is Progress _Bar', ('no', 'yes')[gconfig.torrentname_is_progressbar]))
             options.append(('File _Viewer', "%s" % gconfig.file_viewer))
             options.append(("View _files", ('focused', 'selected')[gconfig.view_selected]))
-            options.append(("Show peers' _reverse DNS", ('no', 'yes')[gconfig.rdns]))
+            if threading:
+                options.append(("Show peers' _reverse DNS", ('no', 'yes')[gconfig.rdns]))
             options.append(("Show torrent _numbers", ('no', 'yes')[gconfig.torrent_numbers]))
             options.append(("_Display format", ('wide', 'narrow')[self.narrow]))
             options.append(("Save _config on exit", ('no', 'yes')[gconfig.save_conf]))
@@ -4924,7 +4930,7 @@ class Interface:
             elif key == K.f:
                 gconfig.view_selected = not gconfig.view_selected
             elif key == K.r:
-                gconfig.rdns = not gconfig.rdns
+                gconfig.rdns = threading and not gconfig.rdns
             elif key == K.n:
                 gconfig.torrent_numbers = not gconfig.torrent_numbers
             elif key == K.v:
@@ -5527,12 +5533,8 @@ if __name__ == '__main__':
             exit_prog("Could not execute the above command: %s\n" % msg.strerror, 128)
         exit_prog('', retcode)
 
-    if gconfig.rdns:
-        # Only import threading if needed. It was optional until python 3.7
-        try:
-            import threading
-        except ImportError:
-            gconfig.rdns = False
+    if gconfig.rdns and not threading:
+        gconfig.rdns = False
 
     gconfig.geoip1 = False
     gconfig.geoip2 = False
