@@ -272,7 +272,7 @@ The following sections are read:
   Keys are username, password, host, port, path, ssl (boolean).
 * [Sorting]
 
-  The key 'order' determines torrents sort order. Possible values are: name, addedDate, percentDone, seeders, leechers, sizeWhenDone, status, uploadedEver, rateUpload, rateDownload, uploadRatio, peersConnected, downloadDir, mainTrackerDomain.
+  The key 'order' determines torrents sort order. Possible values are: name, addedDate, percentDone, seeders, leechers, sizeWhenDone, status, uploadedEver, rateUpload, rateDownload, uploadRatio, peersConnected, downloadDir, mainTrackerDomain. prefix with `:` for reverse order.
 * [Filtering]
 
   Keys are invert (boolean) and filter with possible values: uploading, downloading, active, paused, seeding, incomplete, verifying, private, isolated, tracker, regex, location, selected, honors, label. The filters tracker, regex, location, label need a parameter. The parameter is provided by using `#=` as a delimiter, see [Profile] section for an example.
