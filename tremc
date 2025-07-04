@@ -359,8 +359,8 @@ class GConfig:
         self.file_sort_key = 'name'
         self.file_sort_reverse = False
         self.histories = load_history(self.history_file)
-        self.lines_per_torrent = config.getint('Misc', 'lines_per_torrent', fallback=3)
         self.narrow_threshold = config.getint('Misc', 'narrow_threshold', fallback=73)
+        self.lines_per_torrent = config.getint('Misc', 'lines_per_torrent', fallback=3)
         self.torrentname_is_progressbar = config.getboolean('Misc', 'torrentname_is_progressbar', fallback=True)
         self.file_viewer = config.get('Misc', 'file_viewer', fallback='xdg-open %%s')
         self.file_open_in_terminal = config.getboolean('Misc', 'file_open_in_terminal', fallback=True)
@@ -4886,8 +4886,8 @@ class Interface:
             if threading:
                 options.append(("Show peers' _reverse DNS", ('no', 'yes')[gconfig.rdns]))
             options.append(("Show torrent _numbers", ('no', 'yes')[gconfig.torrent_numbers]))
-            options.append(("Save _config on exit", ('no', 'yes')[gconfig.save_conf]))
             options.append(("_Display format", ('wide', 'narrow')[self.narrow]))
+            options.append(("Save _config on exit", ('no', 'yes')[gconfig.save_conf]))
 
             if first_time:
                 first_time = False
@@ -4929,10 +4929,10 @@ class Interface:
                 return
             if key == K.b:
                 gconfig.torrentname_is_progressbar = not gconfig.torrentname_is_progressbar
-            elif key == K.c:
-                gconfig.save_conf = not gconfig.save_conf
             elif key == K.d:
                 self.force_narrow = not self.narrow
+            elif key == K.c:
+                gconfig.save_conf = not gconfig.save_conf
             elif key == K.f:
                 gconfig.view_selected = not gconfig.view_selected
             elif key == K.r:
