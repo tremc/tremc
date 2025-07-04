@@ -185,9 +185,9 @@ class GConfig:
     VERSION = '0.9.4'
 
     TRNSM_VERSION_MIN = '1.90'
-    TRNSM_VERSION_MAX = '4'
+    TRNSM_VERSION_MAX = '4.1'
     RPC_VERSION_MIN = 8
-    RPC_VERSION_MAX = 17
+    RPC_VERSION_MAX = 18
 
     STARTTIME = time.time()
     DEBUG = False
