@@ -398,6 +398,7 @@ class GConfig:
             'bandwidth_priority_inc': [0, ['+'], 'Increase torrent bandwidth priority'],
             'bandwidth_priority_dec': [0, ['-'], 'Decrease torrent bandwidth priority'],
             'honors_limits': [0, ['*'], 'Toggle torrent honors session limits'],
+            'sequential_download': [2048, [], 'Toggle sequential download'],
             'pause_unpause_torrent': [0, ['p'], 'Pause/Unpause torrent'],
             'pause_unpause_all_torrent': [0, ['P'], 'Pause/Unpause all torrents'],
             'start_now_torrent': [0, ['N'], 'Start torrent now'],
@@ -907,6 +908,10 @@ class Transmission:
             self.LIST_FIELDS.append('group')
             self.DETAIL_FIELDS.append('group')
 
+        if self.rpc_version >= 18:
+            self.DETAIL_FIELDS.append('sequential_download')
+            self.LIST_FIELDS.append('sequential_download')
+
         # set up request list
         self.requests = {'torrent-list':
                          TransmissionRequest(url, 'torrent-get', self.TAG_TORRENT_LIST, {'fields': self.LIST_FIELDS}, server=self),
@@ -1188,6 +1193,14 @@ class Transmission:
         request = TransmissionRequest(self.url, 'torrent-set', 1, data, server=self)
         request.send_request()
         self.wait_for_torrentlist_update()
+
+    def toggle_sequential_download(self, torrent_ids):
+        if torrent_ids:
+            new_honors = not all([self.get_torrent_by_id(t)['sequential_download'] for t in torrent_ids])
+            request = TransmissionRequest(self.url, 'torrent-set', 1,
+                                          {'ids': torrent_ids, 'sequential_download': new_honors}, server=self)
+            request.send_request()
+            self.wait_for_torrentlist_update()
 
     def toggle_honors_session_limits(self, torrent_ids):
         if torrent_ids:
@@ -2124,6 +2137,9 @@ class Interface:
             if limit == -2:  # -2 means 'empty' in dialog_input_number return codes
                 limit = -1
             self.server.set_seed_ratio(float(limit), ids)
+
+    def action_sequential_download(self):
+        self.server.toggle_sequential_download(self.selected_ids())
 
     def action_honors_limits(self):
         self.server.toggle_honors_session_limits(self.selected_ids())
@@ -3318,6 +3334,9 @@ class Interface:
         info[-1].append(strings[9] + (scale_bytes(t['downloadLimit'] * gconfig.speed_k) if t['downloadLimited'] else unlimited) + ";  ")
         info[-1].append(strings[10] + (scale_bytes(t['uploadLimit'] * gconfig.speed_k) if t['uploadLimited'] else unlimited))
 
+        if self.server.get_rpc_version() >= 18:
+            info.append(['Sequential: ', ('disabled', 'enabled')[t['sequential_download']]])
+
         info.append(['Peers: ',
                      strings[0] + "%d;  " % t['peersConnected'],
                      strings[1] + "%d;  " % t['peersSendingToUs'],
@@ -4115,6 +4134,8 @@ class Interface:
                         continue
                     if d[0] & 1024 and self.server.get_rpc_version() < 17:
                         continue
+                    if d[0] & 2048 and self.server.get_rpc_version() < 18:
+                        continue
                     if d[0] == 16 and movement_keys:
                         movement_keys = False
                         message += '           Movement Keys:\n'
@@ -4746,6 +4767,8 @@ class Interface:
             if self.server.get_rpc_version() >= 14:
                 options.append(('Do_wnload Queue Size', "%s" % ('disabled', self.stats['download-queue-size'])[self.stats['download-queue-enabled']]))
                 options.append(('S_eed Queue Size', "%s" % ('disabled', self.stats['seed-queue-size'])[self.stats['seed-queue-enabled']]))
+            if self.server.get_rpc_version() >= 18:
+                options.append(('Sequent_ial download', "%s" % ('disabled', 'enabled')[self.stats['sequential_download']]))
 
             if first_time:
                 first_time = False
@@ -4867,6 +4890,8 @@ class Interface:
                         if not self.stats['seed-queue-enabled']:
                             self.server.set_option('seed-queue-enabled', True)
                         self.server.set_option('seed-queue-size', queue_size)
+            elif key == K.i and self.server.get_rpc_version() >= 18:
+                self.server.set_option('sequential_download', not self.stats['sequential_download'])
             elif key == K.SPACE:
                 page = page + 1
                 if page > (len(options) - 1) / pagelines:
