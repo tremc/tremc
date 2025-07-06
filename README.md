@@ -384,6 +384,17 @@ torrent files with tremc.
 
 `$ tremc path/to/some/torrent-file`
 
+## Installing
+
+`tremc` does not need installation. The only file necessary is the file `tremc` itself.
+
+To run the latest git version run something like:
+```
+$ wget https://github.com/tremc/tremc/raw/refs/heads/master/tremc
+$ python ./tremc
+```
+
+In order to be able to run it by the simple command `tremc`, you may want to copy it to some directory $PATH, and fix the first line to ensure it points to a python3 interpreter.
 
 ## Screenshots
 
