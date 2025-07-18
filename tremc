@@ -477,6 +477,8 @@ class GConfig:
             'page_down': [16, ['NPAGE', '^f'], 'Page Down'],
             'line_up': [16, ['UP', 'k', '^p'], 'Up'],
             'line_down': [16, ['DOWN', 'j', '^n'], 'Down'],
+            'scroll_line_up': [16, ['^k'], 'Scroll one line up'],
+            'scroll_line_down': [16, ['^i'], 'Scroll one line down'],
             'go_home': [16, ['HOME', 'g'], 'Home'],
             'go_end': [16, ['END', 'G'], 'End'],
         }
@@ -2336,6 +2338,12 @@ class Interface:
     def action_line_down(self):
         self.movement_keys('line_down')
 
+    def action_scroll_line_up(self):
+        self.movement_keys('scroll_line_up')
+
+    def action_scroll_line_down(self):
+        self.movement_keys('scroll_line_down')
+
     def action_go_home(self):
         self.movement_keys('home')
 
@@ -2348,6 +2356,12 @@ class Interface:
                 self.focus, self.scrollpos = self.move_up(self.focus, self.scrollpos, gconfig.lines_per_torrent)
             elif action == 'line_down':
                 self.focus, self.scrollpos = self.move_down(self.focus, self.scrollpos, gconfig.lines_per_torrent,
+                                                            self.torrents_per_page, len(self.torrents))
+            elif action == 'scroll_line_up':
+                self.focus, self.scrollpos = self.scroll_line_up(self.focus, self.scrollpos, gconfig.lines_per_torrent,
+                                                            self.torrents_per_page, len(self.torrents))
+            elif action == 'scroll_line_down':
+                self.focus, self.scrollpos = self.scroll_line_down(self.focus, self.scrollpos, gconfig.lines_per_torrent,
                                                             self.torrents_per_page, len(self.torrents))
             elif action == 'page_up':
                 self.focus, self.scrollpos = self.move_page_up(self.focus, self.scrollpos, gconfig.lines_per_torrent,
@@ -3885,6 +3899,21 @@ class Interface:
             focus += 1
             if focus + 1 - scrollpos / step_size > elements_per_page:
                 scrollpos += step_size
+        return focus, scrollpos
+
+    def scroll_line_down(self, focus, scrollpos, step_size, elements_per_page, list_height):
+        pdebug('slu', focus, scrollpos, step_size, elements_per_page, list_height)
+        if focus >=0 and focus > scrollpos/step_size:
+            # when focus isn't at the top of the view.
+            scrollpos += step_size
+        pdebug(' slu ', focus, scrollpos)
+        return focus, scrollpos
+
+    def scroll_line_up(self, focus, scrollpos, step_size, elements_per_page, list_height):
+        pdebug('sld', focus, scrollpos, step_size, elements_per_page, list_height)
+        if focus >= 0 and focus - scrollpos/step_size < elements_per_page:
+            scrollpos -= step_size
+        pdebug(' sld ', focus, scrollpos)
         return focus, scrollpos
 
     def move_page_up(self, focus, scrollpos, step_size, elements_per_page):
