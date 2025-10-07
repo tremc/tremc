@@ -248,6 +248,7 @@ class GConfig:
             try:
                 self.debug_file = open(self.DEBUG, "a", buffering=1)
             except OSError:
+                self.DEBUG = False
                 pass
 
         if not self.create_config and not os.path.isfile(self.configfile) and '/' not in self.configfile:
