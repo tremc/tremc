@@ -3920,18 +3920,14 @@ class Interface:
         return focus, scrollpos
 
     def scroll_line_down(self, focus, scrollpos, step_size, elements_per_page, list_height):
-        pdebug('slu', focus, scrollpos, step_size, elements_per_page, list_height)
         if focus >=0 and focus > scrollpos/step_size:
             # when focus isn't at the top of the view.
             scrollpos += step_size
-        pdebug(' slu ', focus, scrollpos)
         return focus, scrollpos
 
     def scroll_line_up(self, focus, scrollpos, step_size, elements_per_page, list_height):
-        pdebug('sld', focus, scrollpos, step_size, elements_per_page, list_height)
         if focus >= 0 and focus - scrollpos/step_size < elements_per_page:
             scrollpos -= step_size
-        pdebug(' sld ', focus, scrollpos)
         return focus, scrollpos
 
     def move_page_up(self, focus, scrollpos, step_size, elements_per_page):
