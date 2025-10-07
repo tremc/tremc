@@ -8,4 +8,10 @@ _arguments \
   '--create-config[Create default configuration file]' \
   {-f,--config}'[Set path to configuration file]: :_files' \
   {-n,--netrc}'[Get authentication info from ~/.netrc.]' \
+  {-l,--list-actions}'[List available actions for key mapping]' \
+  {-k,--list-keys}'[List available key names for key mapping]' \
+  {-X,--skip-version-check,--permissive}'[Proceed even if the running transmission daemon seems incompatible, or the terminal is too small]' \
+  {-p,--profile}'[Select profile to use]' \
+  {-r,--reverse-dns}'[Toggle reverse DNS peers addresses'] \
+  {-d,--debug}'[Enable debugging messages]' \
   '*::torrent:_files -g "*.torrent"'
