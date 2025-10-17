@@ -3,7 +3,7 @@
     - The chunks screen can sometimes cause a segfault
 
 0.9.4 2025-07-00
-    - Work with RPC version 17 (transmisssion 4)
+    - Work with RPC version 17 (transmission 4)
     - Support transmission bandwidth groups
     - Make color of more elements configurable, and allow configuring attributes, as well as colors
     - tremc can now save config file, while retaining its structure and comments. Saving can be done manually, or automatically on exit (configurable)
@@ -14,3 +14,12 @@
     - Narrow screen mode more useful and configurable
     - Many bugs fixed
     - UI improvements
+
+0.9.5 2025-09-07
+    - Work with RPC version 18 (future transmission 4.1)
+    - Support sequential downloads (requires transmission 4.1)
+    - Prompt for password if it is needed and not supplied in command line or config file
+    - Allow scrolling of torrent list without changing focused torrent
+    - Update bash and zsh completions
+    - Fix crashing bugs in config file creation and debug code
+    - Update documentation
