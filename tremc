@@ -1081,7 +1081,10 @@ class Transmission:
 
                     this_peer['download_speed'] = \
                         norm.add(peerid + ':download_speed', downloaded / time_diff, 10)
-                    this_peer['time_left'] = download_left / this_peer['download_speed']
+                    try:
+                        this_peer['time_left'] = download_left / this_peer['download_speed']
+                    except ZeroDivisionError:
+                        this_peer['time_left'] = 0
                     this_peer['last_update'] = this_time
 
                 # infrequent progress updates lead to increasingly inaccurate
