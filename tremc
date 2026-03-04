@@ -3369,7 +3369,7 @@ class Interface:
         info[-1].append(strings[9] + (scale_bytes(t['downloadLimit'] * gconfig.speed_k) if t['downloadLimited'] else unlimited) + ";  ")
         info[-1].append(strings[10] + (scale_bytes(t['uploadLimit'] * gconfig.speed_k) if t['uploadLimited'] else unlimited))
 
-        if self.server.get_rpc_version() >= 18:
+        if self.server.get_rpc_version() >= 18 and 'sequential_download' in t:
             info.append(['Sequential: ', ('disabled', 'enabled')[t['sequential_download']]])
 
         info.append(['Peers: ',
