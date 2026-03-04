@@ -23,3 +23,7 @@
     - Update bash and zsh completions
     - Fix crashing bugs in config file creation and debug code
     - Update documentation
+
+0.9.6 2026-03-04
+    - Work with RPC version 19 (future transmission 4.1.1)
+    - Fix crashing bugs with sequential downloads and calculating peer remaining download time
