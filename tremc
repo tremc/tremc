@@ -611,7 +611,7 @@ class GConfig:
                 if name not in self.colors:
                     return curses.A_REVERSE
             return curses.color_pair(self.colors[name]['ind']) + self.colors[name]['at']
-        except:
+        except Exception:
             # This only happens if when a bug manifests, but it's better to not
             # crach even in this situation.
             pdebug('element_attr', name, st)
@@ -867,7 +867,7 @@ class Transmission:
                 if not username:
                     username = input('Username: ')
                 password = getpass()
-            except:
+            except (EOFError, KeyboardInterrupt):
                 print('')
                 exit()
             register_credentials(username, password, url)
@@ -5140,8 +5140,8 @@ def save_history(filename, history):
         if oldhistory != history:
             try:
                 json.dump(history, open(filename, "w"))
-            except Exception:
-                pass
+            except (OSError, IOError):
+                pass  # Best-effort history write
 
 
 def reverse_dns(cache, address):
@@ -5634,8 +5634,8 @@ if __name__ == '__main__':
                     s = l.split()
                     if len(s) == 2 and s[0] == 'DatabaseDirectory':
                         gconfig.geoip2_database = s[1] + '/GeoLite2-Country.mmdb'
-            except Exception:
-                pass
+            except (IOError, OSError):
+                pass  # GeoIP config is optional
         if not os.path.isfile(gconfig.geoip2_database):
             gconfig.geoip2_database = "/usr/share/GeoIP/GeoLite2-Country.mmdb"
         if not os.path.isfile(gconfig.geoip2_database):
