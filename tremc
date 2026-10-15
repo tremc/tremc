@@ -367,7 +367,7 @@ class GConfig:
         self.narrow_threshold = config.getint('Misc', 'narrow_threshold', fallback=73)
         self.lines_per_torrent = config.getint('Misc', 'lines_per_torrent', fallback=3)
         self.torrentname_is_progressbar = config.getboolean('Misc', 'torrentname_is_progressbar', fallback=True)
-        self.file_viewer = config.get('Misc', 'file_viewer', fallback='xdg-open %%s')
+        self.file_viewer = config.get('Misc', 'file_viewer', fallback='xdg-open %s')
         self.file_open_in_terminal = config.getboolean('Misc', 'file_open_in_terminal', fallback=True)
         self.view_selected = config.getboolean('Misc', 'view_selected', fallback=False)
         self.torrent_numbers = config.getboolean('Misc', 'torrent_numbers', fallback=False)
